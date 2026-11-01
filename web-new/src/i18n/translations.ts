@@ -1646,6 +1646,154 @@ export const translations = {
     bm: "Pengasas, SME perkhidmatan Selangor",
   },
 
+  // DutaosPreview — the labelled illustrative workspace mock on the marketing pages
+  dutaosPreviewBadge: {
+    en: "Illustrative preview",
+    bm: "Pratonton ilustratif",
+  },
+  dutaosPreviewModDashboard: {
+    en: "Dashboard",
+    bm: "Papan pemuka",
+  },
+  dutaosPreviewModCompliance: {
+    en: "Compliance",
+    bm: "Pematuhan",
+  },
+  dutaosPreviewModProposals: {
+    en: "Proposals",
+    bm: "Cadangan",
+  },
+  dutaosPreviewModDigests: {
+    en: "Digests",
+    bm: "Digest",
+  },
+  dutaosPreviewModAssistant: {
+    en: "AI Assistant",
+    bm: "Pembantu AI",
+  },
+  dutaosPreviewCompliance: {
+    en: "Compliance areas DutaOS tracks",
+    bm: "Kawasan pematuhan yang dipantau DutaOS",
+  },
+  dutaosPreviewActivity: {
+    en: "Activity",
+    bm: "Aktiviti",
+  },
+  dutaosPreviewCaption: {
+    en: "Mock-up for illustration only — not a live account or real client data.",
+    bm: "Reka bentuk untuk ilustrasi sahaja — bukan akaun aktif atau data pelanggan sebenar.",
+  },
+
+  // WorkflowPilot — the low-risk starting point on the home page
+  pilotBadge: {
+    en: "Low-risk start",
+    bm: "Mulakan dengan risiko rendah",
+  },
+  pilotTitle: {
+    en: "Start with one workflow. Prove it. Then scale.",
+    bm: "Mulakan dengan satu aliran kerja. Buktikan. Kemudian kembangkan.",
+  },
+  pilotSub: {
+    en: "You don't need a full platform overhaul to see results. Pick the single process that costs you the most time — sales follow-ups, compliance deadlines, or monthly reporting — and run it on DutaOS month-to-month. Keep it only if it works for you.",
+    bm: "Anda tidak perlu mengubah suai platform sepenuhnya untuk melihat hasil. Pilih satu proses yang paling memakan masa anda — susulan jualan, tarikh akhir pematuhan, atau pelaporan bulanan — dan jalankannya pada DutaOS bulan ke bulan. Kekalkan hanya jika ia berkesan untuk anda.",
+  },
+  pilotStep1Title: {
+    en: "20-minute process review",
+    bm: "Semakan proses 20 minit",
+  },
+  pilotStep1Desc: {
+    en: "We map the one workflow you want to fix and agree what success looks like before anything is built.",
+    bm: "Kami memetakan satu aliran kerja yang anda ingin perbetulkan dan bersetuju dengan definisi kejayaan sebelum apa-apa dibina.",
+  },
+  pilotStep2Title: {
+    en: "Run the pilot",
+    bm: "Jalankan pilot",
+  },
+  pilotStep2Desc: {
+    en: "We set up that module and connect it to the tools you already use — no rip-and-replace. Start with a small group or limited records.",
+    bm: "Kami menyediakan modul itu dan menyambungkannya ke alat yang sudah anda guna — tanpa penggantian menyeluruh. Mulakan dengan kumpulan kecil atau rekod terhad.",
+  },
+  pilotStep3Title: {
+    en: "Measure, then decide",
+    bm: "Ukur, kemudian putuskan",
+  },
+  pilotStep3Desc: {
+    en: "Compare before and after on the numbers you chose. Expand to more modules, adjust, or stop. Month-to-month, no lock-in.",
+    bm: "Bandingkan sebelum dan selepas mengikut angka yang anda pilih. Kembangkan ke lebih banyak modul, laraskan, atau hentikan. Bulan ke bulan, tiada pengikatan.",
+  },
+  pilotWeHandle: {
+    en: "What we handle",
+    bm: "Apa yang kami urus",
+  },
+  pilotWeHandle1: {
+    en: "Setup and configuration of the module",
+    bm: "Pemasangan dan konfigurasi modul",
+  },
+  pilotWeHandle2: {
+    en: "Connecting it to the tools you already use",
+    bm: "Menyambungkannya ke alat yang sudah anda guna",
+  },
+  pilotWeHandle3: {
+    en: "Running the workflow day to day",
+    bm: "Menjalankan aliran kerja sehari-hari",
+  },
+  pilotWeHandle4: {
+    en: "A simple before/after readout",
+    bm: "Bacaan sebelum/selepas yang ringkas",
+  },
+  pilotYouProvide: {
+    en: "What you provide",
+    bm: "Apa yang anda sediakan",
+  },
+  pilotYouProvide1: {
+    en: "Access to the workflow you're fixing",
+    bm: "Akses kepada aliran kerja yang anda perbetulkan",
+  },
+  pilotYouProvide2: {
+    en: "A small test group or sample records",
+    bm: "Kumpulan ujian kecil atau rekod sampel",
+  },
+  pilotYouProvide3: {
+    en: "The measure you want to improve",
+    bm: "Ukuran yang anda ingin tingkatkan",
+  },
+  pilotJudgeTitle: {
+    en: "How you'll judge whether it worked",
+    bm: "Bagaimana anda menilai sama ada ia berkesan",
+  },
+  pilotMeasure1: {
+    en: "Time spent on manual entry",
+    bm: "Masa untuk kemasukan manual",
+  },
+  pilotMeasure2: {
+    en: "Hours to first response on a new lead",
+    bm: "Jam ke respons pertama pada prospek baharu",
+  },
+  pilotMeasure3: {
+    en: "Compliance deadlines missed",
+    bm: "Tarikh akhir pematuhan yang terlepas",
+  },
+  pilotMeasure4: {
+    en: "Report turnaround time",
+    bm: "Masa putaran laporan",
+  },
+  pilotHonesty: {
+    en: "We don't quote savings we haven't measured for you. Estimate your own with the leakage calculator — it runs on your numbers, not ours.",
+    bm: "Kami tidak menyebut penjimatan yang belum kami ukur untuk anda. Anggarkan milik anda dengan kalkulator kebocoran — ia menggunakan angka anda, bukan angka kami.",
+  },
+  pilotCta: {
+    en: "Book a 20-minute process review",
+    bm: "Tempah semakan proses 20 minit",
+  },
+  pilotCtaWaMsg: {
+    en: "Hi Duta Integra, I'd like to book a 20-minute process review to start a small pilot.",
+    bm: "Hai Duta Integra, saya ingin menempah semakan proses 20 minit untuk memulakan pilot kecil.",
+  },
+  pilotCta2: {
+    en: "Get a fixed-price proposal",
+    bm: "Dapatkan cadangan harga tetap",
+  },
+
   /* ── V2 Engineering Handoff Spec components ───────────────────── */
 
   // ProposalForm (§2) — 3-step fixed-price proposal funnel

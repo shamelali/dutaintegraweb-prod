@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DutaosModulesSection } from "@/components/dutaos-modules"
+import { DutaosPreview } from "@/components/dutaos-preview"
+import { WorkflowPilot } from "@/components/workflow-pilot"
 import { waLink } from "@/lib/dutaos"
 import { useLanguage } from "@/hooks/use-language"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
@@ -185,6 +187,20 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* DutaOS workspace preview — labelled illustrative mock */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 px-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(0,212,255,0.10),transparent_55%)]" />
+        <div className="relative max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge variant="electric" className="mb-4 reveal">{t("dutaosModulesEyebrow")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white reveal reveal-delay-1">
+              {t("dutaosModulesTitle")}
+            </h2>
+          </div>
+          <DutaosPreview />
+        </div>
+      </section>
+
       {/* DutaOS Modules — modular pricing (anchor target: #modules) */}
       <DutaosModulesSection id="modules" />
 
@@ -211,6 +227,9 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Low-risk pilot — how to start small and judge it */}
+      <WorkflowPilot />
 
       {/* Services Grid */}
       <section ref={servicesRef} className="py-20 px-6">

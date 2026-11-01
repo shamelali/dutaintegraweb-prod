@@ -29,7 +29,7 @@ function SliderInput({ label, value, setValue, min, max, suffix }: SliderInputPr
     <div>
       <div className="flex justify-between mb-2">
         <label className="text-slate-300 text-sm">{label}</label>
-        <span className="text-white font-bold">
+        <span className="text-white font-bold tabular-nums">
           {value}
           {suffix ? ` ${suffix}` : ""}
         </span>
@@ -71,44 +71,55 @@ export function RoiCalculator() {
   }, [staff, manualHours, downtimeHours])
 
   return (
-    <div id="roi-calculator" className="bg-navy rounded-2xl p-6 md:p-8 lg:p-12 text-white border border-white/5">
-      <h3 className="text-2xl font-heading font-bold mb-2">{t("roiTitle")}</h3>
-      <p className="text-slate-400 mb-8 text-sm">{t("roiSubtitle")}</p>
+    <div
+      id="roi-calculator"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-navy via-slate-deep to-navy p-6 md:p-8 lg:p-12 text-white shadow-2xl shadow-electric/5"
+    >
+      {/* Ambient spatial glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,212,255,0.12),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_100%,rgba(0,212,255,0.08),transparent_50%)]" />
 
-      <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-        {/* Inputs */}
-        <div className="space-y-8">
-          <SliderInput label={t("roiStaffLabel")} value={staff} setValue={setStaff} min={1} max={100} />
-          <SliderInput label={t("roiManualLabel")} value={manualHours} setValue={setManualHours} min={0} max={40} suffix={t("roiHoursWeek")} />
-          <SliderInput label={t("roiDowntimeLabel")} value={downtimeHours} setValue={setDowntimeHours} min={0} max={20} suffix={t("roiHoursMonth")} />
+      <div className="relative">
+        <h3 className="text-2xl font-heading font-bold mb-2">{t("roiTitle")}</h3>
+        <p className="text-slate-400 mb-8 text-sm">{t("roiSubtitle")}</p>
+
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          {/* Inputs */}
+          <div className="space-y-8">
+            <SliderInput label={t("roiStaffLabel")} value={staff} setValue={setStaff} min={1} max={100} />
+            <SliderInput label={t("roiManualLabel")} value={manualHours} setValue={setManualHours} min={0} max={40} suffix={t("roiHoursWeek")} />
+            <SliderInput label={t("roiDowntimeLabel")} value={downtimeHours} setValue={setDowntimeHours} min={0} max={20} suffix={t("roiHoursMonth")} />
+          </div>
+
+          {/* Output — counter readout */}
+          <div className="relative flex flex-col justify-center items-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 overflow-hidden">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,212,255,0.14),transparent_60%)]" />
+            <p className="relative text-slate-400 mb-2 text-sm">{t("roiLeaking")}</p>
+            <p className="relative text-4xl md:text-5xl font-heading font-bold text-electric tabular-nums drop-shadow-[0_0_18px_rgba(0,212,255,0.35)]">
+              RM {annualLoss.toLocaleString()}
+            </p>
+            <div className="relative mt-4 h-px w-28 bg-gradient-to-r from-transparent via-electric to-transparent" />
+            <p className="relative text-slate-400 text-sm text-center mt-4 mb-6">{t("roiEveryYear")}</p>
+            <a
+              href="#proposal-form"
+              onClick={(e) => {
+                // The form lives on /contact; a plain hash anchor only resolves
+                // when we're already on that page. Otherwise route there first,
+                // then scroll to the form once it has mounted.
+                const el = document.getElementById("proposal-form")
+                if (el) return // same page — let the browser/hash scroll handle it
+                e.preventDefault()
+                navigate("/contact")
+              }}
+              className="relative w-full min-h-[44px] inline-flex items-center justify-center gap-2 text-center py-3 bg-electric text-navy font-bold rounded-lg hover:bg-[#00b8e6] transition-colors"
+            >
+              {t("roiCta")} <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
 
-        {/* Output */}
-        <div className="flex flex-col justify-center items-center bg-slate-800/70 rounded-xl p-8">
-          <p className="text-slate-400 mb-2">{t("roiLeaking")}</p>
-          <p className="text-4xl md:text-5xl font-heading font-bold text-electric mb-4 tabular-nums">
-            RM {annualLoss.toLocaleString()}
-          </p>
-          <p className="text-slate-400 text-sm text-center mb-6">{t("roiEveryYear")}</p>
-          <a
-            href="#proposal-form"
-            onClick={(e) => {
-              // The form lives on /contact; a plain hash anchor only resolves
-              // when we're already on that page. Otherwise route there first,
-              // then scroll to the form once it has mounted.
-              const el = document.getElementById("proposal-form")
-              if (el) return // same page — let the browser/hash scroll handle it
-              e.preventDefault()
-              navigate("/contact")
-            }}
-            className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 text-center py-3 bg-electric text-navy font-bold rounded-lg hover:bg-[#00b8e6] transition-colors"
-          >
-            {t("roiCta")} <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
+        <p className="relative text-slate-500 text-xs mt-8">{t("roiDisclaimer")}</p>
       </div>
-
-      <p className="text-slate-500 text-xs mt-8">{t("roiDisclaimer")}</p>
     </div>
   )
 }

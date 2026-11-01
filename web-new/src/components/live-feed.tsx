@@ -163,14 +163,11 @@ export function LiveFeed() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-white/8">
           <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-400" />
-            </span>
-            <span className="text-xs font-semibold text-white/80">Live</span>
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+            <span className="text-xs font-semibold text-white/80">Sample activity</span>
           </div>
           <span className="text-[11px] text-white/30 tabular-nums">
-            {events.length} events
+            Illustrative preview
           </span>
         </div>
 
