@@ -616,8 +616,8 @@ export const translations = {
     bm: "Kami memahami landskap perniagaan Malaysia — peraturan, budaya, dan peluang unik di sini.",
   },
   aboutFounderEyebrow: {
-    en: "The Founder",
-    bm: "Pengasas",
+    en: "A note from the CEO",
+    bm: "Catatan daripada CEO",
   },
   aboutFounderTitle: {
     en: "Why I Started Duta Integra",
@@ -632,8 +632,8 @@ export const translations = {
     bm: "Duta Integra wujud untuk menjadi sebaliknya: kami katakan apa yang kami sendiri akan lakukan, letakkan harga secara jelas, dan terus bertanggungjawab. Jika sesuatu yang kami bina tidak berfungsi, itu masalah kami untuk dibaiki — bukan untuk anda temui sendiri.",
   },
   aboutFounderRole: {
-    en: "Founder & CEO",
-    bm: "Pengasas & CEO",
+    en: "CEO",
+    bm: "CEO",
   },
   aboutCtaDesc: {
     en: "Whether you need a system built, your IT steadied, or a straight answer about where to start — we're happy to talk it through.",
@@ -2226,6 +2226,14 @@ export const translations = {
   billingComingSoon: {
     en: "Online payment coming soon — contact us to activate your plan.",
     bm: "Pembayaran atas talian akan hadir segera — hubungi kami untuk mengaktifkan pelan anda.",
+  },
+  billingLoadFailed: {
+    en: "We couldn't load your subscription.",
+    bm: "Kami tidak dapat memuatkan langganan anda.",
+  },
+  billingContactUs: {
+    en: "Talk to us",
+    bm: "Hubungi kami",
   },
   billingCheckout: {
     en: "Set up payment",

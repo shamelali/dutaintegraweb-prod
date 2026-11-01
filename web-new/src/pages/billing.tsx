@@ -55,6 +55,7 @@ export function BillingPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [checkoutError, setCheckoutError] = useState("")
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [provider, setProvider] = useState<Provider>("hitpay")
   const [plan, setPlan] = useState<Plan>("starter")
@@ -68,11 +69,11 @@ export function BillingPage() {
           if (active) navigate(`/signin?next=${encodeURIComponent(window.location.pathname)}`)
           return
         }
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || "Failed to load")
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || t("billingLoadFailed"))
         if (active) setCompany((data.company as Company) ?? null)
       } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "Failed to load your subscription.")
+        if (active) setError(e instanceof Error && e.message ? e.message : t("billingLoadFailed"))
       } finally {
         if (active) setLoading(false)
       }
@@ -115,7 +116,7 @@ export function BillingPage() {
 
   async function handleCheckout(e: React.FormEvent) {
     e.preventDefault()
-    setError("")
+    setCheckoutError("")
     setCheckoutLoading(true)
     try {
       const res = await fetch("/api/billing/checkout", {
@@ -124,11 +125,11 @@ export function BillingPage() {
         credentials: "same-origin",
         body: JSON.stringify({ provider, plan }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Checkout failed")
       window.location.assign(data.checkoutUrl as string)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Checkout failed")
+      setCheckoutError(e instanceof Error ? e.message : "Checkout failed")
     } finally {
       setCheckoutLoading(false)
     }
@@ -140,6 +141,13 @@ export function BillingPage() {
       <Card className="p-8 max-w-md text-center">
         <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
         <p className="text-destructive">{error}</p>
+        <Button
+          variant="electric"
+          className="mt-6"
+          onClick={() => navigate("/contact")}
+        >
+          {t("billingContactUs")}
+        </Button>
       </Card>
     </div>
   )
@@ -254,6 +262,11 @@ export function BillingPage() {
                 <p className="text-sm text-muted-foreground mb-2">
                   {t("billingAmount")}: {selectedPrice} {t("billingPricePerMonth")}
                 </p>
+                {checkoutError && (
+                  <p role="alert" className="text-sm text-destructive mb-3">
+                    {checkoutError}
+                  </p>
+                )}
                 <Button
                   type="submit"
                   variant="electric"

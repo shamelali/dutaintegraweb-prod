@@ -398,3 +398,117 @@ describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
     assert.match(body.response, /0 compliance item\(s\) still pending, 0 overdue/);
   });
 });
+
+describe("DutaOS billing and company profile are routed in the deployed fork", () => {
+  // Until 2026-11-01 the fork had no payments or companies routes at all, so
+  // /billing loaded the React page and then 404'd its own data. Live probe:
+  // /api/companies and /api/billing/payments both answered 404 on
+  // https://dutaintegra.my while /api/health answered 200.
+  let originalFetch;
+
+  before(() => {
+    process.env.SUPABASE_URL = "https://stub.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
+    delete process.env.HITPAY_API_KEY;
+    delete process.env.HITPAY_SECRET_KEY;
+    delete process.env.BILLPLZ_API_KEY;
+    delete process.env.BILLPLZ_COLLECTION_ID;
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response("[]", {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  test("/api/companies refuses an anonymous caller instead of 404", async () => {
+    const res = await call("/api/companies");
+    assert.equal(res.status, 401);
+  });
+
+  test("/api/companies/:id PATCH is routed", async () => {
+    const res = await call(`/api/companies/${"00000000-0000-4000-8000-000000000000"}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Nope" }),
+    });
+    assert.equal(res.status, 401);
+  });
+
+  test("/api/billing/checkout and /api/billing/payments are routed", async () => {
+    const checkout = await call("/api/billing/checkout", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ provider: "hitpay", plan: "starter" }),
+    });
+    assert.equal(checkout.status, 401);
+
+    const list = await call("/api/billing/payments");
+    assert.equal(list.status, 401);
+  });
+
+  test("provider webhooks fail closed without a signature", async () => {
+    for (const provider of ["hitpay", "billplz"]) {
+      const res = await call(`/api/payments/webhook/${provider}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ order_id: "dutaos-starter-abc12345", paid: true }),
+      });
+      assert.equal(res.status, 401, `${provider} must reject an unsigned webhook`);
+      const body = await res.json();
+      assert.equal(body.error, "Invalid signature");
+    }
+  });
+});
+
+describe("deployed health proves the datastore and names the payment providers", () => {
+  // The fork used to hand-roll its own /api/health: it probed
+  // `leads?limit=0` (reachable, not durable), always answered 200, and omitted
+  // both `datastore.probe` and `payments.providersConfigured` — the two fields
+  // automations/uptime-watch reads to tell an outage from a lost credential.
+  let originalFetch;
+
+  before(() => {
+    process.env.SUPABASE_URL = "https://stub.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
+    delete process.env.HITPAY_API_KEY;
+    delete process.env.HITPAY_SECRET_KEY;
+    process.env.BILLPLZ_API_KEY = "stub-billplz-key";
+    process.env.BILLPLZ_COLLECTION_ID = "stub-collection";
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (_url, init = {}) => {
+      const method = String(init.method ?? "GET").toUpperCase();
+      if (method === "POST") return new Response("[]", { status: 201 });
+      if (method === "DELETE") return new Response("", { status: 204 });
+      return new Response(JSON.stringify([{ id: "probe" }]), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    };
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+    delete process.env.BILLPLZ_API_KEY;
+    delete process.env.BILLPLZ_COLLECTION_ID;
+  });
+
+  test("the sentinel row round-trips and the provider flags are honest", async () => {
+    const res = await call("/api/health?fresh=1");
+    assert.equal(res.status, 200);
+    const body = await res.json();
+
+    assert.equal(body.ok, true);
+    assert.equal(body.datastore.backend, "supabase");
+    assert.equal(body.datastore.probe, "roundtrip", "health must prove a write/read/delete, not a reachable host");
+    assert.equal(body.payments.providersConfigured.hitpay, false);
+    assert.equal(body.payments.providersConfigured.billplz, true);
+
+    // The keys the automation still parses.
+    assert.equal(body.storageBackend, "supabase");
+    assert.equal(body.storageDurable, true);
+  });
+});

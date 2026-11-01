@@ -97,7 +97,10 @@ export async function healthReport({ now = Date.now(), force = false } = {}) {
 
   const { backend, error } = backendStatus();
   const inboxConfigured = Boolean(resolveInboxEmail());
-  const onServerless = Boolean(process.env.VERCEL);
+  // Production runs on Cloudflare Pages, which discards the local filesystem
+  // on every deploy just as Vercel does. Reading only VERCEL let the Pages
+  // fork report a jsonl backend as durable.
+  const onServerless = Boolean(process.env.VERCEL || process.env.CF_PAGES);
   const warnings = [];
 
   let datastore;

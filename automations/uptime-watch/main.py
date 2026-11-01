@@ -41,7 +41,19 @@ EXPECT_JSONL = os.environ.get("WATCH_ALLOW_JSONL", "") == "1"
 MUST_BE_200 = ["/"]
 
 # Paths that require auth; they should return 401 (not 404/500)
-AUTH_PATHS = ["/admin/pipeline", "/admin/enquiries", "/admin/proposals"]
+# The DutaOS API routes are listed here because the Cloudflare fork and the
+# Vercel entrypoint keep diverging: on 2026-11-01 /api/companies and
+# /api/billing/payments answered 404 in production while the site itself looked
+# healthy, so the DutaOS billing page rendered and then failed to load its own
+# data. A missing route is a different failure from a slow one, and 404 catches
+# it while /api/health stays green.
+AUTH_PATHS = [
+    "/admin/pipeline",
+    "/admin/enquiries",
+    "/admin/proposals",
+    "/api/companies",
+    "/api/billing/payments",
+]
 
 
 # --------------------------------------------------------------------------

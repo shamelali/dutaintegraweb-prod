@@ -70,6 +70,20 @@ import {
   handleComplianceItemById,
 } from "./compliance.mjs";
 
+// DutaOS company profile + billing. These are the same Node-style handler
+// modules server/index.mjs runs locally, reached through runNodeHandler.
+import {
+  handleCompaniesGet,
+  handleCompaniesPatch,
+} from "./companies.mjs";
+
+import {
+  handleBillingCheckout,
+  handlePaymentsList,
+  handleHitpayWebhook,
+  handleBillplzWebhook,
+} from "./payments.mjs";
+
 import {
   handleAIChat,
   handleDutaosBrief,
@@ -80,6 +94,8 @@ import {
   handleCatalogItems,
   handleCatalogItemById,
 } from "./catalog.mjs";
+
+import { healthReport } from "./health.mjs";
 
 // ── Security Headers ──────────────────────────────────────────────────────────
 // Cloudflare Pages serves static files with _headers; this applies to API responses
@@ -1076,35 +1092,15 @@ async function handleCalculator(req) {
 }
 
 async function handleHealth(req) {
-  const configured = supabaseConfigured();
-  let supabaseReachable = null;
-  if (configured) {
-    try {
-      const probe = await fetch(`${process.env.SUPABASE_URL.trim().replace(/\/$/, "")}/rest/v1/leads?select=id&limit=0`, {
-        headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY.trim(),
-          authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY.trim()}`,
-        },
-      });
-      supabaseReachable = probe.ok;
-    } catch {
-      supabaseReachable = false;
-    }
-  }
-  const storageBackend = configured ? "supabase" : "jsonl";
-  const warnings = [];
-  if (storageBackend === "jsonl") warnings.push("storage backend is jsonl on Cloudflare Pages - leads will not persist; configure SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY");
-  if (configured && supabaseReachable === false) warnings.push("Supabase configured but unreachable");
-  if (!resolveInboxEmail()) warnings.push("no CONTACT_INBOX_EMAIL/ADMIN_EMAIL configured - enquiry notifications disabled");
-  return sendJson(200, {
-    ok: configured && supabaseReachable !== false,
-    inboxConfigured: Boolean(resolveInboxEmail()),
-    supabaseConfigured: configured,
-    storageBackend,
-    storageDurable: configured,
-    supabaseReachable,
-    warnings,
-  });
+  // One implementation for both entrypoints. The fork used to hand-roll its
+  // own: it probed `leads?limit=0` (reachable, not durable), always answered
+  // 200, and reported neither `datastore.probe` nor `payments.providersConfigured`
+  // — so the uptime automation could not see a lost payment key or a datastore
+  // that accepts a write it cannot read back.
+  const url = new URL(req.url);
+  const fresh = url.searchParams.get("fresh") === "1";
+  const { status, ...report } = await healthReport({ force: fresh });
+  return sendJson(status, report);
 }
 
 // ── Main Router ───────────────────────────────────────────────────────────────
@@ -1151,6 +1147,21 @@ export async function handleApi(req) {
     if (pathname.match(/^\/api\/compliance-items\/[a-f0-9-]+$/) && (req.method === "PATCH" || req.method === "DELETE" || req.method === "POST")) {
       return await runNodeHandler(req, handleComplianceItemById);
     }
+
+    // DutaOS company profile (company-scoped via dutaos_session cookie)
+    if (pathname === "/api/companies") return await runNodeHandler(req, handleCompaniesGet);
+    const companyMatch = pathname.match(/^\/api\/companies\/([a-f0-9-]+)$/);
+    if (companyMatch && req.method === "PATCH") {
+      return await runNodeHandler(req, handleCompaniesPatch, companyMatch[1]);
+    }
+
+    // DutaOS billing — HitPay/Billplz checkout and provider webhooks. The
+    // webhooks are unauthenticated-by-cookie by design; payments.mjs verifies
+    // each provider HMAC and rate-limits by source IP before touching a record.
+    if (pathname === "/api/billing/checkout") return await runNodeHandler(req, handleBillingCheckout);
+    if (pathname === "/api/billing/payments") return await runNodeHandler(req, handlePaymentsList);
+    if (pathname === "/api/payments/webhook/hitpay") return await runNodeHandler(req, handleHitpayWebhook);
+    if (pathname === "/api/payments/webhook/billplz") return await runNodeHandler(req, handleBillplzWebhook);
 
     // DutaOS AI — grounded on the company's compliance brief, audited in ai_actions
     if (pathname === "/api/dutaos/brief") return await runNodeHandler(req, handleDutaosBrief);

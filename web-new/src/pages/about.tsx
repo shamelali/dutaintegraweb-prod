@@ -115,18 +115,12 @@ export function AboutPage() {
             </h2>
           </div>
           <Card className="p-8 md:p-12 reveal reveal-delay-2">
-            <div className="flex items-start gap-6">
-              <div className="w-16 h-16 rounded-full bg-electric/10 flex items-center justify-center shrink-0">
-                <span className="text-2xl font-bold text-electric">S</span>
+            <div>
+              <div className="space-y-4 text-muted-foreground">
+                <p>{t("aboutFounderP1")}</p>
+                <p>{t("aboutFounderP2")}</p>
               </div>
-              <div>
-                <h3 className="text-2xl font-heading font-bold">Shamel</h3>
-                <p className="text-electric text-sm mb-4">{t("aboutFounderRole")}</p>
-                <div className="space-y-4 text-muted-foreground">
-                  <p>{t("aboutFounderP1")}</p>
-                  <p>{t("aboutFounderP2")}</p>
-                </div>
-              </div>
+              <p className="text-electric text-sm mt-6">{t("aboutFounderRole")}</p>
             </div>
           </Card>
         </div>

@@ -93,7 +93,7 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `ac108f20` (source `89a4b83`, 2026-10-30) is live. Only `npm run cf:deploy` changes it. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `2e5b805f` (2026-11-01) is live — it carries the billing/companies API port and the `index-Cl8HJZXr.js` bundle. Only `npm run cf:deploy` changes it. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
 Pushing `main` still does not ship, and neither problem is git: the project
@@ -120,7 +120,7 @@ wrangler pages dev public --port 8791 --ip 127.0.0.1   # must print "Ready", not
 
 Two loose ends worth remembering:
 
-- `public/` carries the current bundle (`index-Djs7j6Hj.js`); `npm run
+- `public/` carries the current bundle (`index-Cl8HJZXr.js`); `npm run
   build:web` syncs it along with `Web/` via `scripts/sync-web.mjs`. The Pages
   project deploys whatever is in `public/` at upload time, so re-check it
   before `npm run cf:deploy`.
@@ -178,9 +178,9 @@ Consequences:
    stale-list test until it is dropped.
 3. **The two deployment trees are separate outputs.** `Web/` is what Vercel
    would serve; Pages serves `public/`. `npm run build:web` writes both in one
-   pass (`scripts/sync-web.mjs`), and as of 2026-10-30 both carry
-   `index-Djs7j6Hj.js` — the same bundle production serves since deployment
-   `ac108f20`. Still confirm the upload will carry it before deploying:
+   pass (`scripts/sync-web.mjs`), and as of 2026-11-01 both carry
+   `index-Cl8HJZXr.js` — the same bundle production serves since deployment
+   `2e5b805f`. Still confirm the upload will carry it before deploying:
    `grep -o 'index-[A-Za-z0-9_-]*\.js' public/index.html`.
 
 ## The Cloudflare fork's data layer
@@ -459,13 +459,38 @@ rebuilds the path by hand instead.
 ## DutaOS payments (HitPay + Billplz)
 
 `server/payments.mjs` (added 2026-10-31) implements the DutaOS billing
-checkout. The Cloudflare fork does **not** have a payments mirror yet, so
-`handler-cloudflare.mjs` still serves 404 for `/api/billing/*` and
-`/api/payments/webhook/*`. The Vercel entrypoint works and the Cloudflare
-Pages deploy carries it because `functions/api/[[path]].js` copies Pages env
-into `process.env` and re-exports `handle` from `handler.mjs` — but check
-before shipping a payments change: any fix in `payments.mjs` needs its
-equivalent ported to a `payments-cloudflare.mjs` when that fork exists.
+checkout. **Production runs it as of 2026-11-01.**
+`handler-cloudflare.mjs` routes `/api/companies`, `/api/companies/:id`,
+`/api/billing/checkout`, `/api/billing/payments` and both
+`/api/payments/webhook/*` paths at the *same* Node handlers
+`server/index.mjs` uses, reached through the fork's `runNodeHandler` adapter —
+deliberately not a `payments-cloudflare.mjs`, because a second copy of the
+billing logic is how this repo keeps diverging its two entrypoints. `npm run
+cf:deploy` shipped that on 2026-11-01 (deployment `2e5b805f`, bundle
+`index-Cl8HJZXr.js`). Verified against `https://dutaintegra.my` after the
+upload: `/api/companies` and `/api/billing/payments` now answer **401** (they
+were **404** before the port), `/api/payments/webhook/hitpay` answers **405** to
+a `GET` and **401** to an unsigned `POST`, and `/api/health` answers 200 with
+`payments.providersConfigured: {hitpay: false, billplz: false}` — the routes are
+live but **no provider keys are set in the Pages production environment**, so
+checkout fails closed ("not configured") until `HITPAY_*`/`BILLPLZ_*` are added
+in the Cloudflare dashboard. That is the intended safe state: nothing can charge
+without explicit keys. The `/billing` SPA (`web-new/src/pages/billing.tsx`) now
+shows an inline checkout error rather than replacing the whole page.
+
+An earlier version of this paragraph claimed the Pages deploy carried
+`handler.mjs` because `functions/api/[[path]].js` copies Pages env into
+`process.env`. That was wrong: the file's only import is `handleApi` from
+`server/handler-cloudflare.mjs`, so nothing in `handler.mjs` is reachable from
+production. Any fix in `payments.mjs` now reaches both entrypoints without a
+port — provided it goes through `runNodeHandler` and never assumes a real
+`req.socket`, `res.writeHead` streaming, or a writable filesystem.
+
+`/api/health` in the fork is also no longer a hand-rolled duplicate: it calls
+`healthReport()` from `server/health.mjs`, so production will finally answer
+with `datastore.probe` and `payments.providersConfigured`, and 503 when the
+round-trip fails. `health.mjs` counts `CF_PAGES` as serverless too, so a jsonl
+fallback on Pages is no longer reported durable.
 
 Four routes, all company-scoped via the `dutaos_session` cookie (`getCompanyIdFromReq`
 in `server/auth.mjs`):
