@@ -105,6 +105,33 @@ until the TTL is lowered. The other four should be retired one at a time, each g
 first: React parity for `/services` / `/about` / `/contact` / `/quiz` has **not** been
 checked against their static twins, so deleting them wholesale could drop real content.
 
+**Lead capture was fully dead in production (found 2026-11-02), fixed in `main` but
+NOT yet deployed.** Two independent bugs on `/api/send-email`, both proven with
+`wrangler pages dev public` (workerd is the same runtime Pages uses):
+
+1. **`crypto.randomUUID` detached → `Illegal invocation`.** The four `*-cloudflare.mjs`
+write modules (enquiries, clients, cms, tickets) each did `const { randomUUID } = crypto;`
+then called `randomUUID()`. Detaching the method drops its `this`, and workerd throws
+`TypeError: Illegal invocation` — *before* any store call, so **every** Pages write 500'd.
+A correctly-formed legacy POST cleared CSRF and still hit this. Fixed by calling
+`crypto.randomUUID()` with its receiver. (The Node-path modules were always fine — they
+`import { randomUUID } from "node:crypto"`, which is a standalone binding.)
+2. **React sent no CSRF token → 403.** `validateCsrf` requires a `csrf_token` cookie *and*
+an `x-csrf-token` header on any POST that carries `Origin`, and browsers send `Origin` on
+every same-origin `fetch` POST. The React app did neither, so `/contact`, the proposal
+funnel, hero WhatsApp signup and quiz leads all failed — `contact.tsx` masked it behind a
+generic toast, `proposal-form.tsx` swallowed it with `.catch(() => undefined)`. Fixed by
+porting the legacy `contact.html` double-submit into `web-new/src/lib/csrf.ts` (+ a unit
+test) and using it at all four callers; the server's fail-closed gate was left intact.
+
+The server `npm test` suite also carried a stale assertion that `Web/pricing.html` serves
+200 — the twin was removed in `1f46ad1`, so the Node static server correctly 404s it; the
+test now targets the still-present `audit.html`. After both fixes: `npm test` 291/291,
+`npm --prefix web-new run test:web` 17/17, `tsc` clean, and `/api/send-email` returns
+`200 {success:true}` under `wrangler pages dev`. **Until someone runs `npm run cf:deploy`
+production still 403s (React) / 500s (legacy) on every lead** — this repo push changes
+nothing live (the `dutaintegra` Pages project has no git integration).
+
 **Production now matches `main` (2026-10-30).** Until then it was 34 commits
 behind: `https://dutaintegra.my/` served `assets/index-B54e6WfU.js`, the bundle
 this repo had at `9b0d08e` (2026-10-26 00:20), and `/api/health` answered the
