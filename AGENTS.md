@@ -65,19 +65,33 @@ loads Google Fonts separately and is the only static page that does.
 
 Verified against `https://www.dutaintegra.my`, not inferred from config.
 
-**Clean URLs 404'd.** Fixed by the SPA fallback rewrite described above. Note
-the legacy pages still link the `.html` variants (`79` references to
-`services.html` and similar); those keep working but a visitor who lands on a
-static page navigates the static site, not React.
+**Clean URLs 404'd** before the SPA fallback existed, but on Cloudflare Pages
+the fallback is *not* the whole story. Pages serves **Pretty URLs**: for any
+path whose `.html` twin exists as a tracked static file, the clean URL resolves
+to that static file, and `/* /index.html 200` only fires for paths with **no**
+static twin. Probed on the apex (2026-11-02): `/billing` and a made-up path
+return the 2 KB React shell, while `/pricing`, `/services`, `/about`,
+`/contact`, `/quiz` each return the 17–19 KB **legacy static** page (its own
+`<title>`, no `index-*.js`). So "clean URL serves React" holds only for React
+routes that have no `public/<name>.html`. (The older "`/` … `/quiz` all 200 —
+serve the React app" claim described the **Vercel** `vercel.json` rewrites;
+Pages, which is what is actually live, behaves as above.)
 
-| Path | Result |
+| Path | Result (Pages, probed 2026-11-02) |
 |---|---|
-| `/`, `/services`, `/about`, `/pricing`, `/contact`, `/quiz` | 200 — serve the React app (via the SPA fallback) |
-| `/services.html`, `/about.html`, `/pricing.html`, `/cases.html`, `/calculator.html`, `/audit.html` | 200 — static HTML |
+| `/`, `/billing`, any path with no static twin | 200 — React app (SPA fallback) |
+| `/services`, `/about`, `/contact`, `/quiz` | 200 — **legacy static** `.html` (Pretty URLs shadows the React route) |
+| `/pricing` | 200 — legacy static **until the next `cf:deploy`** (its twin is deleted in-tree, not yet uploaded) |
+| `/services.html`, `/audit.html`, `/calculator.html`, … | 200 — static HTML |
 
-Both sets now resolve. The `.html` variants are the *legacy* static
-implementations of pages that React also serves; React is canonical, and the
-static ones remain for deep links and standalone tools.
+React is canonical, so a route is only truly served by React once its
+`public/<name>.html` twin is removed. `public/pricing.html` + `Web/pricing.html`
+were deleted so `/pricing` falls through to the new AI-operations landing — but
+that is **not live until someone runs `npm run cf:deploy`**; production still
+shows the old static `/pricing`. Retire the other four one at a time, each
+gated first: React parity for `/services` / `/about` / `/contact` / `/quiz` has
+**not** been checked against their static twins, so deleting them wholesale
+could drop real content.
 
 **Production now matches `main` (2026-10-30).** Until then it was 34 commits
 behind: `https://dutaintegra.my/` served `assets/index-B54e6WfU.js`, the bundle
@@ -93,7 +107,7 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `2e5b805f` (2026-11-01) is live — it carries the billing/companies API port and the `index-Cl8HJZXr.js` bundle. Only `npm run cf:deploy` changes it. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `af5ab95f` (2026-11-02) is live — bundle `index-DVxWREAk.js` (DutaOS home + the new `/pricing` landing compiled into the bundle). It still carries the `pricing.html` twin, so `/pricing` serves the old static page until a redeploy uploads the tree with the twin removed. Only `npm run cf:deploy` changes it. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
 Pushing `main` still does not ship, and neither problem is git: the project
@@ -120,7 +134,7 @@ wrangler pages dev public --port 8791 --ip 127.0.0.1   # must print "Ready", not
 
 Two loose ends worth remembering:
 
-- `public/` carries the current bundle (`index-Cl8HJZXr.js`); `npm run
+- `public/` carries the current bundle (`index-DVxWREAk.js`); `npm run
   build:web` syncs it along with `Web/` via `scripts/sync-web.mjs`. The Pages
   project deploys whatever is in `public/` at upload time, so re-check it
   before `npm run cf:deploy`.
