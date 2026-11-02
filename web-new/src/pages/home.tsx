@@ -14,6 +14,7 @@ import { postWithCsrf } from "@/lib/csrf"
 import { useLanguage } from "@/hooks/use-language"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
 import { LiveFeed } from "@/components/live-feed"
+import { DataFabricBackdrop } from "@/components/data-fabric-backdrop"
 import type { TranslationKey } from "@/i18n/translations"
 
 const services = [
@@ -119,8 +120,9 @@ export function HomePage() {
     <>
       {/* Hero — Pain-led A/B test */}
       <section ref={heroRef} className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 md:py-28">
+        <DataFabricBackdrop />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,212,255,0.08),transparent_50%)]" />
-        <div className="relative max-w-7xl mx-auto px-6 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
           <Badge variant="electric" className="mb-6 reveal">
             {t(hero.badgeKey)}
           </Badge>
@@ -186,8 +188,9 @@ export function HomePage() {
 
       {/* DutaOS workspace preview — labelled illustrative mock */}
       <section className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 px-6">
+        <DataFabricBackdrop />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(0,212,255,0.10),transparent_55%)]" />
-        <div className="relative max-w-7xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <Badge variant="electric" className="mb-4 reveal">{t("dutaosModulesEyebrow")}</Badge>
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-white reveal reveal-delay-1">

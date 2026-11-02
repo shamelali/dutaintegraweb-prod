@@ -241,6 +241,66 @@ h1, h2, h3, h4, h5, h6 {
   animation: glass-halo 2.4s ease-out infinite;
 }
 
+/* ── Data-fabric hero backdrop (decorative) ── */
+.df-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.df-mesh {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+  -webkit-mask-image: radial-gradient(circle at 60% 45%, black, transparent 72%);
+  mask-image: radial-gradient(circle at 60% 45%, black, transparent 72%);
+}
+
+.df-flow {
+  stroke-dasharray: 8 220;
+  stroke-dashoffset: 228;
+  animation: df-flow 3.4s linear infinite;
+}
+
+.df-node {
+  animation: df-node-pulse 2.8s ease-in-out infinite;
+}
+
+/* receding perspective grid floor, faded toward the horizon */
+.df-floor {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: -6%;
+  height: 48%;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.14) 1px, transparent 1px);
+  background-size: 46px 46px;
+  transform: perspective(340px) rotateX(62deg);
+  transform-origin: bottom center;
+  -webkit-mask-image: linear-gradient(to top, black, transparent 85%);
+  mask-image: linear-gradient(to top, black, transparent 85%);
+}
+
+@keyframes df-flow {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes df-node-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df-flow { animation: none; opacity: 0; }
+  .df-node { animation: none; opacity: 0.85; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .glass-dot {
     animation: none;
