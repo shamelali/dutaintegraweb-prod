@@ -113,9 +113,9 @@ const EVENT_POOL: Omit<FeedEvent, "id" | "timeLabel">[] = [
 const TIME_LABELS = ["just now", "1m ago", "2m ago", "4m ago", "6m ago", "9m ago", "12m ago", "15m ago"]
 
 const SEVERITY_STYLES: Record<string, string> = {
-  info: "bg-electric/10 text-electric",
-  warning: "bg-amber-500/15 text-amber-400",
-  error: "bg-red-500/15 text-red-400",
+  info: "bg-electric/10 text-electric ring-electric/25",
+  warning: "bg-amber-500/15 text-amber-400 ring-amber-500/30",
+  error: "bg-red-500/15 text-red-400 ring-red-500/30",
 }
 
 let nextId = 1
@@ -159,14 +159,16 @@ export function LiveFeed() {
 
   return (
     <div className="w-full max-w-2xl mx-auto reveal reveal-delay-3">
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+      <div className="glass glass-rim backdrop-blur-xl backdrop-saturate-150 overflow-hidden rounded-2xl">
+        {/* top accent rail */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-electric via-emerald-400 to-transparent" />
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/8">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
           <div className="flex items-center gap-2">
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+            <span className="glass-dot relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
             <span className="text-xs font-semibold text-white/80">Sample activity</span>
           </div>
-          <span className="text-[11px] text-white/30 tabular-nums">
+          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/40 tabular-nums">
             Illustrative preview
           </span>
         </div>
@@ -176,11 +178,11 @@ export function LiveFeed() {
           {events.map((ev, i) => (
             <div
               key={ev.id}
-              className="feed-item flex items-start gap-3 px-5 py-3"
+              className="feed-item flex items-start gap-3 px-5 py-3 transition-colors hover:bg-white/5"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {/* Icon */}
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-electric/10 flex items-center justify-center">
+              <div className="glass-inset flex flex-shrink-0 items-center justify-center rounded-xl w-8 h-8 shadow-[0_0_16px_-8px_rgba(0,212,255,0.8)]">
                 <ev.icon className="w-4 h-4 text-electric" />
               </div>
 
@@ -196,7 +198,7 @@ export function LiveFeed() {
                   <span className="text-[11px] text-white/25">·</span>
                   <span className="text-[11px] text-white/35">{ev.timeLabel}</span>
                   <span
-                    className={`ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${SEVERITY_STYLES[ev.severity]}`}
+                    className={`ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide ring-1 ring-inset ${SEVERITY_STYLES[ev.severity]}`}
                   >
                     {ev.severity}
                   </span>
