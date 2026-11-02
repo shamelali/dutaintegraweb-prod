@@ -1,5 +1,8 @@
 # dependencies
 /node_modules
+# The repo is npm-only (package-lock.json). A stray `pnpm install` writes an
+# empty pnpm-lock.yaml at the root; ignore it so it never lands in a commit.
+pnpm-lock.yaml
 
 # local env (keep the example)
 .env*
