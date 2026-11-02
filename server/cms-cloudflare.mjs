@@ -78,7 +78,6 @@ async function deleteOne(table, id) {
 // ── Case Studies ─────────────────────────────────────────────────────────────
 
 const CS_TABLE = "case_studies";
-const { randomUUID } = crypto;
 
 function normalizeCaseStudy(c) {
   return {
@@ -112,7 +111,7 @@ export async function getCaseStudy(id) {
 export async function createCaseStudy(data) {
   const now = new Date().toISOString();
   const item = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     client_name: data.clientName,
     category: data.category ?? null,
     summary_en: data.summaryEn ?? null,
@@ -189,7 +188,7 @@ export async function getProduct(id) {
 export async function createProduct(data) {
   const now = new Date().toISOString();
   const item = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     name: data.name,
     tagline: data.tagline ?? null,
     category: data.category ?? null,

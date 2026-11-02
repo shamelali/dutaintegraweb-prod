@@ -42,13 +42,11 @@ function toRow(t) {
   };
 }
 
-const { randomUUID } = crypto;
-
 export async function createTicket({ clientId, subject, description, priority }) {
   if (!supabaseConfigured()) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured");
   const now = new Date().toISOString();
   const ticket = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     clientId,
     subject,
     description: description ?? null,
@@ -174,7 +172,7 @@ export async function createTicketReply({ ticketId, authorType, authorId, author
   if (!supabaseConfigured()) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured");
   const now = new Date().toISOString();
   const reply = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     ticketId,
     authorType,
     authorId,

@@ -107,12 +107,10 @@ async function supabaseUpdateStatus(id, status, note, assignedRole) {
   return Array.isArray(rows) && rows.length ? fromSupabaseRow(rows[0]) : null;
 }
 
-const { randomUUID } = crypto;
-
 /** Append one enquiry record and return it. */
 export async function recordEnquiry(input) {
   const record = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     name: input.name,
     company: input.company ?? null,
     email: input.email,

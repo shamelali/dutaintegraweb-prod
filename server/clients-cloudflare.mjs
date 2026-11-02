@@ -109,8 +109,6 @@ async function supabaseDelete(id) {
   if (!res.ok) throw new Error(`Supabase delete failed: ${res.status}`);
 }
 
-const { randomUUID } = crypto;
-
 export async function findClientByEmail(email) {
   if (!supabaseConfigured()) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured");
   return supabaseFindByEmail(email);
@@ -144,7 +142,7 @@ export async function deleteClient(id) {
 /** Create a new client record with defaults. */
 export async function createClient({ name, email, passwordHash, company, tier, role }) {
   const client = {
-    id: randomUUID(),
+    id: crypto.randomUUID(),
     name,
     email: email.toLowerCase().trim(),
     passwordHash,

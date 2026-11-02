@@ -291,7 +291,7 @@ describe("static site and health", () => {
   });
 
   test("serves a nested page and refuses path traversal", async () => {
-    const ok = await fetch(`${base}/pricing.html`);
+    const ok = await fetch(`${base}/audit.html`);
     assert.equal(ok.status, 200);
     await ok.text();
 
