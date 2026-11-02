@@ -87,16 +87,23 @@ Pages, which is what is actually live, behaves as above.)
 React is canonical, so a route is only truly served by React once its
 `public/<name>.html` twin is removed. `public/pricing.html` + `Web/pricing.html`
 were deleted and deployed (`972ccd30` → `a28c582b`), so the **origin** now serves
-the new AI-operations landing at `/pricing`. Two things to know before it looks
-"fixed" in a browser: (1) a Cloudflare edge object for the exact `/pricing` key,
-cached from before the removal, is not evicted by a deploy — purge it once from
-the dashboard; (2) the `wrangler` token here is **`zone (read)`**, so the purge
-cannot be done programmatically and must be clicked. Recurrence is now prevented
-by `/* → Cache-Control: public, max-age=0, must-revalidate` in `public/_headers`
-(the fallback shell no longer inherits Pages' default ~7-day shared cache). The
-other four should be retired one at a time, each gated first: React parity for
-`/services` / `/about` / `/contact` / `/quiz` has **not** been checked against
-their static twins, so deleting them wholesale could drop real content.
+the new AI-operations landing at `/pricing` — proven by `dutaintegra.pages.dev/pricing`
+(2004 B React shell) and by the custom domain's `/` and `/pricing.html` (both the
+React shell). **But a browser can still see the deleted twin at the bare custom-domain
+URL `https://dutaintegra.my/pricing` (17544 B) and no purge fixes it.** Verified
+2026-11-02: the exact `dutaintegra.my/pricing` key is pinned by an Enterprise
+**`edge_cache_ttl=7200`** zone setting that overrides the deployed `max-age=0`, so
+the stale object is re-cached for 2 h after every eviction — its `age` header climbed
+straight through both a per-file purge and `purge_everything` (+ `cache_reserve`), and
+the zone has no page/origin/cache rule pinning it. The durable fix is therefore *not*
+a purge; it is setting **Edge Cache TTL to "Respect origin"** (or 0) in the dashboard
+(Speed → Caching → Configuration), which the `wrangler`/API token cannot do — it holds
+Cache Purge but its `PATCH /zones/*/settings/*` returns `9109`/`10000`. It self-heals
+once the object's 2 h lifetime lapses. `/* → max-age=0, must-revalidate` in
+`public/_headers` is correct but is *currently overridden* by that `edge_cache_ttl`
+until the TTL is lowered. The other four should be retired one at a time, each gated
+first: React parity for `/services` / `/about` / `/contact` / `/quiz` has **not** been
+checked against their static twins, so deleting them wholesale could drop real content.
 
 **Production now matches `main` (2026-10-30).** Until then it was 34 commits
 behind: `https://dutaintegra.my/` served `assets/index-B54e6WfU.js`, the bundle
@@ -112,7 +119,7 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `a28c582b` (2026-11-02) is live — bundle `index-DVxWREAk.js`. It carries the removed `pricing.html` twin (so the origin resolves `/pricing` to the React landing) and the new `/* → max-age=0, must-revalidate` header. Caveat: a stale edge object for the *exact* `/pricing` key, cached from before the removal, is not evicted by a deploy; clear it once from the dashboard (Speed → Caching → Purge → Custom URL `https://dutaintegra.my/pricing`). Only `npm run cf:deploy` changes it. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `a28c582b` (2026-11-02) is live — bundle `index-DVxWREAk.js`. It carries the removed `pricing.html` twin (so the origin resolves `/pricing` to the React landing) and the new `/* → max-age=0, must-revalidate` header. Caveat: a stale edge object for the *exact* `/pricing` key survives every purge because the zone's Enterprise `edge_cache_ttl=7200` overrides `max-age=0`; lower Edge Cache TTL to "Respect origin" in the dashboard (the token lacks Zone Settings Edit). Only `npm run cf:deploy` changes it. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
 Pushing `main` still does not ship, and neither problem is git: the project
