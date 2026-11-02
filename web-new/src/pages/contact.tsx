@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useLanguage } from "@/hooks/use-language"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
 import { useToast } from "@/hooks/use-toast"
+import { postWithCsrf } from "@/lib/csrf"
 import { ProposalForm } from "@/components/proposal-form"
 import { RoiCalculator } from "@/components/roi-calculator"
 
@@ -37,10 +38,7 @@ export function ContactPage() {
     setSubmitting(true)
 
     try {
-      const res = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await fetch("/api/send-email", postWithCsrf({
           name: form.fullName,
           email: form.email,
           company: form.company,
@@ -48,8 +46,7 @@ export function ContactPage() {
           service: form.service,
           message: form.message,
           source: "contact-form",
-        }),
-      })
+        }))
 
       if (res.ok) {
         show("Message sent! We'll get back to you within 24 hours.")

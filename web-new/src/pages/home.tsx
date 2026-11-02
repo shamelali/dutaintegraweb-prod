@@ -10,6 +10,7 @@ import { DutaosModulesSection } from "@/components/dutaos-modules"
 import { DutaosPreview } from "@/components/dutaos-preview"
 import { WorkflowPilot } from "@/components/workflow-pilot"
 import { waLink } from "@/lib/dutaos"
+import { postWithCsrf } from "@/lib/csrf"
 import { useLanguage } from "@/hooks/use-language"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
 import { LiveFeed } from "@/components/live-feed"
@@ -105,15 +106,11 @@ export function HomePage() {
   const handleWaSignup = async () => {
     if (!waPhone) return
     try {
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await fetch("/api/send-email", postWithCsrf({
           name: waName || "WhatsApp Lead",
           phone: waPhone,
           source: "hero-whatsapp-signup",
-        }),
-      })
+        }))
     } catch {}
     setWaSubmitted(true)
   }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useLanguage } from "@/hooks/use-language"
+import { postWithCsrf } from "@/lib/csrf"
 import type { TranslationKey } from "@/i18n/translations"
 
 type QuizState = "intro" | "q1" | "q2" | "q3" | "loading" | "results" | "error"
@@ -109,10 +110,7 @@ export function QuizPage() {
   const handleLeadSubmit = async () => {
     setSubmittingLead(true)
     try {
-      const res = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const res = await fetch("/api/send-email", postWithCsrf({
           name: result?.tier || "Audit Lead",
           phone: "via-audit",
           email: `${Date.now()}@audit.local`,
@@ -120,8 +118,7 @@ export function QuizPage() {
           source: "quiz-results",
           tier: result?.tier,
           score: result?.score,
-        }),
-      })
+        }))
       if (res.ok) setLeadSent(true)
     } catch {
       // Fail silently — WhatsApp is the primary CTA

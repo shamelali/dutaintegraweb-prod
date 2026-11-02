@@ -3,6 +3,7 @@ import { CheckCircle2, MonitorCog, Package, PenTool, Settings2, ArrowLeft, Loade
 import { useLanguage } from "@/hooks/use-language"
 import type { TranslationKey } from "@/i18n/translations"
 import { waLink } from "@/lib/dutaos"
+import { postWithCsrf } from "@/lib/csrf"
 
 /**
  * ProposalForm — the 3-step + success-state "fixed-price proposal" funnel
@@ -77,10 +78,7 @@ export function ProposalForm() {
     e.preventDefault()
     setSubmitting(true)
     try {
-      await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await fetch("/api/send-email", postWithCsrf({
           name: formData.name,
           email: formData.email,
           company: formData.company,
@@ -88,8 +86,7 @@ export function ProposalForm() {
           service: `Proposal request — ${formData.bottleneck} (${formData.staffSize} staff)`,
           message: `V2 proposal funnel: bottleneck=${formData.bottleneck}, staff=${formData.staffSize}, whatsapp=+60${formData.whatsapp}`,
           source: "proposal-form",
-        }),
-      }).catch(() => undefined) // lead capture is best-effort; never block the UX
+        })).catch(() => undefined) // lead capture is best-effort; never block the UX
     } finally {
       setSubmitting(false)
       setStep(4)

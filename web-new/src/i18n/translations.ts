@@ -299,6 +299,10 @@ export const translations = {
     en: "IT Security & PDPA Compliance",
     bm: "Keselamatan IT & Pematuhan PDPA",
   },
+  svc4Desc: {
+    en: "Protect your business from cyber threats and ensure you're fully compliant with Malaysia's Personal Data Protection Act (PDPA) 2010.",
+    bm: "Lindungi perniagaan anda daripada ancaman siber dan pastikan anda mematuhi sepenuhnya Akta Perlindungan Data Peribadi Malaysia (PDPA) 2010.",
+  },
   svc5Title: {
     en: "Business Intelligence",
     bm: "Kecerdasan Perniagaan",
@@ -479,6 +483,10 @@ export const translations = {
     en: "Support",
     bm: "Sokongan",
   },
+  svcStep4Desc: {
+    en: "We don't disappear after delivery — ongoing support and optimisation is part of the package.",
+    bm: "Kami tidak hilang selepas penghantaran — sokongan berterusan dan pengoptimuman adalah sebahagian daripada pakej.",
+  },
   svcCtaTitle: {
     en: "Not Sure Which Service You Need?",
     bm: "Tidak Pasti Perkhidmatan Yang Anda Perlukan?",
@@ -598,6 +606,10 @@ export const translations = {
   aboutVal2Title: {
     en: "Partnership, Not Transaction",
     bm: "Perkongsian, Bukan Transaksi",
+  },
+  aboutVal2Desc: {
+    en: "We're not here for one-off jobs. We aim to be your long-term technology partner as your business grows.",
+    bm: "Kami bukan di sini untuk kerja sekali sahaja. Kami berhasrat menjadi rakan kongsi teknologi jangka panjang anda apabila perniagaan anda berkembang.",
   },
   aboutVal3Title: {
     en: "Speed With Substance",
