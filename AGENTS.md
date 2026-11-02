@@ -99,14 +99,16 @@ the zone has no page/origin/cache rule pinning it. The durable fix is therefore 
 a purge; it is setting **Edge Cache TTL to "Respect origin"** (or 0) in the dashboard
 (Speed → Caching → Configuration), which the `wrangler`/API token cannot do — it holds
 Cache Purge but its `PATCH /zones/*/settings/*` returns `9109`/`10000`. It self-heals
-once the object's 2 h lifetime lapses. `/* → max-age=0, must-revalidate` in
+once the object's 2 h lifetime lapses — **and it has**: re-probed 2026-11-02 after the
+`d5faaec6` deploy, `https://dutaintegra.my/pricing` now returns the 2004 B React shell
+referencing `index-CTfBlD16.js`, not the 17544 B legacy page. `/* → max-age=0, must-revalidate` in
 `public/_headers` is correct but is *currently overridden* by that `edge_cache_ttl`
 until the TTL is lowered. The other four should be retired one at a time, each gated
 first: React parity for `/services` / `/about` / `/contact` / `/quiz` has **not** been
 checked against their static twins, so deleting them wholesale could drop real content.
 
-**Lead capture was fully dead in production (found 2026-11-02), fixed in `main` but
-NOT yet deployed.** Two independent bugs on `/api/send-email`, both proven with
+**Lead capture was fully dead in production (found 2026-11-02), fixed in `main` and
+now DEPLOYED (2026-11-02, `d5faaec6`).** Two independent bugs on `/api/send-email`, both proven with
 `wrangler pages dev public` (workerd is the same runtime Pages uses):
 
 1. **`crypto.randomUUID` detached → `Illegal invocation`.** The four `*-cloudflare.mjs`
@@ -128,9 +130,12 @@ The server `npm test` suite also carried a stale assertion that `Web/pricing.htm
 200 — the twin was removed in `1f46ad1`, so the Node static server correctly 404s it; the
 test now targets the still-present `audit.html`. After both fixes: `npm test` 291/291,
 `npm --prefix web-new run test:web` 17/17, `tsc` clean, and `/api/send-email` returns
-`200 {success:true}` under `wrangler pages dev`. **Until someone runs `npm run cf:deploy`
-production still 403s (React) / 500s (legacy) on every lead** — this repo push changes
-nothing live (the `dutaintegra` Pages project has no git integration).
+`200 {success:true}` under `wrangler pages dev`. **Deployed 2026-11-02 via `npm run cf:deploy`
+(deployment `d5faaec6`, bundle `index-CTfBlD16.js`).** Verified on the apex: a tokenless
+`POST /api/send-email` carrying `Origin` still returns **403** (the fail-closed gate is live and
+rejects before any datastore write), and `/` + `/pricing` now serve the new React shell. The
+happy-path `200 {success:true}` was proven locally under workerd; it was *not* re-probed against
+production, because a valid-CSRF POST would write a real (fabricated) enquiry row into Supabase.
 
 **Production now matches `main` (2026-10-30).** Until then it was 34 commits
 behind: `https://dutaintegra.my/` served `assets/index-B54e6WfU.js`, the bundle
@@ -146,7 +151,7 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `a28c582b` (2026-11-02) is live — bundle `index-DVxWREAk.js`. It carries the removed `pricing.html` twin (so the origin resolves `/pricing` to the React landing) and the new `/* → max-age=0, must-revalidate` header. Caveat: a stale edge object for the *exact* `/pricing` key survives every purge because the zone's Enterprise `edge_cache_ttl=7200` overrides `max-age=0`; lower Edge Cache TTL to "Respect origin" in the dashboard (the token lacks Zone Settings Edit). Only `npm run cf:deploy` changes it. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `d5faaec6` (2026-11-02) is live — bundle `index-CTfBlD16.js` (glassmorphic DutaOS showcase + the lead-capture fix). It carries the removed `pricing.html` twin, so `/pricing` now serves the 2 KB React shell — the earlier stale edge object for the exact `/pricing` key has since lapsed its `edge_cache_ttl=7200` lifetime and revalidated to origin (probed 2026-11-02). Only `npm run cf:deploy` changes it. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
 Pushing `main` still does not ship, and neither problem is git: the project
@@ -173,7 +178,7 @@ wrangler pages dev public --port 8791 --ip 127.0.0.1   # must print "Ready", not
 
 Two loose ends worth remembering:
 
-- `public/` carries the current bundle (`index-DVxWREAk.js`); `npm run
+- `public/` carries the current bundle (`index-CTfBlD16.js`); `npm run
   build:web` syncs it along with `Web/` via `scripts/sync-web.mjs`. The Pages
   project deploys whatever is in `public/` at upload time, so re-check it
   before `npm run cf:deploy`.
