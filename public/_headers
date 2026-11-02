@@ -23,6 +23,16 @@
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
+# The SPA app shell is served at extensionless routes (/pricing, /services,
+# /about, /contact, /quiz, /billing) via the /* -> /index.html fallback. With no
+# Cache-Control here, Cloudflare applies its default ~7-day shared cache to those
+# HTML responses, so a marketing deploy stays invisible until the cache is
+# purged. Revalidate on every load so deploys show immediately; the JS/CSS stay
+# immutable and cached under /assets/* (content-hashed), so this only adds cheap
+# 304 revalidations of the ~2 KB shell.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 # API routes - no cache, CORS handled by Functions
 /api/*
   Cache-Control: no-store
