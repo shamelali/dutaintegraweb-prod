@@ -82,6 +82,7 @@ import {
   handlePaymentsList,
   handleHitpayWebhook,
   handleBillplzWebhook,
+  handleHerepayWebhook,
 } from "./payments.mjs";
 
 import {
@@ -1162,6 +1163,7 @@ export async function handleApi(req) {
     if (pathname === "/api/billing/payments") return await runNodeHandler(req, handlePaymentsList);
     if (pathname === "/api/payments/webhook/hitpay") return await runNodeHandler(req, handleHitpayWebhook);
     if (pathname === "/api/payments/webhook/billplz") return await runNodeHandler(req, handleBillplzWebhook);
+    if (pathname === "/api/payments/webhook/herepay") return await runNodeHandler(req, handleHerepayWebhook);
 
     // DutaOS AI — grounded on the company's compliance brief, audited in ai_actions
     if (pathname === "/api/dutaos/brief") return await runNodeHandler(req, handleDutaosBrief);

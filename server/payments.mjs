@@ -22,7 +22,7 @@ import { updateCompanySubscription } from "./companies.mjs";
 const PAYMENT_TABLE = "payments";
 const PAYMENT_STORE = "dutaos-payments";
 const CURRENCY = "MYR";
-const PROVIDERS = new Set(["hitpay", "billplz"]);
+const PROVIDERS = new Set(["hitpay", "billplz", "herepay"]);
 
 const PLANS = {
   starter: { amount: 79900 },
@@ -191,6 +191,15 @@ function billplzConfig() {
   };
 }
 
+function herepayConfig() {
+  return {
+    secretKey: process.env.HEREPAY_SECRET_KEY,
+    apiKey: process.env.HEREPAY_API_KEY,
+    privateKey: process.env.HEREPAY_PRIVATE_KEY,
+    baseUrl: process.env.HEREPAY_BASE_URL ?? "https://uat.herepay.org",
+  };
+}
+
 // ── provider: HitPay ───────────────────────────────────────────────────
 
 async function hitpayCreatePayment({ amount, orderId, description, returnUrl, callbackUrl, metadata }) {
@@ -263,6 +272,68 @@ function billplzVerifySignature(rawBody, signature, secretKey) {
   return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
+// ── provider: Herepay ────────────────────────────────────────────────────
+
+function herepayChecksum(fields, privateKey) {
+  const copy = { ...fields };
+  delete copy.checksum;
+  const sorted = Object.keys(copy).sort().reduce((obj, key) => {
+    obj[key] = copy[key];
+    return obj;
+  }, {});
+  const payload = Object.values(sorted).join(",");
+  return createHmac("sha256", privateKey).update(payload).digest("hex");
+}
+
+async function herepayCreatePayment({ amount, orderId, description, returnUrl, callbackUrl, name, email, phone, bankPrefix, metadata }) {
+  const cfg = herepayConfig();
+  if (!cfg.secretKey || !cfg.apiKey || !cfg.privateKey) throw new Error("Herepay not configured");
+  if (!bankPrefix) throw new Error("Herepay requires bank_prefix (customer's selected bank)");
+
+  const fields = {
+    name,
+    email,
+    phone: String(phone),
+    amount: String(amount),
+    description,
+    payment_code: orderId,
+    payment_method: "Online Banking",
+    bank_prefix: bankPrefix,
+    callback_url: callbackUrl,
+    redirect_url: returnUrl,
+  };
+  fields.checksum = herepayChecksum(fields, cfg.privateKey);
+
+  const formBody = new URLSearchParams(fields).toString();
+  const res = await fetch(`${cfg.baseUrl}/api/v1/herepay/initiate`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "SecretKey": cfg.secretKey,
+      "XApiKey": cfg.apiKey,
+    },
+    body: formBody,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Herepay payment creation failed: ${res.status} ${text}`);
+  }
+  // Herepay returns an HTML page that auto-redirects to the bank.
+  // We extract the form action URL (the bank's FPX page) from the HTML.
+  const html = await res.text();
+  const match = html.match(/<form[^>]*action=["']([^"']+)["']/i);
+  const checkoutUrl = match ? match[1] : null;
+  if (!checkoutUrl) throw new Error("Herepay did not return a redirect URL");
+  return { id: orderId, url: checkoutUrl };
+}
+
+function herepayVerifyChecksum(fields, privateKey) {
+  const expected = herepayChecksum(fields, privateKey);
+  const received = fields.checksum;
+  if (!received || expected.length !== received.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+}
+
 // ── checkout creation ──────────────────────────────────────────────────
 
 function siteBaseUrl(req) {
@@ -294,12 +365,30 @@ async function createCheckout(companyId, { provider, plan, baseUrl }) {
       callbackUrl,
       metadata,
     });
-  } else {
+  } else if (provider === "billplz") {
     providerResult = await billplzCreatePayment({
       amount,
       description,
       callbackUrl,
       redirectUrl: returnUrl,
+      metadata,
+    });
+  } else if (provider === "herepay") {
+    // Herepay requires customer details and bank selection
+    const customerName = metadata.customerName ?? "Customer";
+    const customerEmail = metadata.customerEmail ?? "";
+    const customerPhone = metadata.customerPhone ?? "0123456789";
+    const bankPrefix = metadata.bankPrefix;
+    providerResult = await herepayCreatePayment({
+      amount,
+      orderId,
+      description,
+      returnUrl,
+      callbackUrl,
+      name: customerName,
+      email: customerEmail,
+      phone: customerPhone,
+      bankPrefix,
       metadata,
     });
   }
@@ -355,6 +444,29 @@ async function processBillplzWebhook(rawBody, headers) {
     await upgradeCompany(payment.companyId, payment.plan);
   }
   return { status: 200, body: { received: true } };
+}
+
+async function processHerepayWebhook(rawBody, headers) {
+  const cfg = herepayConfig();
+  const contentType = headers["content-type"] ?? "";
+  let fields;
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams(rawBody.toString("utf8"));
+    fields = Object.fromEntries(params.entries());
+  } else {
+    try { fields = JSON.parse(rawBody.toString("utf8")); } catch { return { status: 400, body: { error: "Invalid payload" } }; }
+  }
+  if (!herepayVerifyChecksum(fields, cfg.privateKey)) {
+    return { status: 401, body: { error: "Invalid checksum" } };
+  }
+  const orderId = fields.payment_code;
+  const statusCode = fields.status_code;
+  const status = statusCode === "00" ? "paid" : statusCode === "29" ? "pending" : "failed";
+  const payment = await updatePaymentStatusByOrderId(orderId, status, fields.reference_code ?? null);
+  if (payment && status === "paid") {
+    await upgradeCompany(payment.companyId, payment.plan);
+  }
+  return { status: 200, body: "OK" };
 }
 
 async function updatePaymentStatusByOrderId(orderId, status, providerPaymentId) {
@@ -446,6 +558,21 @@ async function handleBillplzWebhook(req, res) {
   return sendJson(res, result.status, result.body);
 }
 
+async function handleHerepayWebhook(req, res) {
+  if (req.method !== "POST") return sendJson(res, 405, { error: "Method not allowed" });
+  const rl = webhookRateLimit(req);
+  if (!rl.allowed) return sendJson(res, 429, { error: "Too many requests" });
+  const rawBody = await readRawBody(req);
+  const result = await processHerepayWebhook(rawBody, req.headers);
+  // Herepay expects plain text "OK" response
+  if (result.status === 200) {
+    res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    res.end("OK");
+  } else {
+    return sendJson(res, result.status, result.body);
+  }
+}
+
 function webhookRateLimit(req) {
   const ip = String(req.headers["x-forwarded-for"] ?? "").split(",")[0]?.trim() || "unknown";
   return rateLimit(`payments-webhook:${ip}`, Date.now(), 60, 60_000);
@@ -472,4 +599,5 @@ export {
   handlePaymentsList,
   handleHitpayWebhook,
   handleBillplzWebhook,
+  handleHerepayWebhook,
 };
