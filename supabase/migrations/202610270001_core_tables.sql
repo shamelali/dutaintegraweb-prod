@@ -30,13 +30,14 @@ create table if not exists public.clients (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text not null unique,
-  password_hash text not null,
+  password_hash text,
   company text,
   tier text,
   status text,
   role text not null default 'client',
   created_at timestamptz default now()
 );
+alter table public.clients add column if not exists role text not null default 'client';
 
 create table if not exists public.tickets (
   id uuid primary key default gen_random_uuid(),

@@ -31,6 +31,7 @@ import {
   createSupabaseClient,
   verifyUser,
   supabaseConfigured,
+  getSupabaseConfig,
 } from "./supabase-client.mjs";
 
 // ── Security ────────────────────────────────────────────────────────────────────
@@ -108,6 +109,19 @@ async function sbRest(path, init = {}) {
       ...(init.headers ?? {}),
     },
   });
+}
+
+/**
+ * Look up a Supabase Auth user by email via the Auth admin API.
+ * Used to adopt an Auth user that already exists when creating its clients row.
+ */
+async function findAuthUserByEmail(email) {
+  const { AUTH_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+  const res = await fetch(`${AUTH_BASE}/admin/users`, { headers: SERVICE_HEADERS });
+  if (!res.ok) return null;
+  const body = await res.json();
+  const users = Array.isArray(body) ? body : (body.users ?? []);
+  return users.find((u) => String(u.email ?? "").toLowerCase() === email) ?? null;
 }
 
 function parseCookie(req) {
@@ -529,24 +543,39 @@ export async function handleAdminClients(req) {
     if (!name || !email || !password) {
       return sendJson(new Headers(), 400, { error: "name, email, and password are required" });
     }
-    const existing = await findClientByEmail(email.toLowerCase().trim());
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = await findClientByEmail(normalizedEmail);
     if (existing) return sendJson(new Headers(), 409, { error: "A client with this email already exists" });
 
-    // Create Supabase Auth user
+    // Create Supabase Auth user. The REST admin API returns the user object at the
+    // top level (not wrapped in { data: { user } }), so `data` is the user itself.
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password,
       email_confirm: true,
       user_metadata: { name, company, tier: tier || "foundation", role: role || "client" },
     });
-    if (error || !data.user) {
-      return sendJson(new Headers(), 400, { error: error?.message || "Failed to create auth user" });
+    let authUserId;
+    if (error) {
+      // Idempotent retry: if the Auth user already exists (409/422 "already registered"),
+      // adopt it by creating the clients row from the existing Auth user.
+      if (/already/i.test(error.message || "") || /email_exists/i.test(error.message || "") || /422|409/.test(error.message || "")) {
+        const authUser = await findAuthUserByEmail(normalizedEmail);
+        if (!authUser) {
+          return sendJson(new Headers(), 409, { error: "Auth user exists but could not be resolved" });
+        }
+        authUserId = authUser.id;
+      } else {
+        return sendJson(new Headers(), 400, { error: error.message || "Failed to create auth user" });
+      }
+    } else {
+      authUserId = data.id;
     }
 
     const client = await createClient({
-      id: data.user.id,
+      id: authUserId,
       name: name.trim(),
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       passwordHash: null,
       company: company?.trim() || null,
       tier,

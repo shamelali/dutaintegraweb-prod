@@ -22,7 +22,7 @@ export function supabaseConfigured() {
   return Boolean(process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
 }
 
-function getSupabaseConfig() {
+export function getSupabaseConfig() {
   if (cachedConfig) return cachedConfig;
   const url = process.env.SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -98,6 +98,7 @@ export const supabaseAdmin = {
   auth: {
     admin: {
       createUser: async ({ email, password, email_confirm, user_metadata }) => {
+        const { AUTH_BASE, SERVICE_HEADERS } = getSupabaseConfig();
         const response = await fetch(`${AUTH_BASE}/admin/users`, {
           method: "POST",
           headers: {

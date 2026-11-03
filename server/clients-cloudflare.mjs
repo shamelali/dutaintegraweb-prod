@@ -140,9 +140,9 @@ export async function deleteClient(id) {
 }
 
 /** Create a new client record with defaults. */
-export async function createClient({ name, email, passwordHash, company, tier, role }) {
+export async function createClient({ id, name, email, passwordHash, company, tier, role }) {
   const client = {
-    id: crypto.randomUUID(),
+    id: id ?? crypto.randomUUID(),
     name,
     email: email.toLowerCase().trim(),
     passwordHash,
