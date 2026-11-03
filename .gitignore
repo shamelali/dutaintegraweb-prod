@@ -7,8 +7,12 @@ pnpm-lock.yaml
 # local env (keep the example)
 .env*
 !.env.example
+/.dev.vars
 /env
 /env.*
+
+# Python bytecode cache
+__pycache__/
 
 # runtime data — JSONL fallback stores. The README is tracked; its
 # contents never are.
