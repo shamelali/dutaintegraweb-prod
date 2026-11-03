@@ -1768,6 +1768,10 @@ export const translations = {
     en: "IT Response Time",
     bm: "Masa Respons IT",
   },
+  impactCalcNote: {
+    en: "Savings are estimates based on an assumed labour cost of RM 25/hour for Malaysian SMEs — enter your own rate in the leakage calculator. Revenue influenced is not revenue directly generated.",
+    bm: "Jimatan ialah anggaran berdasarkan kos buruh anggaran RM25/jam untuk SME Malaysia — masukkan kadar anda sendiri dalam kalkulator kebocoran. Pendapatinya dipengaruhi bukan pendapatan yang dihasilkan secara langsung.",
+  },
   convTrust1: {
     en: "saved for clients through automation",
     bm: "dijimatkan untuk pelanggan melalui automasi",
@@ -2329,16 +2333,16 @@ export const translations = {
     bm: "Sistem WhatsApp-ke-Resapan",
   },
   pilotHeroTitle: {
-    en: "Turn WhatsApp enquiries into leads your team actually follows up.",
-    bm: "Ubah tanya balas WhatsApp menjadi resapan yang pasukan Anda sebenarnya mengejar.",
+    en: "Stop letting WhatsApp enquiries go untracked.",
+    bm: "Jangan biarkan tanya balas WhatsApp tidak ditangani.",
   },
   pilotHeroDesc: {
-    en: "Capture, prioritize, and follow up enquiries — with human approval controls.",
-    bm: "Tangkap, utamakan, dan ikuti tanya balas — dengan kawalan lulusan manusia.",
+    en: "Capture, prioritize, and follow up leads—with human approval for sensitive actions. Test one workflow for 30 days.",
+    bm: "Tangkap, utamakan, dan ikuti resapan—dengan kelulusan manusia untuk tindakan sensitif. Uji satu aliran kerja selama 30 hari.",
   },
   pilotHeroCta: {
-    en: "Book the 30-day pilot — RM999",
-    bm: "Tempah pilot 30 hari — RM999",
+    en: "Book the RM999 pilot",
+    bm: "Tempah pilot RM999",
   },
   pilotHeroCta2: {
     en: "Watch a 2-minute demo",
@@ -2352,16 +2356,16 @@ export const translations = {
     bm: "Apa yang termasuk dalam pilot",
   },
   pilotPricePilot: {
-    en: "RM999 — 30-day pilot: setup, one workflow, and human-approval controls.",
-    bm: "RM999 — Pilot 30 hari: pemasangan, satu aliran kerja, dan kawalan lulusan manusia.",
+    en: "RM999 — 30-day pilot: setup, one workflow, and human-approval controls. Credits toward your first month if you continue.",
+    bm: "RM999 — Pilot 30 hari: pemasangan, satu aliran kerja, dan kawalan lulusan manusia. Kredit ke bulan pertama jika anda terus.",
   },
   pilotPriceOngoing: {
-    en: "RM1,199/month add-on — requires an active managed IT plan.",
-    bm: "RM1,199/bulan tambahan — memerlukan ancangan IT terurus yang aktif.",
+    en: "RM1,199/month after the pilot — requires an active managed IT plan.",
+    bm: "RM1,199/bulan selepas pilot — memerlukan ancangan IT terurus yang aktif.",
   },
   pilotPriceCondition: {
-    en: "Ongoing support is only available with an active managed IT plan. No hidden setup fees.",
-    bm: "Sokongan berterusan hanya tersedia dengan ancangan IT terurus yang aktif. Tiada cagaran pemasangan tersembunyi.",
+    en: "No commitment to continue after the pilot. Pause anytime with no lock-in. No hidden setup fees.",
+    bm: "Tiada komitmen untuk terus selepas pilot. Anda boleh jeda sebarang masa tanpa penguncian. Tiada cagaran pemasangan tersembunyi.",
   },
 
   /* ── Shortened booking form ─────────────────────────────────── */
@@ -2405,6 +2409,66 @@ export const translations = {
   pilotFaq2Answer: {
     en: "The pilot itself is standalone. Ongoing support after the pilot requires an active managed IT plan. No hidden setup fees.",
     bm: "Pilot adalah mandiri. Sokongan berterusan selepas pilot memerlukan ancangan IT terurus yang aktif. Tiada cagaran pemasangan tersembunyi.",
+  },
+  rightForYouBadge: {
+    en: "Is This Right for You?",
+    bm: "Adakah Ini Tepat untuk Anda?",
+  },
+  rightForYouTitle: {
+    en: "Is the 30-day pilot right for your business?",
+    bm: "Adakah pilot 30 hari tepat untuk perniagaan anda?",
+  },
+  rightForYouDesc: {
+    en: "Best fit: teams that receive regular WhatsApp enquiries and need consistent follow-up. A pilot needs WhatsApp access, a small test group, and one workflow to improve.",
+    bm: "Cocok utama: pasukan yang menerima tanya balas WhatsApp secara biasa dan memerlukan ikutan selari. Pilot memerlukan akses WhatsApp, kumpulan ujian kecil, dan satu aliran kerja untuk diperbaiki.",
+  },
+  rightForYouFit1: {
+    en: "Sales or ops teams receiving 10+ WhatsApp enquiries weekly",
+    bm: "Pasukan jualan atau operasi menerima 10+ tanya balas WhatsApp mingguan",
+  },
+  rightForYouFit2: {
+    en: "Follow-ups that fall through the cracks",
+    bm: "Ikutan yang terlewat di antara retakan",
+  },
+  rightForYouFit3: {
+    en: "One clear workflow you want to fix in 30 days",
+    bm: "Satu aliran kerja jelas yang anda ingin perbaiki dalam 30 hari",
+  },
+  rightForYouRequires1: {
+    en: "WhatsApp Business number you control",
+    bm: "Nombor WhatsApp Perniagaan yang anda kontrol",
+  },
+  rightForYouRequires2: {
+    en: "A small test group or sample records",
+    bm: "Kumpulan ujian kecil atau rekod sampel",
+  },
+  rightForYouRequires3: {
+    en: "One workflow to measure before and after",
+    bm: "Satu aliran kerja untuk diukur sebelum dan selepas",
+  },
+  pilotFaq3Question: {
+    en: "How long does setup take?",
+    bm: "Berapa masa pemasangan mengambil?",
+  },
+  pilotFaq3Answer: {
+    en: "About one week: a 20-minute process review, module setup, and tool connections before going live.",
+    bm: "Kira-kira seminggu: semakan proses 20 minit, pemasangan modul, dan sambungan alat sebelum hidup.",
+  },
+  pilotFaq4Question: {
+    en: "Do I need a WhatsApp Business account?",
+    bm: "Adakah saya perlu akaun WhatsApp Perniagaan?",
+  },
+  pilotFaq4Answer: {
+    en: "Yes. The pilot captures and follows up enquiries through your WhatsApp Business number.",
+    bm: "Ya. Pilot menangkap dan menyusul tanya balas melalui nombor WhatsApp Perniagaan anda.",
+  },
+  pilotFaq5Question: {
+    en: "Are there usage charges beyond the pilot fee?",
+    bm: "Adakah cagaran penggunaan selang dari cagaran pilot?",
+  },
+  pilotFaq5Answer: {
+    en: "No usage charges during the 30-day pilot. Ongoing support at RM1,199/month requires an active managed IT plan.",
+    bm: "Tiada cagaran penggunaan semasa pilot 30 hari. Sokongan berterusan pada RM1,199/bulan memerlukan ancangan IT terurus yang aktif.",
   },
   dutaosIllustrative: {
     en: "Illustrative mock — not a live product screenshot",

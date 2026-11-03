@@ -79,6 +79,22 @@ const FAQ_ITEMS: { questionKey: TranslationKey; answerKey: TranslationKey }[] = 
   { questionKey: "faq6Question", answerKey: "faq6Answer" },
   { questionKey: "pilotFaq1Question", answerKey: "pilotFaq1Answer" },
   { questionKey: "pilotFaq2Question", answerKey: "pilotFaq2Answer" },
+  { questionKey: "pilotFaq3Question", answerKey: "pilotFaq3Answer" },
+  { questionKey: "pilotFaq4Question", answerKey: "pilotFaq4Answer" },
+  { questionKey: "pilotFaq5Question", answerKey: "pilotFaq5Answer" },
+]
+
+// "Is this right for you?" — best fit + pilot requirements.
+const RIGHT_FOR_YOU: TranslationKey[] = [
+  "rightForYouFit1",
+  "rightForYouFit2",
+  "rightForYouFit3",
+]
+
+const PILOT_REQUIRES: TranslationKey[] = [
+  "rightForYouRequires1",
+  "rightForYouRequires2",
+  "rightForYouRequires3",
 ]
 
 // "What you'll get" checklist items under the assessment CTA.
@@ -311,8 +327,6 @@ export function HomePage() {
 
           <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 reveal reveal-delay-1">
             {t("pilotHeroTitle")}
-            <br />
-            <span className="text-electric">{t("pilotHeroCta")}</span>
           </h1>
 
           <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8 reveal reveal-delay-2">
@@ -362,6 +376,11 @@ export function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Impact calculation note */}
+          <p className="text-xs text-white/40 max-w-2xl mx-auto mt-6 reveal reveal-delay-6">
+            {t("impactCalcNote")}
+          </p>
         </div>
       </section>
 
@@ -373,6 +392,46 @@ export function HomePage() {
 
       {/* How we work — low-risk pilot entry point */}
       <WorkflowPilot />
+
+      {/* Is this right for you? — self-qualification + pilot requirements */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 reveal">{t("rightForYouBadge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground reveal reveal-delay-1">
+              {t("rightForYouTitle")}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto reveal reveal-delay-2">
+              {t("rightForYouDesc")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4 reveal">
+              <h3 className="text-lg font-heading font-semibold text-foreground">Best fit</h3>
+              <ul className="space-y-3">
+                {RIGHT_FOR_YOU.map((key) => (
+                  <li key={key} className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <Check className="w-4 h-4 text-electric shrink-0 mt-0.5" />
+                    <span>{t(key)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-4 reveal reveal-delay-1">
+              <h3 className="text-lg font-heading font-semibold text-foreground">What a pilot needs</h3>
+              <ul className="space-y-3">
+                {PILOT_REQUIRES.map((key) => (
+                  <li key={key} className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <Check className="w-4 h-4 text-electric shrink-0 mt-0.5" />
+                    <span>{t(key)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Services Grid */}
       <section ref={servicesRef} className="py-20 px-6">
