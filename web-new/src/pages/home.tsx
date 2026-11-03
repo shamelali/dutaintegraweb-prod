@@ -31,46 +31,6 @@ const whyItems = [
   { num: "04", icon: Flag, titleKey: "idxWhy4Title" as TranslationKey, descKey: "idxWhy4Desc" as TranslationKey },
 ]
 
-// Hero variants: product-led DutaOS hero (50%) vs the two pain-led variants (25% each).
-const heroVariants = [
-  {
-    badgeKey: "dutaosHeroBadge" as TranslationKey,
-    titleKey: "dutaosHeroTitle" as TranslationKey,
-    highlightKey: "dutaosHeroHighlight" as TranslationKey,
-    descKey: "dutaosHeroDesc" as TranslationKey,
-    ctaKey: "dutaosHeroCta1" as TranslationKey,
-    ctaKind: "whatsapp" as const,
-    cta2Key: "dutaosHeroCta2" as TranslationKey,
-    cta2Kind: "anchor" as const,
-    cta2Href: "#modules",
-    weight: 2,
-  },
-  {
-    badgeKey: "convBadgeA" as TranslationKey,
-    titleKey: "convHeroATitle" as TranslationKey,
-    highlightKey: "convHeroAHighlight" as TranslationKey,
-    descKey: "convHeroADesc" as TranslationKey,
-    ctaKey: "convHeroACta" as TranslationKey,
-    ctaKind: "quiz" as const,
-    cta2Key: "idxHeroBtn2" as TranslationKey,
-    cta2Kind: "link" as const,
-    cta2Href: "/services",
-    weight: 1,
-  },
-  {
-    badgeKey: "convBadgeB" as TranslationKey,
-    titleKey: "convHeroBTitle" as TranslationKey,
-    highlightKey: "convHeroBHighlight" as TranslationKey,
-    descKey: "convHeroBDesc" as TranslationKey,
-    ctaKey: "convHeroBCta" as TranslationKey,
-    ctaKind: "quiz" as const,
-    cta2Key: "idxHeroBtn2" as TranslationKey,
-    cta2Kind: "link" as const,
-    cta2Href: "/services",
-    weight: 1,
-  },
-]
-
 // Trust badges row — 3 lightweight pills under the hero CTA.
 const TRUST_BADGES: TranslationKey[] = ["idxTrustBadge1", "idxTrustBadge2", "idxTrustBadge3"]
 
@@ -117,6 +77,8 @@ const FAQ_ITEMS: { questionKey: TranslationKey; answerKey: TranslationKey }[] = 
   { questionKey: "faq4Question", answerKey: "faq4Answer" },
   { questionKey: "faq5Question", answerKey: "faq5Answer" },
   { questionKey: "faq6Question", answerKey: "faq6Answer" },
+  { questionKey: "pilotFaq1Question", answerKey: "pilotFaq1Answer" },
+  { questionKey: "pilotFaq2Question", answerKey: "pilotFaq2Answer" },
 ]
 
 // "What you'll get" checklist items under the assessment CTA.
@@ -305,23 +267,13 @@ export function HomePage() {
   const whyRef = useScrollReveal()
   const trustRef = useScrollReveal()
 
-  // Weighted split: DutaOS product-led 50%, pain-led variants 25% each
-  const [variant] = useState(() => {
-    const total = heroVariants.reduce((sum, v) => sum + v.weight, 0)
-    let roll = Math.random() * total
-    for (let i = 0; i < heroVariants.length; i++) {
-      roll -= heroVariants[i].weight
-      if (roll < 0) return i
-    }
-    return 0
-  })
-  const hero = heroVariants[variant]
-  const heroCtaHref = hero.ctaKind === "whatsapp" ? waLink(t("dutaosHeroWaMsg")) : "/quiz"
-
-  // WhatsApp signup
-  const [waName, setWaName] = useState("")
-  const [waPhone, setWaPhone] = useState("")
-  const [waSubmitted, setWaSubmitted] = useState(false)
+  // Pilot booking form
+  const [pilotName, setPilotName] = useState("")
+  const [pilotEmail, setPilotEmail] = useState("")
+  const [pilotCompany, setPilotCompany] = useState("")
+  const [pilotVolume, setPilotVolume] = useState("")
+  const [pilotTime, setPilotTime] = useState("")
+  const [pilotSubmitted, setPilotSubmitted] = useState(false)
 
   // Sticky CTA visibility
   const [showSticky, setShowSticky] = useState(false)
@@ -331,73 +283,73 @@ export function HomePage() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
-  const handleWaSignup = async () => {
-    if (!waPhone) return
+  const handlePilotSignup = async () => {
+    if (!pilotEmail || !pilotVolume) return
     try {
       await fetch("/api/send-email", postWithCsrf({
-          name: waName || "WhatsApp Lead",
-          phone: waPhone,
-          source: "hero-whatsapp-signup",
+          name: pilotName || "Pilot Lead",
+          email: pilotEmail,
+          company: pilotCompany || "",
+          volume: pilotVolume,
+          time: pilotTime || "",
+          source: "pilot-booking",
         }))
     } catch {}
-    setWaSubmitted(true)
+    setPilotSubmitted(true)
   }
 
   return (
     <>
-      {/* Hero — Pain-led A/B test */}
+      {/* Hero — outcome-focused pilot offer */}
       <section ref={heroRef} className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 md:py-28">
         <DataFabricBackdrop />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,212,255,0.08),transparent_50%)]" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
           <Badge variant="electric" className="mb-6 reveal">
-            {t(hero.badgeKey)}
+            {t("pilotHeroBadge")}
           </Badge>
 
           <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 reveal reveal-delay-1">
-            {t(hero.titleKey)}
+            {t("pilotHeroTitle")}
             <br />
-            <span className="text-electric">{t(hero.highlightKey)}</span>
+            <span className="text-electric">{t("pilotHeroCta")}</span>
           </h1>
 
           <p className="text-lg text-white/60 max-w-2xl mx-auto mb-8 reveal reveal-delay-2">
-            {t(hero.descKey)}
+            {t("pilotHeroDesc")}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 reveal reveal-delay-3">
             <Button asChild variant="electric" size="xl">
-              {hero.ctaKind === "whatsapp" ? (
-                <a href={heroCtaHref} target="_blank" rel="noopener noreferrer">
-                  <span className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    {t(hero.ctaKey)}
-                  </span>
-                </a>
-              ) : (
-                <Link to="/quiz">
-                  <span className="flex items-center gap-2">
-                    {t(hero.ctaKey)}
-                    <ArrowRight className="w-5 h-5" />
-                  </span>
-                </Link>
-              )}
+              <a href={waLink(t("pilotCtaWaMsg"))} target="_blank" rel="noopener noreferrer">
+                <span className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  {t("pilotHeroCta")}
+                </span>
+              </a>
             </Button>
-            {hero.cta2Kind === "anchor" ? (
-              <Button asChild variant="outline" size="xl" className="border-white/20 text-white hover:bg-white/10">
-                <a href={hero.cta2Href}>{t(hero.cta2Key)}</a>
-              </Button>
-            ) : (
-              <Button asChild variant="outline" size="xl" className="border-white/20 text-white hover:bg-white/10">
-                <Link to={hero.cta2Href}>{t(hero.cta2Key)}</Link>
-              </Button>
-            )}
+            <Button asChild variant="outline" size="xl" className="border-white/20 text-white hover:bg-white/10">
+              <Link to="/contact">{t("pilotHeroCta2")}</Link>
+            </Button>
+          </div>
+
+          {/* Pricing clarification — beside the offer */}
+          <div className="max-w-md mx-auto reveal reveal-delay-4">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-left">
+              <h3 className="text-sm font-heading font-semibold text-electric mb-3 uppercase tracking-wide">
+                {t("pilotPriceTitle")}
+              </h3>
+              <p className="text-sm text-white/90 mb-2">{t("pilotPricePilot")}</p>
+              <p className="text-sm text-white/90 mb-2">{t("pilotPriceOngoing")}</p>
+              <p className="text-xs text-white/50">{t("pilotPriceCondition")}</p>
+            </div>
           </div>
 
           {/* Live AI Activity Feed */}
           <LiveFeed />
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto reveal reveal-delay-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto reveal reveal-delay-5">
             {[
               { val: "3", labelKey: "convStat1" as TranslationKey },
               { val: "RM 240K+", labelKey: "convStat2" as TranslationKey },
@@ -491,6 +443,9 @@ export function HomePage() {
             <h2 className="text-3xl md:text-4xl font-heading font-bold text-white reveal reveal-delay-1">
               {t("dutaosModulesTitle")}
             </h2>
+            <p className="text-xs text-white/40 mt-2 reveal reveal-delay-1">
+              {t("dutaosIllustrative")}
+            </p>
           </div>
           <DutaosPreview />
         </div>
@@ -547,59 +502,92 @@ export function HomePage() {
       {/* What you'll get — checklist under the assessment CTA */}
       <WhatYoullGet />
 
-      {/* WhatsApp One-Field Signup */}
+      {/* Pilot booking form */}
       <section className="py-20 px-6 bg-gradient-to-br from-navy to-slate-deep">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4 reveal">
-            {t("convWaTitle")}
+            {t("pilotPriceTitle")}
           </h2>
-          <p className="text-white/60 mb-8 reveal reveal-delay-1">{t("convWaDesc")}</p>
+          <p className="text-white/60 mb-8 reveal reveal-delay-1">{t("pilotHeroDesc")}</p>
 
-          {!waSubmitted ? (
+          {!pilotSubmitted ? (
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 max-w-md mx-auto reveal reveal-delay-2">
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <form onSubmit={(e) => { e.preventDefault(); handlePilotSignup() }} className="space-y-3">
                 <div className="space-y-1">
-                  <Label htmlFor="wa-name" className="text-white/60 text-xs">{t("convWaName")}</Label>
+                  <Label htmlFor="pilot-name" className="text-white/60 text-xs">{t("pilotFormName")}</Label>
                   <Input
-                    id="wa-name"
-                    value={waName}
-                    onChange={(e) => setWaName(e.target.value)}
+                    id="pilot-name"
+                    value={pilotName}
+                    onChange={(e) => setPilotName(e.target.value)}
                     placeholder="Ahmad"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="wa-phone" className="text-white/60 text-xs">{t("convWaPhone")} *</Label>
+                  <Label htmlFor="pilot-email" className="text-white/60 text-xs">{t("pilotFormEmail")}</Label>
                   <Input
-                    id="wa-phone"
-                    type="tel"
-                    value={waPhone}
-                    onChange={(e) => setWaPhone(e.target.value)}
-                    placeholder="012 345 6789"
+                    id="pilot-email"
+                    type="email"
+                    value={pilotEmail}
+                    onChange={(e) => setPilotEmail(e.target.value)}
+                    placeholder="ahmad@syarikat.com"
                     required
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
                   />
                 </div>
-              </div>
-              <Button
-                variant="electric"
-                className="w-full"
-                onClick={handleWaSignup}
-                disabled={!waPhone}
-              >
-                {t("convWaCta")}
-              </Button>
+                <div className="space-y-1">
+                  <Label htmlFor="pilot-company" className="text-white/60 text-xs">{t("pilotFormCompany")}</Label>
+                  <Input
+                    id="pilot-company"
+                    value={pilotCompany}
+                    onChange={(e) => setPilotCompany(e.target.value)}
+                    placeholder="Syarikat Sdn Bhd"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="pilot-volume" className="text-white/60 text-xs">{t("pilotFormVolume")}</Label>
+                  <Input
+                    id="pilot-volume"
+                    type="number"
+                    value={pilotVolume}
+                    onChange={(e) => setPilotVolume(e.target.value)}
+                    placeholder="50"
+                    required
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="pilot-time" className="text-white/60 text-xs">{t("pilotFormTime")}</Label>
+                  <Input
+                    id="pilot-time"
+                    type="text"
+                    value={pilotTime}
+                    onChange={(e) => setPilotTime(e.target.value)}
+                    placeholder="Isnin 10:00 pagi"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <Button
+                  variant="electric"
+                  className="w-full"
+                  onClick={handlePilotSignup}
+                  disabled={!pilotEmail || !pilotVolume}
+                >
+                  {t("pilotFormCta")}
+                </Button>
+              </form>
             </div>
           ) : (
             <div className="bg-electric/10 rounded-2xl p-6 max-w-md mx-auto reveal">
-              <p className="font-medium text-white mb-2">{t("convWaThanks")}</p>
+              <p className="font-medium text-white mb-2">{t("pilotFormCta")} — diterima.</p>
               <a
-                href="https://wa.me/601154034051?text=Hi%20Duta%20Integra!%20I%27m%20interested%20in%20your%20services."
+                href="https://wa.me/601154034051?text=Hi%20Duta%20Integra!%20Saya%20telah%20daftar%20untuk%20pilot%2030%20hari."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-electric font-semibold text-sm hover:underline"
               >
-                {t("convWaLink")}
+                {t("pilotCta")}
               </a>
             </div>
           )}

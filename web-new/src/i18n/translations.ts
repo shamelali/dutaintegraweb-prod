@@ -2322,6 +2322,95 @@ export const translations = {
     bm: "Dapatkan cadangan harga tetap",
   },
 
+  /* ── 30-day pilot hero (outcome-focused) ──────────────────────── */
+
+  pilotHeroBadge: {
+    en: "WhatsApp-to-Lead System",
+    bm: "Sistem WhatsApp-ke-Resapan",
+  },
+  pilotHeroTitle: {
+    en: "Turn WhatsApp enquiries into leads your team actually follows up.",
+    bm: "Ubah tanya balas WhatsApp menjadi resapan yang pasukan Anda sebenarnya mengejar.",
+  },
+  pilotHeroDesc: {
+    en: "Capture, prioritize, and follow up enquiries — with human approval controls.",
+    bm: "Tangkap, utamakan, dan ikuti tanya balas — dengan kawalan lulusan manusia.",
+  },
+  pilotHeroCta: {
+    en: "Book the 30-day pilot — RM999",
+    bm: "Tempah pilot 30 hari — RM999",
+  },
+  pilotHeroCta2: {
+    en: "Watch a 2-minute demo",
+    bm: "Tonton demonstrasi 2 minit",
+  },
+
+  /* ── Pilot pricing clarification ─────────────────────────────── */
+
+  pilotPriceTitle: {
+    en: "What the pilot includes",
+    bm: "Apa yang termasuk dalam pilot",
+  },
+  pilotPricePilot: {
+    en: "RM999 — 30-day pilot: setup, one workflow, and human-approval controls.",
+    bm: "RM999 — Pilot 30 hari: pemasangan, satu aliran kerja, dan kawalan lulusan manusia.",
+  },
+  pilotPriceOngoing: {
+    en: "RM1,199/month add-on — requires an active managed IT plan.",
+    bm: "RM1,199/bulan tambahan — memerlukan ancangan IT terurus yang aktif.",
+  },
+  pilotPriceCondition: {
+    en: "Ongoing support is only available with an active managed IT plan. No hidden setup fees.",
+    bm: "Sokongan berterusan hanya tersedia dengan ancangan IT terurus yang aktif. Tiada cagaran pemasangan tersembunyi.",
+  },
+
+  /* ── Shortened booking form ─────────────────────────────────── */
+
+  pilotFormName: {
+    en: "Name",
+    bm: "Nama",
+  },
+  pilotFormEmail: {
+    en: "Work email",
+    bm: "Emel kerja",
+  },
+  pilotFormCompany: {
+    en: "Company",
+    bm: "Syarikat",
+  },
+  pilotFormVolume: {
+    en: "Approx. monthly WhatsApp enquiries",
+    bm: "Perkiraan tanya balas WhatsApp setiap bulan",
+  },
+  pilotFormTime: {
+    en: "Preferred meeting time",
+    bm: "Masa mesyuarat yang dipilih",
+  },
+  pilotFormCta: {
+    en: "Book my pilot",
+    bm: "Tempah pilot saya",
+  },
+  pilotFaq1Question: {
+    en: "What happens after the 30-day pilot?",
+    bm: "Apakah yang berlaku selepas pilot 30 hari?",
+  },
+  pilotFaq1Answer: {
+    en: "You can roll into the ongoing managed IT plan at RM1,199/month, or pause with no lock-in. Your WhatsApp-to-lead setup stays yours.",
+    bm: "Anda boleh melangkah ke dalam ancangan IT terurus berterusan pada RM1,199/bulan, atau henti tanpa ikatan penguncian. Setup WhatsApp-ke-resapan anda tetap milik anda.",
+  },
+  pilotFaq2Question: {
+    en: "Do I need an existing managed IT plan?",
+    bm: "Adakah saya perlu ancangan IT terurus sedia ada?",
+  },
+  pilotFaq2Answer: {
+    en: "The pilot itself is standalone. Ongoing support after the pilot requires an active managed IT plan. No hidden setup fees.",
+    bm: "Pilot adalah mandiri. Sokongan berterusan selepas pilot memerlukan ancangan IT terurus yang aktif. Tiada cagaran pemasangan tersembunyi.",
+  },
+  dutaosIllustrative: {
+    en: "Illustrative mock — not a live product screenshot",
+    bm: "Contoh ilustrasi — bukan skrin produk sebenar",
+  },
+
   /* ── V2 Engineering Handoff Spec components ───────────────────── */
 
   // ProposalForm (§2) — 3-step fixed-price proposal funnel
