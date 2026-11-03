@@ -1,0 +1,41 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_ENV: "production"
+
+build:
+  stage: build
+  image: node:22
+  only:
+    - main
+  cache:
+    key:
+      files:
+        - web-new/package-lock.json
+      prefix: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - web-new/node_modules/
+  script:
+    - npm --prefix web-new ci
+    - npm --prefix web-new run build
+    - node scripts/sync-web.mjs
+  artifacts:
+    paths:
+      - public/
+    expire_in: 1 week
+
+deploy-pages:
+  stage: deploy
+  image: node:22
+  only:
+    - main
+  needs:
+    - build
+  script:
+    - npm install -g wrangler
+    - wrangler pages deploy public --project-name=dutaintegra
+  environment:
+    name: production
+    url: https://dutaintegra.my
