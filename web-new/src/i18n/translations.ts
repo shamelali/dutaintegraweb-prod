@@ -1547,6 +1547,174 @@ export const translations = {
     en: "© 2026 Duta Integra Solutions Sdn Bhd. All rights reserved.",
     bm: "© 2026 Duta Integra Solutions Sdn Bhd. Semua hak cipta terpelihara.",
   },
+
+  // ---- WIREFRAME SECTIONS (DI_completeWF) ----
+
+  // Trust badges under hero
+  idxTrustBadge1: {
+    en: "Local expertise in Malaysia",
+    bm: "Kecekaran tempatan di Malaysia",
+  },
+  idxTrustBadge2: {
+    en: "SME-focused and practical",
+    bm: "Fokus SME dan praktikal",
+  },
+  idxTrustBadge3: {
+    en: "People, process and technology",
+    bm: "Orang, proses dan teknologi",
+  },
+
+  // Problem navigator — "What do you need help with?"
+  idxNavigatorTitle: {
+    en: "What do you need help with?",
+    bm: "Apa yang anda perlukan bantuan?",
+  },
+  idxNavigatorSub: {
+    en: "Choose a topic to see how we can help.",
+    bm: "Pilih topik untuk melihat bagaimana kami boleh bantu.",
+  },
+  idxNavigator1Title: {
+    en: "IT Support & Reliability",
+    bm: "Sokongan IT & Kepercayaan",
+  },
+  idxNavigator1Desc: {
+    en: "Keep your systems running with local helpdesk, network security, and maintenance.",
+    bm: "Jaga sistem anda berjalan dengan sokongan helpdesk tempatan, keselamatan rangkaian, dan penyelenggaraan.",
+  },
+  idxNavigator2Title: {
+    en: "Cybersecurity & PDPA",
+    bm: "Keselamatan Siber & PDPA",
+  },
+  idxNavigator2Desc: {
+    en: "Protect your data, meet compliance requirements, and defend against cyber threats.",
+    bm: "Lindungi data anda, patuhi keperluan pematuhan, dan bertahan dari ancaman siber.",
+  },
+  idxNavigator3Title: {
+    en: "Cloud Costs & Migration",
+    bm: "Kos Awan & Pemindahan",
+  },
+  idxNavigator3Desc: {
+    en: "Move to the cloud smoothly and optimise what you spend.",
+    bm: "Pindah ke awan dengan lancar dan optimize apa yang anda belanja.",
+  },
+  idxNavigator4Title: {
+    en: "Automate Repetitive Work",
+    bm: "Automasi Kerja Berulang",
+  },
+  idxNavigator4Desc: {
+    en: "Streamline manual workflows with AI so your team focuses on higher-value work.",
+    bm: "Permudah aliran kerja manual dengan AI supaya pasukan anda fokus pada kerja bernilai lebih tinggi.",
+  },
+
+  // Case studies — "Real businesses. Real results."
+  caseStudy1: {
+    en: "Improved system uptime and reliability",
+    bm: "Tingkatkan ketersediaan dan kepercayaan sistem",
+  },
+  caseStudy1Client: {
+    en: "Manufacturing SME, Selangor",
+    bm: "SME Pembuatan, Selangor",
+  },
+  caseStudy1Result: {
+    en: "Verified outcome",
+    bm: "Keputusan disahkan",
+  },
+  caseStudy2: {
+    en: "Stronger security and PDPA readiness",
+    bm: "Keselamatan yang lebih kuat dan kesediaan PDPA",
+  },
+  caseStudy2Client: {
+    en: "Professional Services, Kuala Lumpur",
+    bm: "Perkhidmatan Profesional, Kuala Lumpur",
+  },
+  caseStudy2Result: {
+    en: "Verified outcome",
+    bm: "Keputusan disahkan",
+  },
+  caseStudy3: {
+    en: "Reduced cloud costs and improved efficiency",
+    bm: "Kurangkan kos awan dan tingkatkan kecekapan",
+  },
+  caseStudy3Client: {
+    en: "Retail & Distribution, Penang",
+    bm: "Runcitan & Pengedaran, Pulau Pinang",
+  },
+  caseStudy3Result: {
+    en: "Verified outcome",
+    bm: "Keputusan disahkan",
+  },
+
+  // FAQ accordion
+  faq1Question: {
+    en: "Do you offer long-term contracts?",
+    bm: "Adakah anda menawarkan kontrak jangka panjang?",
+  },
+  faq1Answer: {
+    en: "No. All engagements are month-to-month with no lock-in. You can scale up, adjust, or stop at any time.",
+    bm: "Tiada. Semua perkhidmatan adalah bulan ke bulan tanpa pengikatan. Anda boleh meningkatkan, menyesuaikan, atau menghentikan pada bila-bila masa.",
+  },
+  faq2Question: {
+    en: "How long does implementation take?",
+    bm: "Berapa masa pengambilalihan?",
+  },
+  faq2Answer: {
+    en: "Most implementations are live within 2–4 weeks after the proposal is signed, depending on scope.",
+    bm: "Sebarang pelaksanaan biasanya siap dalam 2–4 minggu selepas cadangan ditandatangani, bergantung kepada skop.",
+  },
+  faq3Question: {
+    en: "How does pricing work?",
+    bm: "Bagaimana harga berfungsi?",
+  },
+  faq3Answer: {
+    en: "Transparent monthly retainers and fixed-price project scopes. No hidden fees — you know the cost before we start.",
+    bm: "Retainer bulanan yang telus dan skop projek harga tetap. Tiada yuran tersembunyi — anda tahu kos sebelum kami mula.",
+  },
+  faq4Question: {
+    en: "What kind of support do you provide?",
+    bm: "Jenis sokongan apa yang anda berikan?",
+  },
+  faq4Answer: {
+    en: "24/7 managed IT support with weekly check-ins, incident response, and ongoing optimisation included in every plan.",
+    bm: "Sokongan IT terurus 24/7 dengan semakan mingguan, respons insiden, dan pengoptimuman berterusan termasuk dalam setiap pelan.",
+  },
+  faq5Question: {
+    en: "Are you familiar with Malaysian compliance (PDPA, SST)?",
+    bm: "Adakah anda familiar dengan pematuhan Malaysia (PDPA, SST)?",
+  },
+  faq5Answer: {
+    en: "Yes. PDPA compliance audits, cybersecurity monitoring, and data protection policies are core to our managed IT services.",
+    bm: "Ya. Audit pematuhan PDPA, pemantauan keselamatan siber, dan dasar perlindungan data adalah inti perkhidmatan IT terurus kami.",
+  },
+  faq6Question: {
+    en: "Do you offer a free initial audit?",
+    bm: "Adakah anda menawarkan audit awal percuma?",
+  },
+  faq6Answer: {
+    en: "Yes. Book a free IT audit or AI readiness assessment — no obligation, no sales pressure.",
+    bm: "Ya. Tempah audit IT percuma atau penilaian kesediaan AI — tanpa kewajipan, tanpa tekanan jualan.",
+  },
+
+  // "What you'll get" checklist under assessment CTA
+  idxAssessmentGetTitle: {
+    en: "What you'll get",
+    bm: "Apa yang anda akan dapatkan",
+  },
+  idxAssessmentGet1: {
+    en: "Review of your current IT setup",
+    bm: "Semakan persediaan IT semasa anda",
+  },
+  idxAssessmentGet2: {
+    en: "Key risks and opportunities identified",
+    bm: "Risiko utama dan peluang dikenal pasti",
+  },
+  idxAssessmentGet3: {
+    en: "Practical recommendations tailored to your business",
+    bm: "Cadangan praktikal yang disesuaikan dengan perniagaan anda",
+  },
+  idxAssessmentGet4: {
+    en: "No obligation, no hard sell",
+    bm: "Tiada kewajipan, tanpa tekanan jualan",
+  },
   // ---- CONVERSION FEATURES ----
   convBadgeA: {
     en: "🇲🇾 Time-Loss Audit — 2 min quiz",

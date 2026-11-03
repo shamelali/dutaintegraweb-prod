@@ -120,3 +120,38 @@ jobs:
             exit 1
           fi
           echo "Web/ matches a fresh build of web-new/."
+
+  # Deploys the built public/ tree to Cloudflare Pages (the live dutaintegra.my
+  # origin). Gated: only runs on pushes to main, and only when the deploy token
+  # is configured — pull requests never deploy, and a missing token silently
+  # skips the job instead of failing the build.
+  deploy-pages:
+    needs: [test, frontend, artifact-drift]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main' && secrets.CLOUDFLARE_API_TOKEN != ''
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-new/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web-new
+        run: npm ci
+
+      - name: Build web
+        run: npm run build:web
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy to Cloudflare Pages
+        run: wrangler pages deploy public --project-name=dutaintegra
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Bot, Monitor, Cloud, Shield, Target, Zap, Timer, Flag, ArrowRight, MessageCircle, Quote } from "lucide-react"
+import { Bot, Monitor, Cloud, Shield, Lock, Target, Zap, Timer, Flag, ArrowRight, MessageCircle, Quote, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -70,6 +70,233 @@ const heroVariants = [
     weight: 1,
   },
 ]
+
+// Trust badges row — 3 lightweight pills under the hero CTA.
+const TRUST_BADGES: TranslationKey[] = ["idxTrustBadge1", "idxTrustBadge2", "idxTrustBadge3"]
+
+// Problem navigator — problem-first topic cards above the fold.
+const NAVIGATOR_ITEMS: { icon: typeof Shield; titleKey: TranslationKey; descKey: TranslationKey }[] = [
+  { icon: Shield, titleKey: "idxNavigator1Title", descKey: "idxNavigator1Desc" },
+  { icon: Lock, titleKey: "idxNavigator2Title", descKey: "idxNavigator2Desc" },
+  { icon: Cloud, titleKey: "idxNavigator3Title", descKey: "idxNavigator3Desc" },
+  { icon: Zap, titleKey: "idxNavigator4Title", descKey: "idxNavigator4Desc" },
+]
+
+// Case studies — cards with category chip + verified result.
+const CASE_STUDIES: {
+  titleKey: TranslationKey
+  clientKey: TranslationKey
+  resultKey: TranslationKey
+  image: string
+}[] = [
+  {
+    titleKey: "caseStudy1",
+    clientKey: "caseStudy1Client",
+    resultKey: "caseStudy1Result",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80",
+  },
+  {
+    titleKey: "caseStudy2",
+    clientKey: "caseStudy2Client",
+    resultKey: "caseStudy2Result",
+    image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=600&q=80",
+  },
+  {
+    titleKey: "caseStudy3",
+    clientKey: "caseStudy3Client",
+    resultKey: "caseStudy3Result",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80",
+  },
+]
+
+// FAQ accordion items.
+const FAQ_ITEMS: { questionKey: TranslationKey; answerKey: TranslationKey }[] = [
+  { questionKey: "faq1Question", answerKey: "faq1Answer" },
+  { questionKey: "faq2Question", answerKey: "faq2Answer" },
+  { questionKey: "faq3Question", answerKey: "faq3Answer" },
+  { questionKey: "faq4Question", answerKey: "faq4Answer" },
+  { questionKey: "faq5Question", answerKey: "faq5Answer" },
+  { questionKey: "faq6Question", answerKey: "faq6Answer" },
+]
+
+// "What you'll get" checklist items under the assessment CTA.
+const ASSESSMENT_GET: TranslationKey[] = [
+  "idxAssessmentGet1",
+  "idxAssessmentGet2",
+  "idxAssessmentGet3",
+  "idxAssessmentGet4",
+]
+
+export function TrustBadges() {
+  const { t } = useLanguage()
+
+  return (
+    <div className="flex flex-wrap justify-center gap-3 mb-8 reveal">
+      {TRUST_BADGES.map((key) => (
+        <span
+          key={key}
+          className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-white/70"
+        >
+          {t(key)}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function ProblemNavigator() {
+  const { t } = useLanguage()
+  const ref = useScrollReveal()
+
+  return (
+    <section ref={ref} className="py-20 px-6 bg-muted/30">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <Badge variant="outline" className="mb-4 reveal">
+            {t("idxNavigatorTitle")}
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground reveal reveal-delay-1">
+            {t("idxNavigatorTitle")}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto reveal reveal-delay-2">
+            {t("idxNavigatorSub")}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {NAVIGATOR_ITEMS.map((item, i) => (
+            <Card key={item.titleKey} className={`p-8 reveal reveal-delay-${i + 1}`}>
+              <div className="w-12 h-12 rounded-lg bg-electric/10 flex items-center justify-center mb-4">
+                <item.icon className="w-6 h-6 text-electric" />
+              </div>
+              <h3 className="text-lg font-heading font-semibold mb-2">{t(item.titleKey)}</h3>
+              <p className="text-muted-foreground text-sm mb-4">{t(item.descKey)}</p>
+              <Link to="/quiz" className="text-electric text-sm font-medium hover:underline">
+                Learn more <ArrowRight className="w-3 h-3 inline ml-1" />
+              </Link>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function CaseStudies() {
+  const { t } = useLanguage()
+  const ref = useScrollReveal()
+
+  return (
+    <section ref={ref} className="py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <Badge variant="outline" className="mb-4 reveal">{t("dutaosProofEyebrow")}</Badge>
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground reveal reveal-delay-1">
+            {t("dutaosProofTitle")}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto reveal reveal-delay-2">
+            See how we've helped Malaysian SMEs solve real IT challenges.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {CASE_STUDIES.map((study, i) => (
+            <Card key={study.titleKey} className={`p-6 reveal reveal-delay-${i + 1}`}>
+              <div className="relative h-32 overflow-hidden rounded-lg mb-4">
+                <img
+                  src={study.image}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <span className="absolute left-3 top-3 inline-flex items-center rounded-md bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                  {t(study.resultKey)}
+                </span>
+              </div>
+              <h3 className="text-lg font-heading font-semibold mb-1">{t(study.titleKey)}</h3>
+              <p className="text-xs text-muted-foreground mb-3">{t(study.clientKey)}</p>
+              <Link to="/case-studies" className="text-electric text-sm font-medium hover:underline">
+                Read case study <ArrowRight className="w-3 h-3 inline ml-1" />
+              </Link>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function FaqSection() {
+  const { t } = useLanguage()
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const ref = useScrollReveal()
+
+  const toggle = (index: number) => {
+    setOpenIndex((prev) => (prev === index ? null : index))
+  }
+
+  return (
+    <section ref={ref} className="py-20 px-6 bg-muted/30">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <Badge variant="outline" className="mb-4 reveal">{t("faqHeroLabel")}</Badge>
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground reveal reveal-delay-1">
+            {t("faqHeroTitle")}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto reveal reveal-delay-2">
+            {t("faqHeroDesc")}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {FAQ_ITEMS.map((item, i) => {
+            const isOpen = openIndex === i
+            return (
+              <Card key={item.questionKey} className={`p-4 reveal reveal-delay-${i + 1}`}>
+                <button
+                  onClick={() => toggle(i)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="font-medium text-foreground">
+                    {t(item.questionKey)}
+                  </span>
+                  <ArrowRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                </button>
+                {isOpen && (
+                  <div className="mt-3 pt-3 border-t border-muted/50 text-sm text-muted-foreground">
+                    {t(item.answerKey)}
+                  </div>
+                )}
+              </Card>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function WhatYoullGet() {
+  const { t } = useLanguage()
+  const ref = useScrollReveal()
+
+  return (
+    <div ref={ref} className="max-w-md mx-auto reveal reveal-delay-2">
+      <Card className="p-8 bg-white/5 border-white/10">
+        <h3 className="text-lg font-heading font-semibold text-white mb-6">
+          {t("idxAssessmentGetTitle")}
+        </h3>
+        <ul className="space-y-3">
+          {ASSESSMENT_GET.map((key) => (
+            <li key={key} className="flex items-start gap-3 text-sm text-white/90">
+              <Check className="w-4 h-4 text-electric shrink-0 mt-0.5" />
+              <span>{t(key)}</span>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  )
+}
 
 export function HomePage() {
   const { t } = useLanguage()
@@ -186,49 +413,13 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* DutaOS workspace preview — labelled illustrative mock */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 px-6">
-        <DataFabricBackdrop />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(0,212,255,0.10),transparent_55%)]" />
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <Badge variant="electric" className="mb-4 reveal">{t("dutaosModulesEyebrow")}</Badge>
-            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white reveal reveal-delay-1">
-              {t("dutaosModulesTitle")}
-            </h2>
-          </div>
-          <DutaosPreview />
-        </div>
-      </section>
+      {/* Trust badges — positioned directly under the hero CTA */}
+      <TrustBadges />
 
-      {/* DutaOS Modules — modular pricing (anchor target: #modules) */}
-      <DutaosModulesSection id="modules" />
+      {/* Problem navigator — problem-first topic cards above the fold */}
+      <ProblemNavigator />
 
-      {/* Social Proof — anonymised early results */}
-      <section className="py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <Badge variant="outline" className="mb-4 reveal">{t("dutaosProofEyebrow")}</Badge>
-            <h2 className="text-3xl md:text-4xl font-heading font-bold reveal reveal-delay-1">
-              {t("dutaosProofTitle")}
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              { quoteKey: "dutaosProofQuote1" as TranslationKey, attrKey: "dutaosProofQuote1Attr" as TranslationKey },
-              { quoteKey: "dutaosProofQuote2" as TranslationKey, attrKey: "dutaosProofQuote2Attr" as TranslationKey },
-            ].map((item, i) => (
-              <Card key={item.quoteKey} className={`p-8 reveal reveal-delay-${i + 1}`}>
-                <Quote className="w-6 h-6 text-electric mb-4" />
-                <p className="text-foreground/90 mb-4">“{t(item.quoteKey)}”</p>
-                <p className="text-sm text-muted-foreground">— {t(item.attrKey)}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Low-risk pilot — how to start small and judge it */}
+      {/* How we work — low-risk pilot entry point */}
       <WorkflowPilot />
 
       {/* Services Grid */}
@@ -287,6 +478,51 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* Case studies — real businesses, real results */}
+      <CaseStudies />
+
+      {/* DutaOS workspace preview — labelled illustrative mock */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-navy via-slate-deep to-navy py-20 px-6">
+        <DataFabricBackdrop />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(0,212,255,0.10),transparent_55%)]" />
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge variant="electric" className="mb-4 reveal">{t("dutaosModulesEyebrow")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white reveal reveal-delay-1">
+              {t("dutaosModulesTitle")}
+            </h2>
+          </div>
+          <DutaosPreview />
+        </div>
+      </section>
+
+      {/* DutaOS Modules — modular pricing (anchor target: #modules) */}
+      <DutaosModulesSection id="modules" />
+
+      {/* Social Proof — anonymised early results */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 reveal">{t("dutaosProofEyebrow")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold reveal reveal-delay-1">
+              {t("dutaosProofTitle")}
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              { quoteKey: "dutaosProofQuote1" as TranslationKey, attrKey: "dutaosProofQuote1Attr" as TranslationKey },
+              { quoteKey: "dutaosProofQuote2" as TranslationKey, attrKey: "dutaosProofQuote2Attr" as TranslationKey },
+            ].map((item, i) => (
+              <Card key={item.quoteKey} className={`p-8 reveal reveal-delay-${i + 1}`}>
+                <Quote className="w-6 h-6 text-electric mb-4" />
+                <p className="text-foreground/90 mb-4">“{t(item.quoteKey)}”</p>
+                <p className="text-sm text-muted-foreground">— {t(item.attrKey)}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Trust Band */}
       <section ref={trustRef} className="py-16 px-6">
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 text-center reveal">
@@ -304,6 +540,12 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ */}
+      <FaqSection />
+
+      {/* What you'll get — checklist under the assessment CTA */}
+      <WhatYoullGet />
 
       {/* WhatsApp One-Field Signup */}
       <section className="py-20 px-6 bg-gradient-to-br from-navy to-slate-deep">
