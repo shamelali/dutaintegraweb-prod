@@ -81,7 +81,7 @@ export function BillingPage() {
     return () => {
       active = false
     }
-  }, [navigate])
+  }, [navigate, t])
 
   useEffect(() => {
     let active = true

@@ -36,22 +36,20 @@ export function CompliancePage() {
   const [newDueDate, setNewDueDate] = useState("")
 
   useEffect(() => {
-    loadItems()
-  }, [])
-
-  async function loadItems() {
-    try {
-      const res = await fetch("/api/compliance-items", { credentials: "same-origin" })
-      if (res.status === 401) return navigate(`/signin?next=${encodeURIComponent(window.location.pathname)}`)
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || "Failed to load")
-      setItems(data.items || [])
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load")
-    } finally {
-      setLoading(false)
-    }
-  }
+    ;(async () => {
+      try {
+        const res = await fetch("/api/compliance-items", { credentials: "same-origin" })
+        if (res.status === 401) return navigate(`/signin?next=${encodeURIComponent(window.location.pathname)}`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "Failed to load")
+        setItems(data.items || [])
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load")
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [navigate])
 
   async function addItem() {
     if (!newType) return

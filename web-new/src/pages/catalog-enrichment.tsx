@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { LoaderCircle, Image, Edit3, Trash2, Save, Plus } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export function CatalogEnrichmentPage() {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const [items, setItems] = useState<CatalogItem[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [enriching, setEnriching] = useState(false)
   const [error, setError] = useState("")
@@ -48,16 +48,12 @@ export function CatalogEnrichmentPage() {
 
   const vlmModel = import.meta.env.VITE_OLLAMA_MODEL ?? "configured model"
 
-  function redirectToSignIn() {
-    navigate(`/signin?next=${encodeURIComponent(window.location.pathname)}`)
-  }
+  const redirectToSignIn = useCallback(
+    () => navigate(`/signin?next=${encodeURIComponent(window.location.pathname)}`),
+    [navigate]
+  )
 
-  useEffect(() => {
-    loadItems()
-  }, [])
-
-  async function loadItems() {
-    setLoading(true)
+  const loadItems = useCallback(async () => {
     try {
       const res = await fetch("/api/catalog/items")
       if (res.status === 401) return redirectToSignIn()
@@ -69,7 +65,13 @@ export function CatalogEnrichmentPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [redirectToSignIn, t])
+
+  useEffect(() => {
+    ;(async () => {
+      await loadItems()
+    })()
+  }, [loadItems])
 
   async function handleSave() {
     setSaving(true)
