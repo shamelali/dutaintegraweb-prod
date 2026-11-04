@@ -2,7 +2,7 @@
   "name": "dutaintegra-web",
   "version": "1.0.0",
   "private": true,
-  "description": "dutaintegra.my \u2014 Duta Integra Solutions marketing site plus its lead-capture API",
+  "description": "dutaintegra.my — Duta Integra Solutions marketing site plus its lead-capture API",
   "type": "module",
   "engines": {
     "node": ">=22"
