@@ -63,6 +63,11 @@ const tiers = [
   },
 ]
 
+const dutaConnectFeatures = [
+  "priceConnectF1", "priceConnectF2", "priceConnectF3",
+  "priceConnectF4", "priceConnectF5",
+] as TranslationKey[]
+
 const includedEveryPlan = [
   "priceIncluded1", "priceIncluded2", "priceIncluded3",
   "priceIncluded4", "priceIncluded5", "priceIncluded6",
@@ -90,6 +95,7 @@ export function PricingPage() {
   const heroRef = useScrollReveal()
   const tiersRef = useScrollReveal()
   const includedRef = useScrollReveal()
+  const connectRef = useScrollReveal()
   const addonsRef = useScrollReveal()
   const faqRef = useScrollReveal()
   const ctaRef = useScrollReveal()
@@ -186,6 +192,63 @@ export function PricingPage() {
                 </Button>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DutaConnect — the pilot and what follows it */}
+      <section ref={connectRef} className="py-20 px-6 bg-muted/30">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge variant="electric" className="mb-4 reveal">{t("priceConnectEyebrow")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-3 reveal reveal-delay-1">
+              {t("priceConnectTitle")}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto reveal reveal-delay-2">
+              {t("priceConnectSub")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="relative flex flex-col p-8 border-electric shadow-lg shadow-electric/10 reveal reveal-delay-1">
+              <h3 className="text-xl font-heading font-bold mb-1">{t("priceConnectPilotName")}</h3>
+              <div className="mb-1">
+                <span className="text-3xl font-bold">RM 999</span>
+                <span className="text-muted-foreground text-sm"> / 30 days</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-6">{t("priceConnectPilotNote")}</p>
+              <ul className="space-y-3 mb-6 flex-1">
+                {dutaConnectFeatures.map((key) => (
+                  <li key={key} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-electric mt-0.5 shrink-0" />
+                    <span>{t(key)}</span>
+                  </li>
+                ))}
+              </ul>
+              {/* A real navigation, not a Link: React Router does not scroll to a hash
+                  target, and this CTA has to land on the booking form. */}
+              <Button asChild variant="electric" className="w-full">
+                <a href="/#pilot">{t("priceConnectCta")}</a>
+              </Button>
+              <p className="text-xs text-center mt-3">
+                <a href="/#lead-leakage-check" className="text-electric underline underline-offset-2">
+                  {t("priceConnectFreeCheck")}
+                </a>
+              </p>
+            </Card>
+
+            <Card className="flex flex-col p-8 reveal reveal-delay-2">
+              <h3 className="text-xl font-heading font-bold mb-1">{t("priceConnectOngoingName")}</h3>
+              <div className="mb-1">
+                <span className="text-3xl font-bold">RM 1,199</span>
+                <span className="text-muted-foreground text-sm"> / month</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-6">{t("priceConnectOngoingNote")}</p>
+              <p className="text-sm text-muted-foreground mb-6 flex-1">{t("priceConnectUsage")}</p>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/contact">{t("priceConnectCta")}</Link>
+              </Button>
+            </Card>
           </div>
         </div>
       </section>
