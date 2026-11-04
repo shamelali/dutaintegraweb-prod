@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { appendFile, mkdir, stat } from "node:fs/promises";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 
-import { listEnquiries, notifyEnquiry, notifyEnquirer, recordEnquiry, resolveInboxEmail, sendMail, updateEnquiryStatus } from "./enquiries.mjs";
+import { listEnquiries, normaliseLeadSource, notifyEnquiry, notifyEnquirer, recordEnquiry, resolveInboxEmail, sendMail, updateEnquiryStatus } from "./enquiries.mjs";
 import { recordTestimonial } from "./testimonials.mjs";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { handleStats } from "./stats.mjs";
@@ -65,12 +65,15 @@ import {
   handlePaymentsList,
   handleHitpayWebhook,
   handleBillplzWebhook,
+  handleHerepayWebhook,
 } from "./payments.mjs";
 
 import {
   handleAIChat,
   handleDutaosBrief,
 } from "./ai.mjs";
+
+import { handleAskDuta } from "./ask-duta.mjs";
 
 import { handleWorkspaceApi } from "./workspace-cloudflare.mjs";
 
@@ -185,6 +188,7 @@ export function validateEnquiry(body) {
       phone: phone.value,
       service: service.value,
       message: message.value,
+      source: normaliseLeadSource(body.source),
     },
   };
 }
@@ -1542,15 +1546,20 @@ export async function handle(req, res) {
       return send(res, 405, { error: "Method not allowed" });
     }
 
-    // ── DutaOS billing / payments (HitPay + Billplz) ─────────────────────────
+    // ── DutaOS billing / payments (HitPay + Billplz + Herepay) ───────────────
     if (pathname === "/api/billing/checkout") return await handleBillingCheckout(req, res);
     if (pathname === "/api/billing/payments") return await handlePaymentsList(req, res);
     if (pathname === "/api/payments/webhook/hitpay") return await handleHitpayWebhook(req, res);
     if (pathname === "/api/payments/webhook/billplz") return await handleBillplzWebhook(req, res);
+    if (pathname === "/api/payments/webhook/herepay") return await handleHerepayWebhook(req, res);
 
     // ── DutaOS AI (grounded on the company's compliance brief) ───────────────
     if (pathname === "/api/dutaos/brief") return await handleDutaosBrief(req, res);
     if (pathname === "/api/ai/chat") return await handleAIChat(req, res);
+
+    // ── Ask Duta: public assistant about Duta Integra itself. No session, no
+    //    datastore write, metered by source IP. ───────────────────────────────
+    if (pathname === "/api/ask-duta") return await handleAskDuta(req, res, clientIp(req));
 
     if (pathname.startsWith("/api/workspace/")) return await handleWorkspaceNodeRequest(req, res);
 

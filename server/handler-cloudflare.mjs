@@ -19,6 +19,8 @@ import {
   listEnquiries,
   sendMail,
   updateEnquiryStatus,
+  normaliseLeadSource,
+  WEBSITE_LEAD_SOURCES,
 } from "./enquiries-cloudflare.mjs";
 
 import { handleStats } from "./stats-cloudflare.mjs";
@@ -90,6 +92,8 @@ import {
   handleDutaosBrief,
 } from "./ai.mjs";
 
+import { handleAskDuta } from "./ask-duta.mjs";
+
 import {
   handleCatalogEnrich,
   handleCatalogItems,
@@ -160,6 +164,7 @@ export function validateEnquiry(body) {
       phone: phone.value,
       service: service.value,
       message: message.value,
+      source: normaliseLeadSource(body.source),
     },
   };
 }
@@ -546,9 +551,9 @@ async function handleAdminPipelinePage(req) {
   const format = url.searchParams.get("format");
   const accept = req.headers.get("accept") || "";
   if (format === "csv") {
-    const header = ["id", "name", "company", "email", "phone", "service", "status", "age_days", "created_at", "note"];
+    const header = ["id", "name", "company", "email", "phone", "service", "source", "status", "age_days", "created_at", "note"];
     const csvRows = [header.join(",")].concat(rows.map((l) => [
-      l.id, l.name, l.company, l.email, l.phone, l.service, l.status, cfAgeDays(l.created_at), l.created_at, l.note,
+      l.id, l.name, l.company, l.email, l.phone, l.service, l.source || "contact-form", l.status, cfAgeDays(l.created_at), l.created_at, l.note,
     ].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")));
     return new Response(csvRows.join("\n"), { status: 200, headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=leads.csv", "cache-control": "no-store" } });
   }
@@ -561,6 +566,18 @@ async function handleAdminPipelinePage(req) {
     for (const s of CF_PIPELINE_STATUSES) {
       byStatus[s].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     }
+    // Funnel chips — which page produced each lead is the only way to read the
+    // conversion test (contact form vs quiz vs proposal vs pilot booking).
+    const funnelCounts = rows.reduce((acc, l) => {
+      const key = l.source || "contact-form";
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const funnelChips = ["all", ...WEBSITE_LEAD_SOURCES.filter((s) => funnelCounts[s])]
+      .map((name) => {
+        const count = name === "all" ? rows.length : funnelCounts[name];
+        return `<button type="button" class="chip${name === "all" ? " on" : ""}" data-funnel="${cfEscapeHtml(name)}" onclick="filterFunnel(this)">${cfEscapeHtml(name)} <small>(${count})</small></button>`;
+      }).join("");
     const colHtml = CF_PIPELINE_STATUSES.map((status) => {
       const cards = byStatus[status].map((l) => {
         const age = cfAgeDays(l.created_at);
@@ -572,9 +589,11 @@ async function handleAdminPipelinePage(req) {
         const opts = CF_PIPELINE_STATUSES.map((s) => `<option value="${s}"${s === l.status ? " selected" : ""}>${s}</option>`).join("");
         const score = l.leadScore !== undefined && l.leadScore !== null ? ` · Score: ${l.leadScore}` : "";
         const ind = l.industry ? ` · ${cfEscapeHtml(l.industry)}` : "";
-        return `<div class="card"${staleAttr}>
+        const source = l.source || "contact-form";
+        return `<div class="card" data-source="${cfEscapeHtml(source)}"${staleAttr}>
           <div class="name">${cfEscapeHtml(l.name || "—")}</div>
-          <div class="meta">${cfEscapeHtml(l.company) || "—"} · ${cfEscapeHtml(l.service) || "—"}${ind}</div>
+          <div class="meta">${cfEscapeHtml(l.company) || "—"} · ${cfEscapeHtml(l.service) || "—"}</div>
+          <div class="meta src">${cfEscapeHtml(source)}${ind}</div>
           <div class="meta age">Age: ${age}d${stale ? " · STALE" : ""}${score}</div>
           ${l.note ? `<div class="meta note">Note: ${cfEscapeHtml(l.note)}</div>` : ""}
           <div class="actions">
@@ -600,16 +619,29 @@ async function handleAdminPipelinePage(req) {
  .card{background:#fff;border:1px solid #e7e5e4;border-radius:.375rem;padding:.6rem;margin-bottom:.5rem}
  .name{font-weight:600;margin-bottom:.25rem}
  .meta{font-size:.75rem;color:#57534e}
+ .src{font-family:ui-monospace,monospace;color:#78716c}
  .age{margin:.25rem 0}
+ .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin:-.4rem 0 1rem}
+ .chip{font:inherit;font-size:.75rem;padding:.2rem .6rem;border:1px solid #e7e5e4;background:#fff;border-radius:999px;cursor:pointer;color:#57534e}
+ .chip.on{background:#1c1917;border-color:#1c1917;color:#fff}
+ .card.hidden{display:none}
  .actions{display:flex;gap:.5rem;align-items:center;margin-top:.5rem;flex-wrap:wrap}
  .actions select{font-size:.75rem;padding:.2rem .3rem}
  .actions a{font-size:.75rem;color:#2563eb;text-decoration:none}
  .empty{color:#a8a29e;font-size:.75rem;text-align:center;padding:1rem 0}
 </style></head><body>
 <h1>Leads pipeline <small>(${rows.length})</small> <a href="/admin/pipeline?token=${encodeURIComponent(token)}&format=csv" style="font-size:.8rem;font-weight:400;margin-left:1rem">Export CSV</a></h1>
+<div class="chips">${funnelChips}</div>
 <div class="board">${colHtml}</div>
 <script>
 const token = ${JSON.stringify(token)};
+function filterFunnel(btn) {
+  const name = btn.getAttribute('data-funnel');
+  document.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c === btn));
+  document.querySelectorAll('.card').forEach((c) => {
+    c.classList.toggle('hidden', name !== 'all' && c.getAttribute('data-source') !== name);
+  });
+}
 async function moveStatus(sel) {
   const id = sel.getAttribute('data-id');
   const status = sel.value;
@@ -1168,6 +1200,11 @@ export async function handleApi(req) {
     // DutaOS AI — grounded on the company's compliance brief, audited in ai_actions
     if (pathname === "/api/dutaos/brief") return await runNodeHandler(req, handleDutaosBrief);
     if (pathname === "/api/ai/chat") return await runNodeHandler(req, handleAIChat);
+
+    // Ask Duta — public assistant about Duta Integra itself. Same Node handler as
+    // the local fork (no ask-duta-cloudflare.mjs), metered by source IP, and it
+    // writes nothing.
+    if (pathname === "/api/ask-duta") return await runNodeHandler(req, handleAskDuta, clientIp(req));
 
     // Catalog enrichment (staff-internal; DutaOS session required)
     if (pathname === "/api/catalog/enrich") return await runNodeHandler(req, handleCatalogEnrich);

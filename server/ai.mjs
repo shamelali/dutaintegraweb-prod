@@ -109,7 +109,17 @@ function modelConfig() {
   };
 }
 
-async function callModel(messages) {
+/**
+ * True only when an OpenAI-compatible endpoint is fully configured. Ollama on
+ * localhost is the default and does not count: it is unreachable on Cloudflare
+ * Pages, so treating it as configured would let callers wait on a 60s timeout for
+ * a model that is not there.
+ */
+export function llmConfigured() {
+  return Boolean(process.env.LLM_BASE_URL && process.env.LLM_API_KEY);
+}
+
+export async function callModel(messages) {
   const cfg = modelConfig();
   const res = await fetch(cfg.url, {
     method: "POST",

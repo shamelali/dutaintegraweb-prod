@@ -22,6 +22,26 @@ function supabaseHeaders(extra = {}) {
 // Writes go to the pre-existing `leads` table (status/lead_score/source workflow)
 const LEADS_TABLE = "leads";
 
+/** The funnel vocabulary the admin pipeline lists. Anything else stays hidden. */
+export const WEBSITE_LEAD_SOURCES = [
+  "contact-form",
+  "quiz-results",
+  "proposal-form",
+  "pilot-booking",
+  "ask-duta",
+];
+
+const WEBSITE_LEAD_SOURCE_SET = new Set(WEBSITE_LEAD_SOURCES);
+
+/**
+ * Coerce a client-supplied funnel name to a known source. Unrecognised or
+ * missing values become "contact-form" — the value is interpolated into a
+ * PostgREST filter, so nothing outside the allowlist may reach the database.
+ */
+export function normaliseLeadSource(value) {
+  return typeof value === "string" && WEBSITE_LEAD_SOURCE_SET.has(value) ? value : "contact-form";
+}
+
 async function supabaseRecord(record) {
   const url = `${process.env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${LEADS_TABLE}`;
   const res = await fetch(url, {
@@ -38,7 +58,7 @@ async function supabaseRecord(record) {
       ip: record.ip,
       user_agent: record.userAgent,
       status: "new",
-      source: "contact-form",
+      source: normaliseLeadSource(record.source),
       created_at: record.created_at,
       emailed_at: record.emailed_at,
     }),
@@ -61,6 +81,7 @@ function fromSupabaseRow(row) {
     created_at: row.created_at,
     emailed_at: row.emailed_at,
     status: row.status,
+    source: row.source,
     leadScore: row.lead_score,
     industry: row.industry,
   };
@@ -70,7 +91,7 @@ async function supabaseList(limit) {
   const base = process.env.SUPABASE_URL.replace(/\/$/, "");
   const cap = Number.isFinite(limit) ? limit : 1000;
   const url =
-    `${base}/rest/v1/${LEADS_TABLE}?select=*&source=eq.contact-form` +
+    `${base}/rest/v1/${LEADS_TABLE}?select=*&source=in.(${WEBSITE_LEAD_SOURCES.join(",")})` +
     `&order=created_at.desc&limit=${cap}`;
   const res = await fetch(url, { headers: supabaseHeaders() });
   if (!res.ok) throw new Error(`Supabase read failed: ${res.status} ${await res.text()}`);
@@ -119,6 +140,7 @@ export async function recordEnquiry(input) {
     message: input.message ?? null,
     ip: input.ip ?? null,
     userAgent: input.userAgent ?? null,
+    source: normaliseLeadSource(input.source),
     created_at: new Date().toISOString(),
     emailed_at: null,
   };

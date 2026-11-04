@@ -512,3 +512,182 @@ describe("deployed health proves the datastore and names the payment providers",
     assert.equal(body.storageDurable, true);
   });
 });
+
+describe("deployed pipeline board is countable by funnel", () => {
+  // The one-week conversion test needs to answer "how many pilot bookings came
+  // in?" from the stored rows alone. That only works if the board shows the
+  // source, the CSV carries it, and the read filter keeps every website funnel.
+  let originalFetch;
+  const seenUrls = [];
+  const seenRequests = [];
+  const ADMIN = "pipeline-funnel-token";
+
+  const today = new Date().toISOString();
+  const LEAD_ROWS = [
+    { id: "11111111-1111-4111-8111-111111111111", name: "Ahmad", company: "Syarikat Sdn Bhd", email: "ahmad@syarikat.my", phone: "60123456789", service: "WhatsApp lead follow-up pilot", message: "Pilot booking — 50 enquiries/month", status: "new", source: "pilot-booking", created_at: today },
+    { id: "22222222-2222-4222-8222-222222222222", name: "Siti", company: "Warung Siti", email: "siti@warung.my", phone: "", service: "Free IT Audit", status: "new", source: "quiz-results", created_at: today },
+    // A row written before the funnel was recorded: still has to show up.
+    { id: "33333333-3333-4333-8333-333333333333", name: "Lim", company: "Lim Trading", email: "lim@lim.my", phone: "", service: "Managed IT Services", status: "contacted", created_at: today },
+    // Not a website funnel — the pipeline must not list it.
+    { id: "44444444-4444-4444-8444-444444444444", name: "Outbound", company: "", email: "out@corp.my", phone: "", service: "Explee pilot", status: "new", source: "explee-outbound", created_at: today },
+  ];
+
+  before(() => {
+    process.env.ADMIN_TOKEN = ADMIN;
+    // Browsers send Origin on every same-origin POST, and the fork only accepts
+    // origins named in ALLOWED_ORIGINS — the Pages environment sets this.
+    process.env.ALLOWED_ORIGINS = ORIGIN;
+    process.env.SUPABASE_URL = "https://stub.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, init = {}) => {
+      const href = String(url);
+      seenUrls.push(href);
+      seenRequests.push({
+        href,
+        method: String(init.method ?? "GET"),
+        body: init.body ? JSON.parse(String(init.body)) : null,
+      });
+      // Only the leads read returns rows; auth stays a hard miss so the token
+      // branch is what authorises the request.
+      if (href.includes("/rest/v1/leads")) {
+        const wanted = new URL(href).searchParams.get("source");
+        const names = wanted ? wanted.replace(/^in\.\(/, "").replace(/\)$/, "").split(",") : null;
+        const rows = names ? LEAD_ROWS.filter((r) => names.includes(r.source || "contact-form")) : LEAD_ROWS;
+        return new Response(JSON.stringify(rows), { status: 200, headers: { "content-type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ error: "invalid_token" }), { status: 401, headers: { "content-type": "application/json" } });
+    };
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+    delete process.env.ADMIN_TOKEN;
+    delete process.env.ALLOWED_ORIGINS;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    seenUrls.length = 0;
+    seenRequests.length = 0;
+  });
+
+  test("the booking row written to Postgres carries the funnel, not a hardcoded one", async () => {
+    seenRequests.length = 0;
+    const csrf = "funnel-csrf-token-value";
+    const res = await call("/api/send-email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: ORIGIN,
+        "x-csrf-token": csrf,
+        cookie: `csrf_token=${csrf}`,
+      },
+      body: JSON.stringify({
+        name: "Ahmad",
+        email: "ahmad@syarikat.my",
+        company: "Syarikat Sdn Bhd",
+        service: "WhatsApp lead follow-up pilot",
+        message: "Pilot booking — 50 enquiries/month; preferred slot: Isnin 10:00 pagi",
+        source: "pilot-booking",
+      }),
+    });
+    assert.equal(res.status, 200);
+
+    const insert = seenRequests.find((r) => r.method === "POST" && r.href.includes("/rest/v1/leads"));
+    assert.ok(insert, "the enquiry must be written to the leads table");
+    // The write used to hardcode "contact-form", so every funnel looked alike.
+    assert.equal(insert.body.source, "pilot-booking");
+    assert.equal(insert.body.status, "new");
+    assert.match(insert.body.message, /50 enquiries\/month/);
+  });
+
+  test("a client-invented funnel name never reaches the database", async () => {
+    seenRequests.length = 0;
+    const csrf = "funnel-csrf-token-value";
+    const res = await call("/api/send-email", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: ORIGIN,
+        "x-csrf-token": csrf,
+        cookie: `csrf_token=${csrf}`,
+      },
+      body: JSON.stringify({
+        name: "Siti",
+        email: "siti@warung.my",
+        service: "Free check",
+        message: "from the quiz",
+        source: "pilot-booking)&delete=gt",
+      }),
+    });
+    assert.equal(res.status, 200);
+    const insert = seenRequests.find((r) => r.method === "POST" && r.href.includes("/rest/v1/leads"));
+    assert.equal(insert.body.source, "contact-form");
+  });
+
+  test("the read asks for every website funnel, not just the contact form", async () => {
+    seenUrls.length = 0;
+    await call("/admin/pipeline", { headers: { "x-admin-token": ADMIN } });
+    const leadsUrl = seenUrls.find((u) => u.includes("/rest/v1/leads"));
+    assert.ok(leadsUrl, "the board must read the leads table");
+    const filter = new URL(leadsUrl).searchParams.get("source");
+    for (const name of ["contact-form", "quiz-results", "proposal-form", "pilot-booking"]) {
+      assert.ok(filter.includes(name), `${name} must stay visible on the read path`);
+    }
+    assert.ok(!filter.includes("explee-outbound"), "non-website funnels stay out of the pipeline");
+  });
+
+  test("each card is labelled with the funnel that produced it", async () => {
+    const res = await call("/admin/pipeline", { headers: { "x-admin-token": ADMIN, accept: "text/html" } });
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.match(html, /data-source="pilot-booking"/);
+    assert.match(html, /data-source="quiz-results"/);
+    // A lead stored before the funnel existed is still shown, as the default.
+    assert.match(html, /data-source="contact-form"/);
+    assert.ok(!html.includes('data-source="explee-outbound"'));
+    // A filter chip per funnel, so cohorts are readable without new UI.
+    assert.match(html, /data-funnel="pilot-booking"/);
+    assert.match(html, /data-funnel="all"/);
+  });
+
+  test("the CSV export carries the source column", async () => {
+    const res = await call("/admin/pipeline?format=csv", { headers: { "x-admin-token": ADMIN } });
+    assert.equal(res.status, 200);
+    const [header, ...rows] = (await res.text()).split("\n");
+    assert.ok(header.split(",").includes("source"), `CSV header must name the funnel column, got ${header}`);
+    assert.ok(rows.some((r) => r.includes("pilot-booking")));
+  });
+});
+
+describe("Ask Duta is routed on the entrypoint production runs", () => {
+  // /api/ai/chat 401s for an anonymous visitor, so the marketing assistant cannot
+  // share it. These assert the fork reaches the same Node handler the local fork
+  // does — there is no ask-duta-cloudflare.mjs to drift.
+  test("an anonymous POST gets a grounded answer with no session and no CSRF token", async () => {
+    const res = await call("/api/ask-duta", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "how much is the Growth plan", lang: "en" }),
+    });
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.answered, true);
+    assert.equal(body.source, "rule");
+    assert.match(body.answer, /RM 1,490/);
+    assert.equal(res.headers.get("cache-control"), "no-store");
+  });
+
+  test("GET is 405 and an unknown question hands off instead of inventing", async () => {
+    const wrong = await call("/api/ask-duta", { method: "GET" });
+    assert.equal(wrong.status, 405);
+
+    const res = await call("/api/ask-duta", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "do you file my GST returns", lang: "en" }),
+    });
+    const body = await res.json();
+    assert.equal(body.answered, false);
+    assert.equal(body.source, "handoff");
+  });
+});

@@ -22,6 +22,7 @@ import { BillingPage } from "@/pages/billing"
 import { NotFoundPage } from "@/pages/not-found"
 import { CaseStudiesPage } from "@/pages/case-studies"
 import { ProductsPage } from "@/pages/products"
+import { AskPage } from "@/pages/ask"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { WebVitals } from "@/components/WebVitals"
 
@@ -36,6 +37,7 @@ const routes = [
   { path: "/proposal/:id", element: <ProposalPage /> },
   { path: "/case-studies", element: <CaseStudiesPage /> },
   { path: "/products", element: <ProductsPage /> },
+  { path: "/ask", element: <AskPage /> },
   { path: "/login", element: <PortalLoginPage /> },
   { path: "/signin", element: <AuthPage mode="login" /> },
   { path: "/signup", element: <AuthPage mode="signup" /> },

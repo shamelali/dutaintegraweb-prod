@@ -196,6 +196,70 @@ describe("POST /api/send-email", () => {
   });
 });
 
+describe("POST /api/send-email — pilot booking funnel", () => {
+  // The body the hero form shipped with until this fix: volume and time, no
+  // service. `service` is required, so the whole pilot funnel was 400ing while
+  // the client ignored res.ok and printed a confirmation.
+  const BROKEN_PILOT_BODY = {
+    name: "Ahmad",
+    email: "ahmad@syarikat.com",
+    company: "Syarikat Sdn Bhd",
+    volume: "50",
+    time: "Isnin 10:00 pagi",
+    source: "pilot-booking",
+  };
+
+  const PILOT_BODY = {
+    name: "Ahmad",
+    email: "ahmad@syarikat.com",
+    company: "Syarikat Sdn Bhd",
+    service: "WhatsApp lead follow-up pilot",
+    message: "Pilot booking — 50 enquiries/month; preferred slot: Isnin 10:00 pagi; company: Syarikat Sdn Bhd",
+    source: "pilot-booking",
+  };
+
+  test("the volume/time-only body the form used to send is rejected with 400", async () => {
+    const res = await post(BROKEN_PILOT_BODY);
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, "Service is required");
+    assert.equal((await listEnquiries()).length, 0);
+  });
+
+  test("a booking carrying a service is stored and countable as pilot-booking", async () => {
+    const res = await post(PILOT_BODY);
+    assert.equal(res.status, 200);
+
+    const rows = await listEnquiries();
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].source, "pilot-booking");
+    assert.equal(rows[0].service, "WhatsApp lead follow-up pilot");
+    // Volume and meeting time have no columns, so the form encodes them here —
+    // without this the one-week funnel test has nothing to measure.
+    assert.match(rows[0].message, /50 enquiries\/month/);
+    assert.match(rows[0].message, /Isnin 10:00 pagi/);
+  });
+
+  test("an unknown source is coerced, not passed through", async () => {
+    // source is interpolated into a PostgREST `source=in.(…)` filter, so a
+    // client-chosen value must never reach the database verbatim.
+    const res = await post({ ...PILOT_BODY, source: "pilot-booking)&delete=gt" });
+    assert.equal(res.status, 200);
+    assert.equal((await listEnquiries())[0].source, "contact-form");
+  });
+
+  test("a missing source still records a source", async () => {
+    const { source, ...withoutSource } = PILOT_BODY;
+    await post(withoutSource);
+    assert.equal((await listEnquiries())[0].source, "contact-form");
+  });
+
+  test("validateEnquiry keeps every known funnel name", () => {
+    for (const source of ["contact-form", "quiz-results", "proposal-form", "pilot-booking"]) {
+      assert.equal(validateEnquiry({ ...VALID, source }).value.source, source);
+    }
+  });
+});
+
 describe("testimonial capture", () => {
   const SUBMISSION = {
     client: "Mokhtar Trading Sdn Bhd",

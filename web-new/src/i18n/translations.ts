@@ -7,6 +7,14 @@ export const translations = {
     en: "Services",
     bm: "Perkhidmatan",
   },
+  navProducts: {
+    en: "Products",
+    bm: "Produk",
+  },
+  navAssessmentCta: {
+    en: "Book a free assessment",
+    bm: "Tempah penilaian percuma",
+  },
   navAbout: {
     en: "About",
     bm: "Tentang",
@@ -694,6 +702,65 @@ export const translations = {
   priceBestForLabel: {
     en: "Best for:",
     bm: "Sesuai untuk:",
+  },
+
+  /* ── DutaConnect: standalone pilot, then a managed-IT add-on ──── */
+
+  priceConnectEyebrow: {
+    en: "DutaConnect — WhatsApp lead follow-up",
+    bm: "DutaConnect — susulan lead WhatsApp",
+  },
+  priceConnectTitle: {
+    en: "Start with the pilot, not a subscription",
+    bm: "Mulakan dengan pilot, bukan langganan",
+  },
+  priceConnectSub: {
+    en: "RM999 buys one measured 30-day pilot on a single workflow — no managed IT plan needed to book it. Continuing afterwards is RM1,199/month, as an add-on to an active managed IT plan.",
+    bm: "RM999 untuk satu pilot 30 hari yang diukur pada satu aliran kerja — tidak perlu pelan IT terurus untuk menempahnya. Penerusan selepas itu ialah RM1,199/bulan, sebagai tambahan kepada pelan IT terurus yang aktif.",
+  },
+  priceConnectPilotName: {
+    en: "30-day pilot",
+    bm: "Pilot 30 hari",
+  },
+  priceConnectPilotNote: {
+    en: "One-off. Credited to your first ongoing month if you continue. Nothing renews by itself.",
+    bm: "Bayaran sekali. Dikreditkan ke bulan berterusan pertama anda jika anda terus. Tiada apa yang disambung sendiri.",
+  },
+  priceConnectOngoingName: {
+    en: "After the pilot",
+    bm: "Selepas pilot",
+  },
+  priceConnectOngoingNote: {
+    en: "Add-on to an active managed IT plan. Month to month — pause or stop anytime, no lock-in.",
+    bm: "Tambahan kepada pelan IT terurus yang aktif. Bulan ke bulan — jeda atau berhenti sebarang masa, tiada penguncian.",
+  },
+  priceConnectF1: {
+    en: "Every enquiry captured into one pipeline, tagged with the funnel that produced it",
+    bm: "Setiap tanya balas dirakam dalam satu saluran, ditanda dengan corong yang menghasilkannya",
+  },
+  priceConnectF2: {
+    en: "A triage rulebook agreed in week one — budget, urgency, deal size",
+    bm: "Buku aturan triage dipersetujui pada minggu pertama — bajet, desakan, nilai urus niaga",
+  },
+  priceConnectF3: {
+    en: "Follow-up drafts for your number, sent only after a person approves them",
+    bm: "Draf susulan untuk nombor anda, dihantar hanya selepas seseorang meluluskannya",
+  },
+  priceConnectF4: {
+    en: "Open, answered and converted times recorded against each lead",
+    bm: "Masa dibuka, dijawab dan ditukar direkodkan pada setiap lead",
+  },
+  priceConnectF5: {
+    en: "Baseline versus pilot report at day 30, read together with you",
+    bm: "Laporan garis dasar berbanding pilot pada hari ke-30, dibaca bersama anda",
+  },
+  priceConnectUsage: {
+    en: "Meta charges WhatsApp per message from 1 Oct 2026: service replies on your own number are billed after 1,000 free each month. That fee goes straight to Meta — we add no markup.",
+    bm: "Meta mengenakan caj WhatsApp setiap mesej mulai 1 Okt 2026: balasan perkhidmatan pada nombor anda sendiri dicaj selepas 1,000 percuma setiap bulan. Caj itu terus kepada Meta — kami tiada tambahan margin.",
+  },
+  priceConnectCta: {
+    en: "Book the pilot",
+    bm: "Tempah pilot",
   },
   priceAiStarterName: {
     en: "AI Starter",
@@ -2360,12 +2427,12 @@ export const translations = {
     bm: "RM999 — Pilot 30 hari: pemasangan, satu aliran kerja, dan kawalan lulusan manusia. Kredit ke bulan pertama jika anda terus.",
   },
   pilotPriceOngoing: {
-    en: "RM1,199/month after the pilot — requires an active managed IT plan.",
-    bm: "RM1,199/bulan selepas pilot — memerlukan ancangan IT terurus yang aktif.",
+    en: "RM1,199/month after the pilot — an add-on to an active managed IT plan. The pilot itself needs no managed IT plan.",
+    bm: "RM1,199/bulan selepas pilot — tambahan kepada pelan IT terurus yang aktif. Pilot itu sendiri tidak memerlukan pelan IT terurus.",
   },
   pilotPriceCondition: {
-    en: "No commitment to continue after the pilot. Pause anytime with no lock-in. No hidden setup fees.",
-    bm: "Tiada komitmen untuk terus selepas pilot. Anda boleh jeda sebarang masa tanpa penguncian. Tiada cagaran pemasangan tersembunyi.",
+    en: "Nothing continues automatically. At day 30 we read the report together, and you only move to RM1,199/month if you choose to — that plan requires an active managed IT plan. No hidden setup fees.",
+    bm: "Tiada apa yang berterusan secara automatik. Pada hari ke-30 kita baca laporan bersama, dan anda hanya beralih kepada RM1,199/bulan jika anda memilihnya — pelan itu memerlukan pelan IT terurus yang aktif. Tiada caj pemasangan tersembunyi.",
   },
 
   /* ── Shortened booking form ─────────────────────────────────── */
@@ -2394,21 +2461,37 @@ export const translations = {
     en: "Book my pilot",
     bm: "Tempah pilot saya",
   },
+  pilotFormSubmitting: {
+    en: "Booking…",
+    bm: "Menempah…",
+  },
+  pilotFormSuccess: {
+    en: "Pilot booking received",
+    bm: "Tempahan pilot diterima",
+  },
+  pilotFormError: {
+    en: "We could not save your booking. Please try again, or WhatsApp us.",
+    bm: "Tempahan anda gagal disimpan. Sila cuba lagi, atau hantar WhatsApp kepada kami.",
+  },
+  pilotFormNetworkError: {
+    en: "We could not reach the server. Please try again, or WhatsApp us.",
+    bm: "Kami tidak dapat menghubungi pelayan. Sila cuba lagi, atau hantar WhatsApp kepada kami.",
+  },
   pilotFaq1Question: {
     en: "What happens after the 30-day pilot?",
     bm: "Apakah yang berlaku selepas pilot 30 hari?",
   },
   pilotFaq1Answer: {
-    en: "You can roll into the ongoing managed IT plan at RM1,199/month, or pause with no lock-in. Your WhatsApp-to-lead setup stays yours.",
-    bm: "Anda boleh melangkah ke dalam ancangan IT terurus berterusan pada RM1,199/bulan, atau henti tanpa ikatan penguncian. Setup WhatsApp-ke-resapan anda tetap milik anda.",
+    en: "We read the baseline-versus-pilot report together at day 30. Nothing renews on its own — you can stop with no lock-in, or continue on DutaConnect at RM1,199/month, which is an add-on to an active managed IT plan. Your triage rulebook and lead history stay yours either way.",
+    bm: "Kita baca laporan garis dasar berbanding pilot bersama pada hari ke-30. Tiada apa yang disambung sendiri — anda boleh berhenti tanpa penguncian, atau teruskan DutaConnect pada RM1,199/bulan, iaitu tambahan kepada pelan IT terurus yang aktif. Buku aturan triage dan sejarah lead anda tetap milik anda.",
   },
   pilotFaq2Question: {
     en: "Do I need an existing managed IT plan?",
     bm: "Adakah saya perlu ancangan IT terurus sedia ada?",
   },
   pilotFaq2Answer: {
-    en: "The pilot itself is standalone. Ongoing support after the pilot requires an active managed IT plan. No hidden setup fees.",
-    bm: "Pilot adalah mandiri. Sokongan berterusan selepas pilot memerlukan ancangan IT terurus yang aktif. Tiada cagaran pemasangan tersembunyi.",
+    en: "For the pilot, no — RM999 books on its own. For the ongoing RM1,199/month plan, yes: it runs as an add-on to an active managed IT plan. If you do not want one, stop at day 30 with no lock-in.",
+    bm: "Untuk pilot, tidak — RM999 menempah sendiri. Untuk pelan berterusan RM1,199/bulan, ya: ia berjalan sebagai tambahan kepada pelan IT terurus yang aktif. Jika anda tidak menginginkannya, berhenti pada hari ke-30 tanpa penguncian.",
   },
   rightForYouBadge: {
     en: "Is This Right for You?",
@@ -2442,9 +2525,80 @@ export const translations = {
     en: "A small test group or sample records",
     bm: "Kumpulan ujian kecil atau rekod sampel",
   },
+  rightForYouFitHeading: {
+    en: "A good fit if",
+    bm: "Sesuai jika",
+  },
+  rightForYouNeedsHeading: {
+    en: "A pilot needs",
+    bm: "Pilot memerlukan",
+  },
   rightForYouRequires3: {
     en: "One workflow to measure before and after",
     bm: "Satu aliran kerja untuk diukur sebelum dan selepas",
+  },
+
+  /* ── Lead Leakage Check — free, result before any contact form ── */
+
+  llcBadge: {
+    en: "Free · no sign-up",
+    bm: "Percuma · tanpa pendaftaran",
+  },
+  llcTitle: {
+    en: "Lead Leakage Check",
+    bm: "Semakan Kebocoran Lead",
+  },
+  llcDesc: {
+    en: "Three numbers from your own month. See how many WhatsApp enquiries are likely going cold before anyone replies — and you get the answer before we ask for anything.",
+    bm: "Tiga angka dari bulan anda sendiri. Lihat berapa banyak tanya balas WhatsApp yang mungkin menjadi sejuk sebelum seseorang membalas — anda dapat jawapannya sebelum kami meminta apa-apa.",
+  },
+  llcEnquiries: {
+    en: "WhatsApp enquiries per month",
+    bm: "Tanya balas WhatsApp setiap bulan",
+  },
+  llcResponseHours: {
+    en: "Typical first reply, in hours",
+    bm: "Balasan pertama yang biasa, dalam jam",
+  },
+  llcDealValue: {
+    en: "Average deal value (RM)",
+    bm: "Nilai urus niaga purata (RM)",
+  },
+  llcWinRate: {
+    en: "Assumed win rate (%)",
+    bm: "Kadar kemenangan diandaikan (%)",
+  },
+  llcColdLeads: {
+    en: "enquiries likely going cold each month",
+    bm: "tanya balas yang mungkin menjadi sejuk setiap bulan",
+  },
+  llcRevenueAtRisk: {
+    en: "estimated revenue at risk per month",
+    bm: "anggaran hasil terdedah risiko setiap bulan",
+  },
+  llcPerYear: {
+    en: "over 12 months",
+    bm: "sepanjang 12 bulan",
+  },
+  llcModelNote: {
+    en: "How we work it out: a reply inside one hour counts as full attention, and past 24 hours we count the enquiry as cold. Between those, we assume interest falls in a straight line. Change the win rate if ours is wrong for your business.",
+    bm: "Cara kami mengira: balasan dalam satu jam dikira perhatian penuh, dan selepas 24 jam kami kira tanya balas itu sejuk. Antara keduanya, kami andaikan minat menurun secara linear. Ubah kadar kemenangan jika angka kami tidak sesuai dengan perniagaan anda.",
+  },
+  llcDisclaimer: {
+    en: "This is an estimate from your own numbers, not a measured result — nothing here comes from your account, because we do not have one.",
+    bm: "Ini anggaran daripada angka anda sendiri, bukan keputusan yang diukur — tiada apa di sini datang daripada akaun anda, kerana kami tidak memilikinya.",
+  },
+  llcCta: {
+    en: "Book the RM999 pilot",
+    bm: "Tempah pilot RM999",
+  },
+  priceConnectFreeCheck: {
+    en: "Not sure it applies to you? Run the free Lead Leakage Check first.",
+    bm: "Tidak pasti ia sesuai untuk anda? Jalankan Semakan Kebocoran Lead percuma dahulu.",
+  },
+  llcCtaNote: {
+    en: "Only worth it if the number above is worth fixing.",
+    bm: "Berbaloi hanya jika angka di atas wajar diperbaiki.",
   },
   pilotFaq3Question: {
     en: "How long does setup take?",
@@ -2467,8 +2621,8 @@ export const translations = {
     bm: "Adakah cagaran penggunaan selang dari cagaran pilot?",
   },
   pilotFaq5Answer: {
-    en: "No usage charges during the 30-day pilot. Ongoing support at RM1,199/month requires an active managed IT plan.",
-    bm: "Tiada cagaran penggunaan semasa pilot 30 hari. Sokongan berterusan pada RM1,199/bulan memerlukan ancangan IT terurus yang aktif.",
+    en: "Duta Integra adds no usage markup during the 30-day pilot. Meta does charge per message: from 1 Oct 2026, replies to a lead on your WhatsApp Business number are billed as service conversations, with roughly 1,000 free each month per number. After the pilot, continuing costs RM1,199/month as an add-on to an active managed IT plan.",
+    bm: "Duta Integra tidak menambah sebarang caj penggunaan semasa pilot 30 hari. Meta mengenakan caj per mesej: mulai 1 Okt 2026, balasan kepada lead pada nombor WhatsApp Perniagaan anda dicaj sebagai perkhidmatan perbualan, dengan kira-kira 1,000 percuma setiap bulan bagi setiap nombor. Selepas pilot, meneruskan ialah RM1,199/bulan sebagai tambahan kepada pelan IT terurus yang aktif.",
   },
   dutaosIllustrative: {
     en: "Illustrative mock — not a live product screenshot",
@@ -3119,5 +3273,101 @@ export const translations = {
   billingProvider: {
     en: "Provider",
     bm: "Penyedia",
+  },
+  navAsk: {
+    en: "Ask Duta",
+    bm: "Tanya Duta",
+  },
+  askTitle: {
+    en: "Ask Duta",
+    bm: "Tanya Duta",
+  },
+  askPageTitle: {
+    en: "Ask Duta — Duta Integra Solutions",
+    bm: "Tanya Duta — Duta Integra Solutions",
+  },
+  askIntro: {
+    en: "Ask us anything about Duta Integra — our services, what things cost, how we start, and how to reach a person. Answers come from what we publish, and we tell you when we do not have one.",
+    bm: "Tanya apa sahaja tentang Duta Integra — perkhidmatan kami, harga, cara kami bermula, dan macam mana nak hubungi orang sebenar. Jawapannya berdasarkan apa yang kami siarkan, dan kami akan beritahu jika kami tiada jawapan.",
+  },
+  askWelcome: {
+    en: "Hi — I'm Ask Duta. Ask me about our services, pricing, the free AI workflow audit, DutaOS, or how to reach us.",
+    bm: "Hai — saya Ask Duta. Tanya saya tentang perkhidmatan kami, harga, audit AI workflow percuma, DutaOS, atau cara menghubungi kami.",
+  },
+  askPlaceholder: {
+    en: "What would you like to know?",
+    bm: "Apa yang anda ingin tahu?",
+  },
+  askSend: {
+    en: "Ask",
+    bm: "Tanya",
+  },
+  askThinking: {
+    en: "Thinking…",
+    bm: "Sedang berfikir…",
+  },
+  askError: {
+    en: "Something went wrong reaching us. Try again, or WhatsApp +60 11-5403 4051.",
+    bm: "Ada masalah menghubungi kami. Cuba lagi, atau WhatsApp +60 11-5403 4051.",
+  },
+  askTooMany: {
+    en: "You have asked a few too many questions just now. Wait a minute and try again.",
+    bm: "Anda baru saja terlalu banyak bertanya. Tunggu seminit dan cuba lagi.",
+  },
+  askDisclaimer: {
+    en: "Ask Duta is read-only: it can quote what we publish, but it cannot book, file, or change anything for you.",
+    bm: "Ask Duta hanya baca: ia boleh petik apa yang kami siarkan, tetapi tidak boleh menempah, memfail, atau mengubah apa-apa untuk anda.",
+  },
+  askQuickPrice: {
+    en: "What does it cost?",
+    bm: "Berapa harganya?",
+  },
+  askQuickAudit: {
+    en: "Book a free AI audit",
+    bm: "Tempah audit AI percuma",
+  },
+  askQuickDutaos: {
+    en: "What is DutaOS?",
+    bm: "Apa itu DutaOS?",
+  },
+  askQuickPdpa: {
+    en: "Do you handle PDPA?",
+    bm: "Anda urus PDPA?",
+  },
+  askLeadTitle: {
+    en: "Let a person answer that",
+    bm: "Biar manusia jawab soalan ini",
+  },
+  askLeadHint: {
+    en: "We do not have that answer published. Leave your details and your question and we'll get back to you within 24 hours.",
+    bm: "Kami tiada jawapan itu yang disiarkan. Tinggalkan butiran dan soalan anda, dan kami akan balas dalam masa 24 jam.",
+  },
+  askLeadName: {
+    en: "Name",
+    bm: "Nama",
+  },
+  askLeadEmail: {
+    en: "Email",
+    bm: "E-mel",
+  },
+  askLeadPhone: {
+    en: "Phone / WhatsApp",
+    bm: "Telefon / WhatsApp",
+  },
+  askLeadSubmit: {
+    en: "Send my question",
+    bm: "Hantar soalan saya",
+  },
+  askLeadSending: {
+    en: "Sending…",
+    bm: "Menghantar…",
+  },
+  askLeadDone: {
+    en: "Sent. We'll get back to you within 24 hours.",
+    bm: "Terhantar. Kami akan balas dalam masa 24 jam.",
+  },
+  askLeadError: {
+    en: "That did not send. Please try again, or WhatsApp +60 11-5403 4051.",
+    bm: "Ia tidak terhantar. Sila cuba lagi, atau WhatsApp +60 11-5403 4051.",
   },
 } as const
