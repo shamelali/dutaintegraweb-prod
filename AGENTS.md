@@ -53,6 +53,32 @@ every existing static page and asset resolving to itself. If you add a static
 page under a path with no extension, add it to the lookahead or it will be
 swallowed by the fallback.
 
+### There is no demo video, and nothing on the site claims there is
+
+Confirmed 2026-11-04 by searching every surface a visitor can reach, not by reading
+the plan that assumed one: no `.mp4`/`.webm`/`<video>`/`<iframe>` and no
+YouTube/Loom/Vimeo reference exists in `web-new/src`, in the 17 hand-written static
+pages, in `public/sitemap.xml`, or in the bundle the apex serves. The one trace of the
+idea is the orphan dictionary entry `pilotHeroCta2` ("Watch a 2-minute demo" /
+"Tonton demonstrasi 2 minit") at `web-new/src/i18n/translations.ts:2414`, which **no
+component renders** — it is inert bytes in the bundle, not a broken button. It stays
+until the translation-key pass (the same pass that owns the ~20 unkeyed nav labels),
+because deleting single keys from that file while it is being worked on is how two
+sessions end up over each other.
+
+The hero's second CTA is the Lead Leakage Check instead, and it works: `home.tsx:258`
+links `#lead-leakage-check`, which `components/lead-leakage-check.tsx:59` renders as a
+real `<section id>`, alongside `#pilot` and `#services`. The proof-of-product the video
+was meant to supply is currently carried by `DashboardPreview` in the hero — a static
+mockup — so a demo recording is an *addition*, not a hole.
+
+If a recording does happen: do not commit it into `Web/`/`public/`. Those two trees are
+byte-compared against a fresh `web-new/` build by `server/static-i18n.test.mjs` and
+rebuilt by the `artifact-drift` job, so a binary in them means every pipeline pays for
+it; the video needs its own host (R2/Stream) plus the CSP origins it demands, and
+`server/handler.test.mjs` asserts the policy against the pages that actually load
+things.
+
 ### Fonts
 
 `web-new/src/index.css` declares `--font-heading: "Syne"` and
