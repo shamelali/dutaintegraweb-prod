@@ -1,5 +1,12 @@
 name: CI
 
+# The same gate as `.gitlab-ci.yml`, kept in step with it on purpose — change a
+# check in one file and change it in the other, or whichever account recovers
+# starts enforcing a different set of rules. As of 2026-11-04 nothing here has
+# executed: every job for this account ends `failed` with `runner_name: ""` and
+# the annotation "your account is locked due to a billing issue", so GitLab is
+# the pipeline that actually runs. Treat this file as the standby.
+
 on:
   push:
     branches: [main]
@@ -25,6 +32,24 @@ jobs:
 
       - name: Test
         run: npm test
+
+  # .env.example is the contract for every variable the server reads; a name used in
+  # code but undocumented (or documented but gone) fails here rather than on a cold
+  # start. Cheap enough to be its own job, and it needs no install.
+  env-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate .env.example against the code
+        run: node scripts/validate-env.mjs
 
   # web-new is where the frontend actually lives. Without this job its TypeScript
   # errors go unnoticed, which is how 70 of them accumulated.
@@ -91,8 +116,13 @@ jobs:
       - name: Scan git history
         run: node scripts/scan-secrets.mjs --history --verify
 
-  # Guards against the failure mode this repo already hit: a bundle committed to
-  # Web/ that no longer matches web-new/ source. Rebuild and diff.
+  # Guards against the failure mode this repo already hit: a bundle committed to a
+  # deploy tree that no longer matches web-new/ source. Rebuild and diff.
+  #
+  # Both trees are checked, not just Web/. Vercel serves Web/ and Cloudflare Pages
+  # serves public/, and `npm run build:web` writes the pair through
+  # scripts/sync-web.mjs in one pass — a half-synced pair ships the old app to one
+  # of them, which is what this job used to miss.
   artifact-drift:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -110,48 +140,66 @@ jobs:
       - name: Rebuild deploy artifact
         run: npm run build:web
 
-      - name: Fail if Web/ is stale
+      - name: Fail if either deploy tree is stale
         run: |
           # Porcelain (not `git diff`) so newly emitted hashed bundles count too.
-          if [ -n "$(git status --porcelain -- Web/)" ]; then
-            echo "::error::Web/ is out of date with web-new/ source."
+          if [ -n "$(git status --porcelain -- Web/ public/)" ]; then
+            echo "::error::Web/ or public/ is out of date with web-new/ source."
             echo "Run 'npm run build:web' and commit the result."
-            git status --porcelain -- Web/
+            git status --porcelain -- Web/ public/
             exit 1
           fi
-          echo "Web/ matches a fresh build of web-new/."
+          echo "Both deploy trees match a fresh build of web-new/."
 
-  # Deploys the built public/ tree to Cloudflare Pages (the live dutaintegra.my
-  # origin). Gated: only runs on pushes to main, and only when the deploy token
-  # is configured — pull requests never deploy, and a missing token silently
-  # skips the job instead of failing the build.
+      - name: Upload the verified public/ tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-public
+          path: public
+          retention-days: 7
+
+  # Uploads exactly the public/ tree the drift job just rebuilt and verified, so the
+  # bytes that get shipped are the bytes that got checked — the deploy no longer
+  # pays for a second, unverified build of its own.
+  #
+  # Opt-in rather than automatic. GitHub has no `when: manual`; the nearest thing
+  # that is actually enforced from this file is a repository variable, so with
+  # CF_PAGES_DEPLOY_ENABLED unset the job is simply not added to the run. The
+  # previous condition tested `secrets.CLOUDFLARE_API_TOKEN != ''` here, which is
+  # not a context available to jobs.<job_id>.if — so that guard was never evaluated
+  # the way it read. Set the variable (and, if you want a human in the loop as well,
+  # require approval on the `production` environment under Settings → Environments).
   deploy-pages:
     needs: [test, frontend, artifact-drift]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main' && secrets.CLOUDFLARE_API_TOKEN != ''
+    if: github.ref == 'refs/heads/main' && vars.CF_PAGES_DEPLOY_ENABLED == 'true'
+    environment:
+      name: production
+      url: https://dutaintegra.my
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download the artifact-drift output
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-public
+          path: public
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: web-new/package-lock.json
-
-      - name: Install dependencies
-        working-directory: web-new
-        run: npm ci
-
-      - name: Build web
-        run: npm run build:web
 
       - name: Install Wrangler
         run: npm install -g wrangler
 
+      # --commit-hash is why this can be trusted as provenance: a bare
+      # `wrangler pages deploy` records the deploying runner's CF_PAGES_COMMIT_SHA
+      # as the Pages "Source", which says something about the machine, not the
+      # commit. Event fields go through env, never inline into the shell line.
       - name: Deploy to Cloudflare Pages
-        run: wrangler pages deploy public --project-name=dutaintegra
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: wrangler pages deploy public --project-name=dutaintegra --commit-hash "$COMMIT_SHA" --commit-message "GitHub Actions $RUN_URL"

@@ -446,20 +446,31 @@ section, instead of 35 blocks of `opacity: 0`. Re-adding a bare
 
 ## CI
 
-`.github/workflows/ci.yml` has five jobs, and `.gitlab-ci.yml` now mirrors them:
+Both files run the same six jobs, and neither is weaker than the other (as of
+2026-11-04 `ci.yml` was brought back in step — it had drifted in two ways, described
+under the table):
 
 | Job (GitHub / GitLab) | What it does |
 |---|---|
 | `test` / `server-tests` | `npm test` - `node --test` over `server/**/*.test.mjs`. Needs no install (root has zero deps). |
+| `env-docs` | `node scripts/validate-env.mjs` - `.env.example` versus every `process.env.*` read in `server/` and `api/`. The cheap half of `npm run verify`. |
 | `frontend` / `frontend-tests` | `npm ci`, Vitest unit tests, `oxlint`, and `tsc -b && vite build` in `web-new/`; uploads `dist/`. |
 | `secret-scan` | `scripts/scan-secrets.mjs` over the working tree and the full git history. |
-| `artifact-drift` | Runs `npm run build:web`, then fails if a deploy tree no longer matches source. The GitLab job checks `Web/` **and** `public/`; GitHub only ever looked at `Web/`. |
-| `deploy-pages` | Uploads `public/` to the `dutaintegra` Pages project. |
+| `artifact-drift` | Runs `npm run build:web`, then fails if a deploy tree no longer matches source. Checks **both** `Web/` and `public/` on either host, and publishes `public/` as the artifact the deploy job uploads. |
+| `deploy-pages` | Uploads that artifact to the `dutaintegra` Pages project. Manual on GitLab (`when: manual`), opt-in on GitHub (`vars.CF_PAGES_DEPLOY_ENABLED == 'true'`). |
 
-GitLab adds one job the GitHub file does not have, `env-docs`
-(`node scripts/validate-env.mjs`) - the cheap half of `npm run verify`. Neither
-pipeline runs `npm run test:email`; it needs live mail credentials, so it stays a
-manual command.
+Two GitHub-only defects fixed alongside the mirror. Its `artifact-drift` had only
+ever looked at `Web/`, so a `public/` — the tree production actually serves — could
+drift and stay green; and its deploy condition read
+`secrets.CLOUDFLARE_API_TOKEN != ''`, which is not a context available to
+`jobs.<job_id>.if`, so the guard it appeared to have was never the one being
+evaluated. A job that ships to a live origin should not rest on a condition the
+runtime cannot see. The durable GitHub equivalent of GitLab's manual click is a
+required reviewer on the `production` environment (Settings → Environments); the
+variable only makes the job absent by default.
+
+Neither pipeline runs `npm run test:email`; it needs live mail credentials, so it
+stays a manual command.
 
 The `frontend` job exists because its absence is what let 70 TypeScript errors
 accumulate in `web-new` unnoticed — CI previously only tested `server/`, so the
@@ -490,7 +501,7 @@ The check-run annotations say why:
 > The job was not started because your account is locked due to a billing issue.
 
 `actions/permissions` still reports `enabled: true, allowed_actions: all`,
-`ci.yml` parses, and all five jobs are `runs-on: ubuntu-latest`, so this is not a
+`ci.yml` parses, and every job it defined then was `runs-on: ubuntu-latest`, so this is not a
 repo or workflow defect — it is an account-level hold, and it is fixed at
 `github.com/account`, not in code. Until it is cleared, CI tells you nothing:
 a red X is not evidence of broken code, and `npm run verify` locally is the only
