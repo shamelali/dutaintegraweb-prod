@@ -124,8 +124,8 @@ tailwind.config = {
 <nav>
   <a href="index.html" class="logo-text">Duta Integra Solutions</a>
   <ul class="nav-links">
-    <li><a href="services.html">Services</a></li>
-    <li><a href="about.html" data-i18n="navAbout">About</a></li>    <li><a href="pricing.html" data-i18n="navPricing">Pricing</a></li>
+    <li><a href="/services">Services</a></li>
+    <li><a href="/about" data-i18n="navAbout">About</a></li>    <li><a href="/pricing" data-i18n="navPricing">Pricing</a></li>
     <li><a href="autonomous-ops.html" style="color:var(--electric)" data-i18n="navAutonomousOps">Autonomous Ops</a></li>
     <li><a href="flowmail.html">Flowmail</a></li>
     <li><a href="praxis.html">Praxis</a></li>
@@ -133,7 +133,7 @@ tailwind.config = {
     <li><a href="sensai.html">Sensai</a></li>
     <li><a href="integrall.html">Integrall</a></li>
     <li><a href="dutaconnect.html">DutaConnect</a></li>
-    <li><a href="contact.html" class="nav-cta" data-i18n="navContact">Contact Us</a></li>
+    <li><a href="/contact" class="nav-cta" data-i18n="navContact">Contact Us</a></li>
       <li><button class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Toggle dark mode"><i class="ti ti-moon"></i></button></li>
     <li><button class="lang-toggle" id="langToggle" onclick="toggleLanguage()" title="Toggle language">BM</button></li>
   </ul>
@@ -277,7 +277,7 @@ tailwind.config = {
 </section>
 
 <div class="footer">
-  © 2026 Duta Integra Solutions Sdn Bhd · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+  © 2026 Duta Integra Solutions Sdn Bhd · <a href="privacy.html">Privacy</a> · <a href="tos.html">Terms</a>
 </div>
 
 <script>
@@ -346,7 +346,7 @@ function showResult(data) {
       }
     </div>
     <div class="result-next">${data.nextStep}</div>
-    <a href="contact.html" class="btn-primary">Book a Compliance Review</a>
+    <a href="/contact" class="btn-primary">Book a Compliance Review</a>
     <button class="btn-secondary" onclick="location.reload()" style="margin-left:1rem">Retake Quiz</button>
   `;
   document.querySelector('.btn-primary').style.display = 'none';

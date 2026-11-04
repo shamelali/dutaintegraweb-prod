@@ -41,10 +41,21 @@
     navContact:       { en: 'Contact Us',    bm: 'Hubungi Kami' },
     navQuiz:          { en: 'Free IT Audit',  bm: 'Audit IT Percuma' },
     navAutonomousOps: { en: 'Autonomous Ops', bm: 'Autonomous Ops' },
+    navDutaConnect:   { en: 'DutaConnect',   bm: 'DutaConnect' },
+    navFlowmail:      { en: 'Flowmail',      bm: 'Flowmail' },
+    navSensai:        { en: 'Sensai',        bm: 'Sensai' },
+    navPraxis:        { en: 'Praxis',        bm: 'Praxis' },
+    navIntegrall:     { en: 'Integrall',     bm: 'Integrall' },
+    navOntrac:        { en: 'Ontrac',        bm: 'Ontrac' },
     navCaseStudies:   { en: 'Case Studies',  bm: 'Kajian Kes' },
     navClientPortal:  { en: 'Client Portal', bm: 'Portal Pelanggan' },
     navFaq:           { en: 'FAQ',           bm: 'Soalan Lazim' },
     navCalculator:    { en: 'Calculator',    bm: 'Kalkulator' },
+
+    // ---- DUTACONNECT PAGE (Web/dutaconnect.html) ----
+    connectHeroDesc:      { en: 'Every WhatsApp enquiry captured in one pipeline, triaged against rules you agree, followed up only after a person approves it, and measured against your own baseline — with the automation built on top of that, not instead of it.', bm: 'Setiap tanya balas WhatsApp dirakam dalam satu saluran, diisih mengikut peraturan yang anda setujui, diikuti hanya selepas seseorang meluluskannya, dan diukur terhadap garis dasar anda sendiri — dengan automasi dibina di atasnya, bukan sebagai gantinya.' },
+    connectBookPilot:    { en: 'Book the RM999 pilot', bm: 'Tempah pilot RM999' },
+    connectLeakageCheck: { en: 'Run the free Lead Leakage Check →', bm: 'Jalankan Semakan Kebocoran Lead percuma →' },
 
     // ---- INDEX PAGE ----
     idxHeroBadge:     { en: '🇲🇾 Founder-Led · AI-First · Cyberjaya, Malaysia', bm: '🇲🇾 Ditubuhkan oleh Pengasas · AI-Pertama · Cyberjaya, Malaysia' },
@@ -301,6 +312,10 @@
     opsFeedEyebrow:   { en: 'Live Feed',     bm: 'Suapan Langsung' },
     opsFeedTitle:     { en: "What's happening right now", bm: 'Apa yang sedang berlaku sekarang' },
     opsFeedSub:       { en: 'A real-time aggregate view of AI actions across all managed environments.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua persekitaran terurus.' },
+
+    // ---- ONTRAC PAGE (Web/ontrac.html) ----
+    // Ontrac reuses the Autonomous Ops keys, but its feed covers operational workflows, not infrastructure.
+    ontracFeedSub:    { en: 'A real-time aggregate view of AI actions across all managed operational workflows.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua aliran kerja operasi terurus.' },
 
     // ---- CASES PAGE ----
     casesHeroTitle:   { en: 'Case Studies',  bm: 'Kajian Kes' },
