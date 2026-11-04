@@ -151,3 +151,47 @@ describe("pilot booking form", () => {
     expect(document.getElementById("pilot-email")).not.toBeNull()
   })
 })
+
+/**
+ * `pilotFaq1..5` sat in `translations.ts` for months — translated, bundled, and
+ * read by no component. These exist so the answer a prospect needs before
+ * booking is on the page rather than in the artifact.
+ */
+describe("pilot FAQ", () => {
+  function faqBlocks() {
+    return [...document.querySelectorAll<HTMLDetailsElement>("#pilot details")]
+  }
+
+  function renderIn(language: "en" | "bm") {
+    localStorage.setItem("language", language)
+    renderHome()
+  }
+
+  it("renders all five questions under the pilot section", () => {
+    renderIn("en")
+
+    expect(screen.queryByText("The questions people actually ask before booking")).not.toBeNull()
+    expect(faqBlocks()).toHaveLength(5)
+    for (const block of faqBlocks()) {
+      expect(block.querySelector("summary")?.textContent?.trim()).not.toBe("")
+      expect(block.querySelector("p")?.textContent?.trim()).not.toBe("")
+    }
+  })
+
+  it("states the managed-IT rule the booking decision turns on: pilot no, ongoing yes", () => {
+    renderIn("en")
+
+    const managed = faqBlocks().find((b) => b.querySelector("summary")?.textContent?.includes("managed IT plan"))
+    if (!managed) throw new Error("the managed-IT question is not on the page")
+    const answer = String(managed.querySelector("p")?.textContent)
+    expect(answer).toContain("For the pilot, no")
+    expect(answer).toContain("add-on to an active managed IT plan")
+  })
+
+  it("answers in Malay when the site is in Malay", () => {
+    renderIn("bm")
+
+    expect(screen.queryByText("Adakah saya perlu pelan IT terurus sedia ada?")).not.toBeNull()
+    expect(document.body.textContent).not.toContain("Do I need an existing managed IT plan?")
+  })
+})

@@ -33,6 +33,17 @@ import type { TranslationKey } from "@/i18n/translations"
 const FIT_KEYS: TranslationKey[] = ["rightForYouFit1", "rightForYouFit2", "rightForYouFit3"]
 const NEEDS_KEYS: TranslationKey[] = ["rightForYouRequires1", "rightForYouRequires2", "rightForYouRequires3"]
 
+// Written, translated, and shipped in the bundle for months without any
+// component reading them — see `home-pilot.test.tsx`, which now fails if one of
+// these five stops rendering.
+const pilotFaqs = [
+  { qKey: "pilotFaq1Question" as TranslationKey, aKey: "pilotFaq1Answer" as TranslationKey },
+  { qKey: "pilotFaq2Question" as TranslationKey, aKey: "pilotFaq2Answer" as TranslationKey },
+  { qKey: "pilotFaq3Question" as TranslationKey, aKey: "pilotFaq3Answer" as TranslationKey },
+  { qKey: "pilotFaq4Question" as TranslationKey, aKey: "pilotFaq4Answer" as TranslationKey },
+  { qKey: "pilotFaq5Question" as TranslationKey, aKey: "pilotFaq5Answer" as TranslationKey },
+]
+
 const LANDING_COPY = {
   en: {
     heroEyebrow: "Technology for a stronger Malaysian SME sector",
@@ -300,6 +311,20 @@ export function HomePage() {
           {pilotError && <p role="alert">{pilotError}</p>}
           <Button type="submit" disabled={!pilotEmail || !pilotVolume || pilotSubmitting}>{pilotSubmitting ? t("pilotFormSubmitting") : t("pilotFormCta")}</Button>
         </form> : <p className="landing-pilot-success"><Check />{t("pilotFormSuccess")}</p>}
+      </div>
+      <div className="mt-10">
+        <h3 className="text-lg font-heading font-semibold mb-4">{t("pilotFaqTitle")}</h3>
+        <div className="space-y-3">
+          {pilotFaqs.map((faq) => (
+            <details key={faq.qKey} className="group rounded-lg border border-border/60 bg-card px-5 py-4 open:shadow-sm">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">
+                <span>{t(faq.qKey)}</span>
+                <span className="text-electric ml-4 shrink-0 transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-3 text-sm text-muted-foreground">{t(faq.aKey)}</p>
+            </details>
+          ))}
+        </div>
       </div>
     </div></section>
 

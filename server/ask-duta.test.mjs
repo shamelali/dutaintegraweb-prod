@@ -310,6 +310,13 @@ describe("grounding stays honest as the site changes", () => {
       ["what does it cost", "pricing"],
       ["do you do web design", "services"],
       ["what is your SSM number", "compliance"],
+      // Both of these used to be stolen: "whatsapp" made `contact` answer
+      // "do I need a WhatsApp Business account" with our phone number, and "plan"
+      // made `pricing` answer the managed-IT question with the tier table.
+      ["do I need a managed IT plan?", "pilot-terms"],
+      ["what happens after the pilot", "pilot-terms"],
+      ["do I need a WhatsApp Business account", "pilot-terms"],
+      ["are there usage charges beyond the pilot fee", "usage-charges"],
     ];
     for (const [question, topic] of routes) {
       assert.equal(answerLocally(question, "en")?.topic, topic, question);
@@ -344,6 +351,10 @@ describe("grounding stays honest as the site changes", () => {
       ["berapa sejam", "hourly"],
       ["saya nak audit percuma", "audit"],
       ["apa yang anda tak buat", "limits"],
+      ["perlu pelan it terurus ke", "pilot-terms"],
+      ["saya perlu nombor whatsapp perniagaan", "pilot-terms"],
+      ["berapa lama pemasangan", "pilot-terms"],
+      ["adakah caj penggunaan", "usage-charges"],
     ];
     for (const [question, topic] of bmRoutes) {
       assert.equal(answerLocally(question, "bm")?.topic, topic, question);
@@ -361,6 +372,7 @@ describe("grounding stays honest as the site changes", () => {
       "siapa anda", "apa yang kamu buat", "berapa lama proposal", "harga pakej",
       "berapa kos DutaOS", "macam mana nak hubungi", "adakah kontrak", "yuran setup",
       "pulangan wang", "hai", "nombor SSM kami", "berapa sejam", "saya nak audit percuma",
+      "perlu pelan it terurus ke", "adakah caj penggunaan",
     ];
     for (const question of probes) {
       const hit = answerLocally(question, "bm");
@@ -377,6 +389,7 @@ describe("grounding stays honest as the site changes", () => {
       "how much per hour", "what does DutaOS cost", "can we trial it", "what time are you open",
       "tell me about Duta Integra", "hello", "do you do web design", "what is your SSM number",
       "how long for a proposal", "what you won't do", "book a free audit",
+      "do I need a managed IT plan", "are there usage charges beyond the pilot fee",
     ];
     for (const question of probes) {
       const en = answerLocally(question, "en");
@@ -385,5 +398,45 @@ describe("grounding stays honest as the site changes", () => {
       assert.notEqual(bm.answer, en.answer, `${question} answers the same in both languages`);
       assert.ok(bm.answer.trim().length > 20, `${question} BM answer is a stub`);
     }
+  });
+
+  test("Ask Duta and the pilot page tell the same story about a managed IT plan", async () => {
+    const copy = await readFile(new URL("../web-new/src/i18n/translations.ts", import.meta.url), "utf8");
+    const enCopy = (key) => {
+      const found = copy.match(new RegExp(`${key}:\\s*\\{\\s*en:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s"));
+      if (!found) throw new Error(`${key} has left translations.ts — update this guard deliberately, not silently`);
+      return found[1];
+    };
+    const pageSays = enCopy("pilotFaq2Answer");
+    const dutaSays = answerLocally("do I need a managed IT plan?", "en").answer;
+
+    assert.equal(DI_FACTS.pilotTerms.needsManagedITPlan, false, "the pilot needs no plan; the site says so twice");
+    assert.equal(DI_FACTS.pilotTerms.ongoingNeedsManagedITPlan, true);
+    assert.match(pageSays, /For the pilot, no/);
+    assert.match(dutaSays, /needs no managed IT plan/);
+    // The other half of the rule, in both places, or the two surfaces disagree
+    // about when the prerequisite starts to apply.
+    assert.match(pageSays, /add-on to an active managed IT plan/);
+    assert.match(dutaSays, /add-on to an active managed IT plan/);
+  });
+
+  test("the pilot FAQ is rendered, not only translated and bundled", async () => {
+    // Second occurrence of the same defect class: `pilotHeroCta2` was recorded in
+    // AGENTS.md as an orphan, and `pilotFaq1..5` shipped the same way — written,
+    // keyed, present in the built artifact, and read by no component. The web suite
+    // renders the page, but it can also fail to start under memory pressure, so this
+    // half lives in the suite that always runs.
+    const [home, copy] = await Promise.all([
+      readFile(new URL("../web-new/src/pages/home.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../web-new/src/i18n/translations.ts", import.meta.url), "utf8"),
+    ]);
+    for (let i = 1; i <= 5; i += 1) {
+      for (const suffix of ["Question", "Answer"]) {
+        const key = `pilotFaq${i}${suffix}`;
+        assert.ok(copy.includes(`${key}:`), `${key} is missing from translations.ts`);
+        assert.ok(home.includes(`"${key}"`), `${key} is defined but no component reads it`);
+      }
+    }
+    assert.ok(home.includes('"pilotFaqTitle"'), "the FAQ block needs its own heading rendered");
   });
 });

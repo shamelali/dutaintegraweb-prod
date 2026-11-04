@@ -2477,6 +2477,10 @@ export const translations = {
     en: "We could not reach the server. Please try again, or WhatsApp us.",
     bm: "Kami tidak dapat menghubungi pelayan. Sila cuba lagi, atau hantar WhatsApp kepada kami.",
   },
+  pilotFaqTitle: {
+    en: "The questions people actually ask before booking",
+    bm: "Soalan yang orang sebenarnya tanya sebelum menempah",
+  },
   pilotFaq1Question: {
     en: "What happens after the 30-day pilot?",
     bm: "Apakah yang berlaku selepas pilot 30 hari?",
@@ -2487,7 +2491,7 @@ export const translations = {
   },
   pilotFaq2Question: {
     en: "Do I need an existing managed IT plan?",
-    bm: "Adakah saya perlu ancangan IT terurus sedia ada?",
+    bm: "Adakah saya perlu pelan IT terurus sedia ada?",
   },
   pilotFaq2Answer: {
     en: "For the pilot, no — RM999 books on its own. For the ongoing RM1,199/month plan, yes: it runs as an add-on to an active managed IT plan. If you do not want one, stop at day 30 with no lock-in.",
@@ -2602,7 +2606,7 @@ export const translations = {
   },
   pilotFaq3Question: {
     en: "How long does setup take?",
-    bm: "Berapa masa pemasangan mengambil?",
+    bm: "Berapa lama pemasangan mengambil masa?",
   },
   pilotFaq3Answer: {
     en: "About one week: a 20-minute process review, module setup, and tool connections before going live.",
@@ -2618,7 +2622,7 @@ export const translations = {
   },
   pilotFaq5Question: {
     en: "Are there usage charges beyond the pilot fee?",
-    bm: "Adakah cagaran penggunaan selang dari cagaran pilot?",
+    bm: "Adakah caj penggunaan selain daripada caj pilot?",
   },
   pilotFaq5Answer: {
     en: "Duta Integra adds no usage markup during the 30-day pilot. Meta does charge per message: from 1 Oct 2026, replies to a lead on your WhatsApp Business number are billed as service conversations, with roughly 1,000 free each month per number. After the pilot, continuing costs RM1,199/month as an add-on to an active managed IT plan.",

@@ -77,6 +77,29 @@ export const DI_FACTS = {
       bm: "Sekali bayar. Dikreditkan ke bulan berterusan pertama anda jika anda teruskan. Tiada apa yang diperbaharui sendiri.",
     },
   },
+  // The booking rules the home page states under `#pilot` (translations.ts
+  // `pilotFaq*`). Ask Duta used to hand-off "do I need a managed IT plan?" —
+  // a question the page answers explicitly twice.
+  pilotTerms: {
+    needsManagedITPlan: false,
+    ongoingNeedsManagedITPlan: true,
+    needsWhatsappBusinessNumber: true,
+    setupWeeks: 1,
+    setupNote: {
+      en: "Setup takes about a week: a 20-minute process review, module setup, and tool connections before anything goes live.",
+      bm: "Pemasangan mengambil masa kira-kira seminggu: semakan proses 20 minit, pemasangan modul, dan sambungan alat sebelum apa-apa berjalan.",
+    },
+    dayThirty: {
+      en: "At day 30 we read the baseline-versus-pilot report together. Your triage rulebook and lead history stay yours either way.",
+      bm: "Pada hari ke-30 kita baca laporan garis dasar berbanding pilot bersama. Buku aturan triage dan sejarah lead anda tetap milik anda.",
+    },
+    // Meta's per-message charge on service conversations, effective 1 Oct 2026 —
+    // our own margin is zero either way, and saying so is the point.
+    usageCharges: {
+      en: "Duta Integra adds no usage markup during the pilot. Meta does charge per message: since 1 Oct 2026, replies to a lead on your WhatsApp Business number are billed as service conversations, with roughly 1,000 free each month per number.",
+      bm: "Duta Integra tidak menambah sebarang caj penggunaan semasa pilot. Meta mengenakan caj setiap mesej: sejak 1 Okt 2026, balasan kepada lead pada nombor WhatsApp Perniagaan anda dicaj sebagai perbualan perkhidmatan, dengan kira-kira 1,000 percuma setiap bulan bagi setiap nombor.",
+    },
+  },
   dutaosModules: [
     {
       name: "DutaOS Connect",
@@ -160,6 +183,32 @@ const processNames = (lang) => DI_FACTS.process[lang];
  * A local answer, not a model call. Ordered, not scored — see INTENTS.
  */
 const INTENTS = [
+  {
+    // Must run before `contact`: that one claims any sentence containing
+    // "whatsapp", so "do I need a WhatsApp Business account?" was answered with
+    // our phone number. Every needle here is a phrase, never a bare word, for the
+    // same reason a phrase is the only safe thing to put above another intent.
+    id: "usage-charges",
+    match: ["usage charge", "caj penggunaan", "per message", "setiap mesej", "meta charge", "message charge", "service conversation", "perbualan perkhidmatan", "free allowance", "elaun", "kos mesej", "caj mesej"],
+    answer: {
+      en: `No usage markup from us — the ${money(DI_FACTS.dutaConnect.pilotMYR)} pilot fee is the whole bill for the pilot itself. Meta is the one that charges per message: since 1 Oct 2026, replies to a lead on your WhatsApp Business number are billed as service conversations, with roughly 1,000 free each month per number. ${DI_FACTS.excludedFromPlan.en} And outside a plan, additional changes are ${money(DI_FACTS.extraChangesPerHourMYR)} per hour.`,
+      bm: `Tiada caj penggunaan daripada kami — bayaran pilot ${money(DI_FACTS.dutaConnect.pilotMYR)} itulah keseluruhan bil untuk pilot itu sendiri. Meta pula yang mengecas setiap mesej: sejak 1 Okt 2026, balasan kepada lead pada nombor WhatsApp Perniagaan anda dicaj sebagai perbualan perkhidmatan, dengan kira-kira 1,000 percuma setiap bulan bagi setiap nombor. ${DI_FACTS.excludedFromPlan.bm} Dan di luar pelan, perubahan tambahan ialah ${money(DI_FACTS.extraChangesPerHourMYR)} sejam.`,
+    },
+  },
+  {
+    // Before `contact` (the "whatsapp" needle above) and before `pilot`/`pricing`,
+    // which claim any sentence containing "pilot" or "plan" — so "do I need a
+    // managed IT plan?" used to reach the pricing table, and the question the page
+    // answers twice left Ask Duta silent.
+    id: "pilot-terms",
+    match: ["managed it plan", "pelan it terurus", "need a managed", "perlu pelan it", "whatsapp business account", "akaun whatsapp perniagaan", "nombor whatsapp perniagaan", "after the pilot", "lepas pilot", "selepas pilot", "end of the pilot", "tamat pilot", "setup take", "lama pemasangan", "berapa lama pasang", "book the pilot", "tempah pilot", "prerequisite", "syarat"],
+    answer: {
+      // Not "No — …": this intent also answers "what happens after the pilot",
+      // and a bare "No" in front of a wh-question reads as a malfunction.
+      en: `The ${money(DI_FACTS.dutaConnect.pilotMYR)} pilot needs no managed IT plan, and nothing renews by itself. You do need a WhatsApp Business number, because that is where enquiries are captured and followed up. ${DI_FACTS.pilotTerms.setupNote.en} ${DI_FACTS.pilotTerms.dayThirty.en} Continuing is ${money(DI_FACTS.dutaConnect.ongoingMYR)} / ${PERIOD.en}, which does run as an add-on to an active managed IT plan; if you would rather not take one, stop at day ${DI_FACTS.dutaConnect.pilotDays}. Book with the pilot form on this page, or message ${DI_FACTS.whatsapp}.`,
+      bm: `Pilot ${money(DI_FACTS.dutaConnect.pilotMYR)} tidak memerlukan pelan IT terurus, dan tiada apa yang diperbaharui sendiri. Anda perlukan nombor WhatsApp Perniagaan, kerana di situlah pertanyaan direkod dan disusuli. ${DI_FACTS.pilotTerms.setupNote.bm} ${DI_FACTS.pilotTerms.dayThirty.bm} Penerusan ialah ${money(DI_FACTS.dutaConnect.ongoingMYR)} setiap ${PERIOD.bm}, yang memang berjalan sebagai tambahan kepada pelan IT terurus yang aktif; jika anda tidak mahu menerimanya, berhenti pada hari ke-${DI_FACTS.dutaConnect.pilotDays}. Tempah melalui borang pilot di halaman ini, atau hantar mesej ke ${DI_FACTS.whatsapp}.`,
+    },
+  },
   {
     id: "contact",
     // First: a visitor asking how to reach us should never get a price list.
