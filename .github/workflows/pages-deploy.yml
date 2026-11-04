@@ -1,13 +1,36 @@
+# Manual companion to `.github/workflows/ci.yml`.
+#
+# ci.yml is the pipeline: six jobs, the same set `.gitlab-ci.yml` runs, with its own
+# `deploy-pages` job. This file existed alongside it as a second path to the same
+# Cloudflare Pages project, with a `deploy` job gated on nothing but
+# `github.ref == 'refs/heads/main'` — so the two files together meant one push could
+# upload to dutaintegra.my twice. That is the shape of the "six production uploads in
+# twelve hours" that AGENTS.md records as a mystery, and it is why the gate lives in
+# front of the deploy rather than beside it.
+#
+# It stayed harmless by accident, not by design: its verify job ran
+# `npm --prefix web-new run test:web` and `run lint:web`, and those names only exist
+# at the repository root (`web-new/` defines `test` and `lint`). The job died on the
+# first frontend step, `deploy` had `needs: verify`, and nothing ever shipped. Both
+# are fixed below, because a gate that passes by crashing is not a gate.
+#
+# Deploy is opt-in and shared with ci.yml: unset CF_PAGES_DEPLOY_ENABLED and neither
+# workflow uploads. `workflow_dispatch` is what this file is for — a deliberate,
+# auditable one-off deploy of the current main.
 name: Deploy to Cloudflare Pages
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
   deployments: write
+
+concurrency:
+  group: pages-deploy-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '22'
@@ -16,6 +39,7 @@ jobs:
   verify:
     name: Verify (tests + lint + build)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +48,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            web-new/package-lock.json
 
       - name: Install root dependencies
         run: npm ci
@@ -31,41 +58,74 @@ jobs:
       - name: Run server tests
         run: npm test
 
+      - name: Validate .env.example
+        run: npm run validate:env
+
       - name: Install frontend dependencies
         run: npm --prefix web-new ci
 
       - name: Run frontend tests
-        run: npm --prefix web-new run test:web
+        run: npm --prefix web-new run test
 
       - name: Lint frontend
-        run: npm --prefix web-new run lint:web
+        run: npm --prefix web-new run lint
 
       - name: Build web
         run: npm run build:web
+
+      # Fails the job if either deploy tree no longer matches web-new/ source, so what
+      # gets uploaded is what the tests just ran against. Porcelain rather than
+      # `git diff`: a newly emitted hashed bundle has to count as drift too.
+      - name: Fail if either deploy tree is stale
+        run: |
+          if [ -n "$(git status --porcelain -- Web/ public/)" ]; then
+            echo "::error::Web/ or public/ is out of date with web-new/ source."
+            echo "Run 'npm run build:web' and commit the result."
+            git status --porcelain -- Web/ public/
+            exit 1
+          fi
+          echo "Both deploy trees match a fresh build of web-new/."
+
+      - name: Upload the verified public/ tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-deploy-public
+          path: public
+          retention-days: 7
 
   deploy:
     name: Deploy to Cloudflare Pages
     needs: verify
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main' && vars.CF_PAGES_DEPLOY_ENABLED == 'true'
+    environment:
+      name: production
+      url: https://dutaintegra.my
     steps:
-      - uses: actions/checkout@v4
+      - name: Download the verified artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-deploy-public
+          path: public
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web
-        run: npm run build:web
-
+      # No checkout, no second build: the bytes uploaded are the bytes the verify job
+      # tested. A deploy that rebuilds is a deploy of something nothing checked.
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Without an explicit hash, wrangler records the runner's own
+          # CF_PAGES_COMMIT_SHA as the Pages "Source" — provenance about the machine,
+          # not the commit. Wrangler reads these from the environment, so nothing is
+          # interpolated into a shell line.
+          env:
+            CF_PAGES_COMMIT_SHA: ${{ github.sha }}
+            CF_PAGES_COMMIT_MESSAGE: "GitHub Actions ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           command: pages deploy public --project-name=dutaintegra

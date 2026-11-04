@@ -469,6 +469,19 @@ runtime cannot see. The durable GitHub equivalent of GitLab's manual click is a
 required reviewer on the `production` environment (Settings → Environments); the
 variable only makes the job absent by default.
 
+**There is a third workflow file, and it was a second path to the same origin.**
+`.github/workflows/pages-deploy.yml` (added by `bb14165`, 2026-11-02) was not
+mentioned anywhere in this file, and its `deploy` job was gated on nothing but
+`github.ref == 'refs/heads/main'` — so together with `ci.yml`'s `deploy-pages` it meant
+one push could upload `public/` to `dutaintegra` twice, which is the shape of the "six
+production uploads in twelve hours" recorded above. It never did, by accident: its
+`verify` job ran `npm --prefix web-new run test:web` and `run lint:web`, and those
+script names exist only at the repository root (`web-new/` defines `test` and `lint`),
+so the job died on the first frontend step and `deploy` had `needs: verify`. It is now
+a `workflow_dispatch` companion with the same root scripts, the same both-trees drift
+check, `CF_PAGES_DEPLOY_ENABLED` as its deploy condition, and an artifact instead of a
+second rebuild — a gate that passes by crashing is not a gate.
+
 Neither pipeline runs `npm run test:email`; it needs live mail credentials, so it
 stays a manual command.
 
