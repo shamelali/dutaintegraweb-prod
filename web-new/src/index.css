@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* dark: utilities must follow the .dark class (toggled by useDarkMode), not
+   prefers-color-scheme. Without this the token/CSS dark and the Tailwind
+   dark: variant disagree — split-brain. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ── Duta Integra Design Tokens (from Web/css/shadcn-tokens.css) ── */
 @theme {
   --color-background: #f8fafc;
