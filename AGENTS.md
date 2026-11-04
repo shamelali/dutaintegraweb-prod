@@ -77,35 +77,96 @@ routes that have no `public/<name>.html`. (The older "`/` … `/quiz` all 200 �
 serve the React app" claim described the **Vercel** `vercel.json` rewrites;
 Pages, which is what is actually live, behaves as above.)
 
-| Path | Result (Pages, probed 2026-11-02) |
+| Path | Result (probed 2026-11-04) |
 |---|---|
-| `/`, `/billing`, any path with no static twin | 200 — React app (SPA fallback) |
-| `/services`, `/about`, `/contact`, `/quiz` | 200 — **legacy static** `.html` (Pretty URLs shadows the React route) |
-| `/pricing` | origin now serves React (twin removed + deployed); the bare URL may still show a **stale cached** copy until one dashboard purge |
-| `/services.html`, `/audit.html`, `/calculator.html`, … | 200 — static HTML |
+| `/`, `/billing`, any path with no static twin | 200 — React app (SPA fallback), on the apex *and* at origin |
+| `/services`, `/about`, `/contact`, `/quiz`, `/pricing` | **apex**: 200 — **legacy static** HTML (17–20 KB, no `index-*.js`). **origin** (`dutaintegra.pages.dev`): 200 — React shell (2004 B, `index-CTWEBryY.js`) |
+| `/audit.html`, `/calculator.html`, … (twins that still exist) | 200 — static HTML |
+| `/services.html`, `/about.html`, `/contact.html`, `/quiz.html` | 200 — **the React shell**, not static HTML: the twins are gone and `/* /index.html 200` catches the `.html` spelling too. Confirmed under `wrangler pages dev public` (workerd, 2026-11-04): all five routes and all five `.html` variants return the same 2004 B shell. A link to `services.html` therefore lands on the React page, not on a 404 or a stale legacy file. |
 
-React is canonical, so a route is only truly served by React once its
-`public/<name>.html` twin is removed. `public/pricing.html` + `Web/pricing.html`
-were deleted and deployed (`972ccd30` → `a28c582b`), so the **origin** now serves
-the new AI-operations landing at `/pricing` — proven by `dutaintegra.pages.dev/pricing`
-(2004 B React shell) and by the custom domain's `/` and `/pricing.html` (both the
-React shell). **But a browser can still see the deleted twin at the bare custom-domain
-URL `https://dutaintegra.my/pricing` (17544 B) and no purge fixes it.** Verified
-2026-11-02: the exact `dutaintegra.my/pricing` key is pinned by an Enterprise
-**`edge_cache_ttl=7200`** zone setting that overrides the deployed `max-age=0`, so
-the stale object is re-cached for 2 h after every eviction — its `age` header climbed
-straight through both a per-file purge and `purge_everything` (+ `cache_reserve`), and
-the zone has no page/origin/cache rule pinning it. The durable fix is therefore *not*
-a purge; it is setting **Edge Cache TTL to "Respect origin"** (or 0) in the dashboard
-(Speed → Caching → Configuration), which the `wrangler`/API token cannot do — it holds
-Cache Purge but its `PATCH /zones/*/settings/*` returns `9109`/`10000`. It self-heals
-once the object's 2 h lifetime lapses — **and it has**: re-probed 2026-11-02 after the
-`d5faaec6` deploy, `https://dutaintegra.my/pricing` now returns the 2004 B React shell
-referencing `index-CTfBlD16.js`, not the 17544 B legacy page. `/* → max-age=0, must-revalidate` in
-`public/_headers` is correct but is *currently overridden* by that `edge_cache_ttl`
-until the TTL is lowered. The other four should be retired one at a time, each gated
-first: React parity for `/services` / `/about` / `/contact` / `/quiz` has **not** been
-checked against their static twins, so deleting them wholesale could drop real content.
+**All five twins are already retired.** `git ls-files public/` lists no
+`services.html` / `about.html` / `contact.html` / `quiz.html` / `pricing.html`, and
+origin answers the React shell on every one of those routes. So the legacy pages a
+visitor sees at `https://dutaintegra.my/pricing` are **not** an origin defect: they are
+the Enterprise **`edge_cache_ttl=7200`** pin below, still re-caching the deleted object.
+One consequence to keep in mind while doing conversion work on the React app: any change
+to `/`, `/pricing`, `/services` etc. is *live at origin* but **invisible on the custom
+domain** for those five paths until the edge TTL is lowered — only `/` currently reflects
+the deployed bundle.
+
+`public/pricing.html` + `Web/pricing.html` were deleted and deployed (`972ccd30` →
+`a28c582b`), so the **origin** serves the new AI-operations landing at `/pricing` — proven
+by `dutaintegra.pages.dev/pricing` (2004 B React shell) and by the custom domain's `/` and
+`/pricing.html` (both the React shell). **But a browser still sees the deleted twin at the
+bare custom-domain URL `https://dutaintegra.my/pricing` (17544 B) and no purge fixes it.**
+The exact `dutaintegra.my/pricing` key is pinned by that **`edge_cache_ttl=7200`** zone
+setting, which overrides the deployed `max-age=0`, so the stale object is re-cached for 2 h
+after every eviction — its `age` header climbed straight through both a per-file purge and
+`purge_everything` (+ `cache_reserve`), and the zone has no page/origin/cache rule pinning
+it. The durable fix is therefore *not* a purge; it is setting **Edge Cache TTL to "Respect
+origin"** (or 0) in the dashboard (Speed → Caching → Configuration), which the
+`wrangler`/API token cannot do — it holds Cache Purge but its `PATCH /zones/*/settings/*`
+returns `9109`/`10000`.
+
+**Earlier claim, now retracted:** this file said the pin "self-heals once the object's 2 h
+lifetime lapses — and it has", based on a 2026-11-02 probe. It does not. Re-probed
+2026-11-04, `https://dutaintegra.my/pricing` again returns the 17544 B legacy page, with
+`cf-cache-status: DYNAMIC`, `cache-control: public, max-age=0, must-revalidate` and
+`age: 162858` (~1.9 days) — an object that cannot be that old under a 2 h edge TTL, which is
+what the `edge_cache_ttl` override looks like from outside. `/* → max-age=0, must-revalidate`
+in `public/_headers` is correct but is *currently overridden* until the TTL is lowered.
+The other four twins are gone from the repo, so their legacy copies survive only in that
+edge cache. **That parity has now been checked, for `/quiz` at least, and it holds:** the
+retired `quiz.html` asked exactly three questions (team size → `teamSize`, annual IT spend →
+`annualSpend`, biggest pain points → `painPoints`) and `web-new/src/pages/quiz.tsx` posts the
+same three keys to the same lead endpoint, with `quizQ1..Q3` covering the same topics. So the
+apex's stale legacy copy is a display defect that ends when the TTL is lowered — not a
+content loss. Parity for `/services`, `/about` and `/contact` is still unchecked.
+
+**The static pages' nav pointed at files that no longer exist (found 2026-11-04,
+fixed in the working tree, NOT yet deployed).** `public/_redirects` ends in
+`/* /index.html 200`, so an unmatched path does not 404 — Pages answers the React
+shell and React Router's `path="*"` renders `NotFoundPage`. The visitor sees a
+normal-looking page whose content is the site's not-found screen, and every
+monitoring check still reports 200. That is how 195 links across 16 static pages
+stayed broken: the nav and footer of every page linked
+`quiz.html` / `services.html` / `about.html` / `pricing.html` / `contact.html`
+after those twins were retired, and `audit.html` linked `/work` (×4) — a route
+`web-new/src/App.tsx` has never had. Fixed by rewriting them to the React clean
+URLs (`/quiz`, `/services`, `/about`, `/pricing`, `/contact`), `terms.html` →
+`tos.html` (the legal page ships as `tos.html`), and `/work` → `/case-studies`.
+`/ms/<x>` is not a defect: the first `_redirects` rule maps it to `/<x>`, so the
+Malay prefix is alive exactly when the unprefixed path is.
+
+**`audit.html` renders unstyled, and has never been otherwise.** Its only
+stylesheet is `public/css/styles.css`, which is not on disk and has no git
+history (`git log -- public/css/styles.css` is empty), while the page carries no
+`<style>` block and no inline styles — every class it uses (`audit-form`,
+`audit-features`, `brand-mark`, `nav-links`…) is defined nowhere in the repo.
+The `<link>` cannot 404 either: `https://dutaintegra.my/css/styles.css` answers
+**200 with the 2004 B index.html** as `text/css`, which the browser rejects
+silently. This is the free-audit funnel, so the page that sells the audit looks
+like raw HTML. Fixing it needs the stylesheet authored (or recovered), which is
+design work, not a one-liner — `server/static-i18n.test.mjs` therefore tracks it
+in `PAGES_MISSING_THEIR_STYLESHEET` so the hole is asserted rather than hidden,
+and the test fails when someone adds the file without retiring the entry.
+
+**`server/static-i18n.test.mjs` (2026-11-04) is the only guard over the hand-written
+static tree.** It asserts, from `public/js/site.js` and the real pages: every
+`data-i18n` key resolves with a non-empty `en` *and* `bm` (applyTranslations()
+falls back to `entry.en`, so a half-filled entry only looks translated until you
+toggle); no `data-i18n` on a void element (`<meta>` — `textContent` on it renders
+nothing, seven such attributes were dead weight); the dictionary's `en` string
+equals the page's own English for every keyed element — this caught three pages
+whose copy was keyed to *another* page's string, so toggling to BM replaced
+Ontrac's hero label with "Autonomous Ops" and its feed subtitle with the
+Autonomous Ops sentence; every `<a>` href resolves to a real file under `public/`
+or a route parsed out of `web-new/src/App.tsx`; and `Web/` and `public/` carry
+byte-identical files except Pages-only `_headers`/`_redirects`. That last one was
+already false: `public/robots.txt` had gained `Disallow: /workspace` etc. and
+`public/sitemap.xml` a `/digital-assessment` URL that `Web/` never got — and
+`scripts/sync-web.mjs` does not copy either, because they exist in neither
+`web-new/public/` nor `dist/`, so both are hand-maintained twice.
 
 **Lead capture was fully dead in production (found 2026-11-02), fixed in `main` and
 now DEPLOYED (2026-11-02, `d5faaec6`).** Two independent bugs on `/api/send-email`, both proven with
@@ -151,14 +212,15 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `d5faaec6` (2026-11-02) is live — bundle `index-CTfBlD16.js` (glassmorphic DutaOS showcase + the lead-capture fix). It carries the removed `pricing.html` twin, so `/pricing` now serves the 2 KB React shell — the earlier stale edge object for the exact `/pricing` key has since lapsed its `edge_cache_ttl=7200` lifetime and revalidated to origin (probed 2026-11-02). Only `npm run cf:deploy` changes it. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `22b337fb` (2026-11-04, Source `2e267ba` = `main` tip) is live — apex `/` serves bundle `index-CTWEBryY.js`, which is exactly `HEAD:public/index.html`. It is one of **six** production uploads in the twelve hours before it (`794c2810`, `9a4baf45`, `1e696e61`, `a502c730`, `1f82b504`, `22b337fb`), so this project is being re-uploaded often; do not assume the deploy named in the history below is still current — re-check with `npx wrangler pages deployment list --project-name=dutaintegra` and `curl -s https://dutaintegra.my/ \| grep -o 'index-[A-Za-z0-9_-]*\.js'`. Only `npm run cf:deploy` — or the `deploy-pages` job in `.gitlab-ci.yml`, which until 2026-11-04 ran on **every** push to the `gitlab` remote with no test in front of it — changes it. See the CI section: pushing to GitHub ships nothing, pushing to GitLab used to ship everything. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
-Pushing `main` still does not ship, and neither problem is git: the project
-that owns the domain has no git integration (production changes only when
-someone runs `npm run cf:deploy`, which uploads `public/`), while the project
-that *does* watch `main` fails its builds and its hostname is not the one
-anyone visits.
+Pushing `main` to **GitHub** still does not ship, and neither problem is git: the
+project that owns the domain has no git integration (production changes when
+someone runs `npm run cf:deploy`, or when the GitLab pipeline's manual deploy job
+is clicked), while the project that *does* watch `main` fails its builds and its
+hostname is not the one anyone visits. Pushing `main` to the **`gitlab` remote** did
+ship, untested, until the pipeline gained a gate — see the CI section.
 
 **Deploying `main` before `5a90c04` would have taken the whole API down.**
 `server/paths.mjs` resolved `PROJECT_ROOT` at module
@@ -178,8 +240,10 @@ wrangler pages dev public --port 8791 --ip 127.0.0.1   # must print "Ready", not
 
 Two loose ends worth remembering:
 
-- `public/` carries the current bundle (`index-CTfBlD16.js`); `npm run
-  build:web` syncs it along with `Web/` via `scripts/sync-web.mjs`. The Pages
+- `public/` carries the current bundle — as of this commit that is
+  `index-CNfIbn5X.js` + `index-C9szhQXu.css` in **both** trees, while the apex still
+  serves the previous `index-CTWEBryY.js`. `npm run build:web` syncs it
+  along with `Web/` via `scripts/sync-web.mjs`. The Pages
   project deploys whatever is in `public/` at upload time, so re-check it
   before `npm run cf:deploy`.
 - Uploads record the uploading shell's `CF_PAGES_COMMIT_SHA` as their Source,
@@ -236,10 +300,13 @@ Consequences:
    stale-list test until it is dropped.
 3. **The two deployment trees are separate outputs.** `Web/` is what Vercel
    would serve; Pages serves `public/`. `npm run build:web` writes both in one
-   pass (`scripts/sync-web.mjs`), and as of 2026-11-01 both carry
-   `index-Cl8HJZXr.js` — the same bundle production serves since deployment
-   `2e5b805f`. Still confirm the upload will carry it before deploying:
-   `grep -o 'index-[A-Za-z0-9_-]*\.js' public/index.html`.
+   pass (`scripts/sync-web.mjs`); both carry `index-CNfIbn5X.js` since this commit,
+   while production serves the older `index-CTWEBryY.js` until the next upload.
+   `server/static-i18n.test.mjs`
+   byte-compares the two trees (excluding `_headers`/`_redirects`) precisely because
+   a half-synced pair ships the old app to one host. Re-check both sides before deploying:
+   `grep -o 'index-[A-Za-z0-9_-]*\.js' public/index.html` and
+   `curl -s https://dutaintegra.my/ | grep -o 'index-[A-Za-z0-9_-]*\.js'`.
 
 ## The Cloudflare fork's data layer
 
@@ -281,7 +348,16 @@ reaches PostgREST to fail loudly.
   (`portal-cloudflare.mjs` seeds the row from the signup response), so
   `workspace_proposals.client_id` is a valid FK for it and `client_id=eq.<uid>`
   doubles as the ownership check. The Vercel fork has to match proposal leads by
-  email instead; the two forks disagree about what a client is.
+  email instead; the two forks disagree about what a client is. That divergence is
+  why the Node entrypoint's portal list endpoints are not ports of this fork's:
+  `handlePortalProposals` (`server/portal.mjs:400`) answers **`200 {proposals:[]}`**
+  unconditionally — an empty list, not an error — with the email-match left as a
+  comment, and `/api/portal/projects` is not routed in `handler.mjs` at all (404).
+  Nothing in either frontend calls `/api/portal/projects`; only
+  `handler-cloudflare.test.mjs:240` does. Do not "fix parity" by routing the fork
+  handler through Node: it keys on `user.id` from `getAccessToken`/`verifyUser`,
+  which the Node cookie-session path (`portal_sessions`, keyed on a hashed token →
+  `clientId`) never produces.
 - **`ops-tasks-cloudflare.mjs` is deleted** (2026-10-29). It exposed
   `/api/ops/tasks*`, `/api/ops/task-stats` and `/api/ops/audit-log` with **no
   auth check at all**; those routes reached the data layer directly and answered
@@ -314,8 +390,9 @@ Two consequences worth remembering:
 ## Workflow
 
 ```bash
-npm test            # 195 tests, node:test, no deps; runs in a throwaway DATA_DIR
-npm run test:web    # 15 tests, Vitest + Testing Library (needs web-new/node_modules)
+npm test            # 339 passing (2026-11-04 — 7 of them are
+                    # server/static-i18n.test.mjs); node:test, no deps, throwaway DATA_DIR
+npm run test:web    # 58 tests in 10 files (2026-11-04), Vitest + Testing Library (needs web-new/node_modules)
 npm start           # loads .env via --env-file-if-exists
 npm run build:web   # build web-new/ into Web/ (the deploy artifact)
 npm run lint:web    # oxlint over web-new/ (needs web-new/node_modules)
@@ -328,6 +405,20 @@ There is no `dotenv` and shouldn't be.
 `npm run verify` is the whole gate in one command: it runs `build:web` before
 `test:web` and `lint:web` because both need `web-new/node_modules`, which the
 build installs.
+
+**A `test:web` run can fail without running a single test, and that is not a code
+defect.** Under memory pressure — e.g. another repo's Vitest in parallel, or the
+~8 `npm exec` MCP servers this workspace keeps alive — the forks pool dies with
+`Unhandled Error: [vitest-pool]: Failed to start forks worker` and
+`Caused by: Timeout waiting for worker to respond`, once per test file, with
+summary lines `Test Files no tests / Tests no tests`. Exit code is 1, so nothing
+is silently green; but it reads like a suite failure. It is startup, not
+assertions: `--maxWorkers=1` and `--no-file-parallelism` do not fix it, and one
+jsdom environment costs ~20 s on a quiet machine (Vitest's own hint measured 8
+environments / 176 s). Free a few hundred MB plus swap in use is the tell. Wait
+for the other job, or run the files you changed individually
+(`npx vitest run src/components/lead-leakage-check.test.tsx`). `tsc -p
+tsconfig.vitest.json --noEmit` still runs and is the cheap half of the gate.
 
 **`build:web` and `cf:build` prefix the install with `npm_config_allow_scripts=`
 for a reason.** npm 11 forwards a developer's `allow-scripts` setting from
@@ -355,14 +446,20 @@ section, instead of 35 blocks of `opacity: 0`. Re-adding a bare
 
 ## CI
 
-`.github/workflows/ci.yml` has four jobs:
+`.github/workflows/ci.yml` has five jobs, and `.gitlab-ci.yml` now mirrors them:
 
-| Job | What it does |
+| Job (GitHub / GitLab) | What it does |
 |---|---|
-| `test` | `npm test` — `node --test` over `server/**/*.test.mjs`. Needs no install (root has zero deps). |
-| `frontend` | `npm ci`, Vitest unit tests, `oxlint`, and `tsc -b && vite build` in `web-new/`; uploads `dist/`. |
-| `secret-scan` | `scripts/scan-secrets.mjs` over the working tree and full git history. |
-| `artifact-drift` | Runs `npm run build:web`, then fails if `Web/` no longer matches source. |
+| `test` / `server-tests` | `npm test` - `node --test` over `server/**/*.test.mjs`. Needs no install (root has zero deps). |
+| `frontend` / `frontend-tests` | `npm ci`, Vitest unit tests, `oxlint`, and `tsc -b && vite build` in `web-new/`; uploads `dist/`. |
+| `secret-scan` | `scripts/scan-secrets.mjs` over the working tree and the full git history. |
+| `artifact-drift` | Runs `npm run build:web`, then fails if a deploy tree no longer matches source. The GitLab job checks `Web/` **and** `public/`; GitHub only ever looked at `Web/`. |
+| `deploy-pages` | Uploads `public/` to the `dutaintegra` Pages project. |
+
+GitLab adds one job the GitHub file does not have, `env-docs`
+(`node scripts/validate-env.mjs`) - the cheap half of `npm run verify`. Neither
+pipeline runs `npm run test:email`; it needs live mail credentials, so it stays a
+manual command.
 
 The `frontend` job exists because its absence is what let 70 TypeScript errors
 accumulate in `web-new` unnoticed — CI previously only tested `server/`, so the
@@ -393,7 +490,7 @@ The check-run annotations say why:
 > The job was not started because your account is locked due to a billing issue.
 
 `actions/permissions` still reports `enabled: true, allowed_actions: all`,
-`ci.yml` parses, and all four jobs are `runs-on: ubuntu-latest`, so this is not a
+`ci.yml` parses, and all five jobs are `runs-on: ubuntu-latest`, so this is not a
 repo or workflow defect — it is an account-level hold, and it is fixed at
 `github.com/account`, not in code. Until it is cleared, CI tells you nothing:
 a red X is not evidence of broken code, and `npm run verify` locally is the only
@@ -404,6 +501,45 @@ While diagnosing it, one further fact about the queue: `actions/runners` for thi
 repo returns an empty list, which is *expected* — that endpoint lists
 self-hosted runners only, and these jobs ask for GitHub-hosted ones. An empty
 list there is not the fault.
+
+**The workaround is `.gitlab-ci.yml`, and the remote was already in use.** `git
+remote -v` lists `gitlab → https://gitlab.com/shamelali/dutaintegra.git`, whose
+`main` sits on `2e267ba` — the same commit as local `main`, so this repo is
+already being pushed to GitLab. Until 2026-11-04 that pipeline was two jobs,
+`build` (install, vite build, `sync-web.mjs`) and `deploy-pages`, with **no test
+of any kind**: every push to main uploaded `public/` to the live `dutaintegra.my`
+origin unchecked. That is the mechanical explanation for the six production
+uploads in twelve hours recorded above — they were CI, not someone typing
+`npm run cf:deploy`, which is why the deploy history never corresponded to a gate.
+`0c0dfd2` added the job on 2026-11-03 and `dd0bd71` fixed its install
+(`NODE_ENV=production` had been suppressing devDependencies); neither added a test.
+
+The rewritten file runs the same gate GitLab can reach (`server-tests`,
+`frontend-tests`, `env-docs`, `secret-scan`, `artifact-drift`) and keeps the
+deploy, but as `when: manual` on the default branch, `needs: artifact-drift` with
+its `public/` artifact, and present in the pipeline only when
+`CLOUDFLARE_API_TOKEN` is defined. Pushing therefore cannot change production by
+itself, and the bytes uploaded are the bytes that were just rebuilt and checked
+rather than a second, unverified build. Set `CLOUDFLARE_API_TOKEN` (plus
+`CLOUDFLARE_ACCOUNT_ID`) as masked, protected variables under Settings → CI/CD →
+Variables. The job also passes `--commit-hash $CI_COMMIT_SHA`, because a bare
+`wrangler pages deploy` records the uploading *machine*'s
+`CF_PAGES_COMMIT_SHA` as the Pages Source — the provenance column this file has
+been warning about all along.
+
+Verified by running the job scripts in a clean worktree of `2e267ba`
+(`git worktree add --detach /tmp/ci-wt HEAD`), the closest local stand-in for a
+runner: `npm run build:web` exited 0 with `git status --porcelain -- Web/ public/`
+empty, so `artifact-drift` passes on the first push — including the `public/` half
+GitHub's version never looked at; `npm test` 291/291; web tests 17/17; `oxlint` 0
+errors; `validate-env` and `scan-secrets` both exit 0. `scan-secrets --verify` was
+**not** run locally, because its liveness check sends each candidate to the
+provider that issued it — that half is for the runner.
+
+Two things do not move with the pipeline: Dependabot (`.github/dependabot.yml`)
+has no free-tier GitLab equivalent, so keep Dependabot on GitHub — it opens PRs and
+needs no runner — or adopt Renovate; and `automations/` runs on OpenHands cron, not
+on either CI.
 
 ## Automations
 
@@ -536,6 +672,16 @@ in the Cloudflare dashboard. That is the intended safe state: nothing can charge
 without explicit keys. The `/billing` SPA (`web-new/src/pages/billing.tsx`) now
 shows an inline checkout error rather than replacing the whole page.
 
+**Re-probed 2026-11-04: that safe state has moved.** `/api/health` on the apex now
+answers `payments.providersConfigured: {hitpay: true, billplz: false}`, so `HITPAY_*`
+has been added to the Pages production environment and **HitPay checkout can charge
+today**. `billplz` is still unset, and the deployed build does not report herepay at
+all. All three `/api/payments/webhook/*` routes answer **405** to a `GET`; an
+unsigned `POST` answers **401** for hitpay and billplz but **500** for herepay —
+the deployed `payments.mjs` computes the checksum before checking for a key, so
+`createHmac(undefined)` throws. The working tree fixes that (401, with the payer and
+payload guards described below) and it ships only on the next `npm run cf:deploy`.
+
 An earlier version of this paragraph claimed the Pages deploy carried
 `handler.mjs` because `functions/api/[[path]].js` copies Pages env into
 `process.env`. That was wrong: the file's only import is `handleApi` from
@@ -550,7 +696,7 @@ with `datastore.probe` and `payments.providersConfigured`, and 503 when the
 round-trip fails. `health.mjs` counts `CF_PAGES` as serverless too, so a jsonl
 fallback on Pages is no longer reported durable.
 
-Four routes, all company-scoped via the `dutaos_session` cookie (`getCompanyIdFromReq`
+Five routes, all company-scoped via the `dutaos_session` cookie (`getCompanyIdFromReq`
 in `server/auth.mjs`):
 
 | Method | Path | Auth | Purpose |
@@ -559,8 +705,42 @@ in `server/auth.mjs`):
 | GET | `/api/billing/payments` | cookie | Lists the authenticated company's payments (newest first) |
 | POST | `/api/payments/webhook/hitpay` | HMAC-SHA256 sig | Flips payment to paid/failed, upgrades subscription on paid |
 | POST | `/api/payments/webhook/billplz` | HMAC-SHA256 sig | Same, against the `x-signature` header |
+| POST | `/api/payments/webhook/herepay` | checksum | Same, against Herepay's field checksum |
 
-Both webhook routes are rate-limited at 60 requests/minute per source IP
+**HerePay fails closed instead of self-contradicting.** Until 2026-11-04
+`createCheckout` built `metadata = { companyId, plan, orderId }` and then read
+`metadata.bankPrefix` / `metadata.customerName` back out of that same object, so the
+always-`undefined` values threw `Herepay requires bank_prefix` after a payment row had
+already been created as pending. It now takes a fourth argument, `customer`, threaded from
+the request body (`handler` → `readJsonBodyLocal` does no key filtering, so
+`{ provider, plan, customer }` arrives intact), checks the three `HEREPAY_*` keys first,
+and only then refuses unless the caller supplied `name`/`email`/`phone` and the
+`bankPrefix` the payer picked. The error is a 400 before any provider call, and
+`payments.test.mjs` asserts all three paths: unconfigured, configured-but-no-payer
+(`fetch` call count stays 0), and a complete payer — which checks the form body's
+`name`/`email`/`bank_prefix`/`amount` and the `checksum` against the mock's HTML
+`<form action>`, since HerePay returns a form, not JSON.
+
+What is still missing is the caller: `web-new/src/pages/billing.tsx` POSTs only
+`{ provider, plan }`, so HerePay checkout cannot succeed from the UI even with keys set,
+and nothing anywhere collects a bank choice. Wiring it needs the company's contact details
+read from `companies.mjs` plus Herepay's bank-prefix list. `HEREPAY_*` is unset in the
+Pages environment, so the provider stays hidden — the fail-closed default.
+
+The callback had the same problem in reverse: it computed the checksum before
+checking that a key exists, so with `HEREPAY_PRIVATE_KEY` unset — production's
+state today — `createHmac(undefined)` threw and
+`/api/payments/webhook/herepay` answered **500** instead of the **401** hitpay
+and billplz answer. `herepayVerifyChecksum` now refuses a missing key or a
+non-string `checksum` before touching HMAC, `processHerepayWebhook` rejects a
+parsed body that is not an object, and `updatePaymentStatusByOrderId` returns
+early when the provider names no order (the id used to degrade into
+`metadata ilike '%null%'`, which could flip an unrelated row) and
+percent-encodes it, the way every other `sbFetch` call in the file already did.
+`status_code` maps `00` → paid, `29` → pending, anything else → failed, and the
+success body is the literal text `OK` because that is what HerePay parses.
+
+All three webhook routes are rate-limited at 60 requests/minute per source IP
 (`x-forwarded-for`) via `auth.mjs:rateLimit` — see `webhookRateLimit` in
 `payments.mjs`. Signatures are verified with `timingSafeEqual`. A provider
 is only offered at checkout when its keys are set; unset means hidden, not
@@ -573,9 +753,40 @@ that bypasses the `UPDATABLE_FIELDS` whitelist; do not route subscription
 changes through the normal `updateCompany`, or the tier/status fields are
 silently dropped.
 
-`/api/health` reports `payments.providersConfigured.{hitpay,billplz}` so the
+`/api/health` reports `payments.providersConfigured.{hitpay,billplz,herepay}` so the
 uptime automation can page when a key disappears; the flag is not part of
 the health `ok` calculation.
+
+## Ask Duta (public assistant on `/ask`)
+
+`server/ask-duta.mjs` + `POST /api/ask-duta` answer anonymous visitors about Duta
+Integra itself. It is **not** the DutaOS chatbar: `/api/ai/chat` calls
+`requireCompany()` (`server/ai.mjs`) and grounds on the signed-in client's own
+compliance rows, so it 401s for a marketing visitor — which is why this is a
+separate endpoint and not a reuse of it.
+
+Answer order, first hit wins: curated facts → the model, *only* if one is
+configured → an explicit hand-off. The response is
+`{ answer, answered, topic, source: "rule"|"model"|"handoff", lang }`, and a miss
+is returned as a miss (`answered:false`), never improvised. `server/knowledge/duta-integra.mjs`
+is the only DATA block; facts we do not have are stored as `null` with a comment
+(`ssmNumber`, `taxNumber`, `refundPolicy`), because `privacy.html` still carries
+the unfilled `(Company No. [INSERT])` placeholder.
+
+| Consequence | Why it matters |
+|---|---|
+| **It works with zero keys.** `llmConfigured()` is `LLM_BASE_URL && LLM_API_KEY`; Ollama on localhost does not count, because it is unreachable on workerd. Adding a provider later upgrades the site with no redeploy — and a model-only widget would have hit the `catch` on every query in production. | The same "routes live, keys absent" state recorded for payments. |
+| **One handler, both forks.** `handler.mjs` calls it directly; `handler-cloudflare.mjs` reaches it through `runNodeHandler`. There is deliberately no `ask-duta-cloudflare.mjs` — a second copy is how this repo diverges its entrypoints. | Production runs the second fork. |
+| **No migration, no table.** `ai_actions.company_id` is `not null references companies(id)`, so an anonymous turn cannot be logged there, and a new table means a hand-applied schema change. v1 writes nothing to the datastore; leads reuse `/api/send-email` (CSRF, validation, notification and the `leads` table come free). `"ask-duta"` is in `WEBSITE_LEAD_SOURCES` or `normaliseLeadSource()` silently rewrites the attribution to `contact-form`. | RLS is not the gate here — writes go through the service-role key. |
+| **Rate limit is per-IP and per-isolate.** `rateLimit("ask-duta:"+ip, …, 10, 60_000)`; the counters are a module-level `Map`, so a cold isolate resets them. It blunts a browser flood; it is not a paywall. Tests must use a fresh `nextIp()` per case. | Same trap as every other rate-limited route. |
+
+Two guard tests exist because both defects were found in this feature, not
+before it: BM answers must not carry English prose (the matcher is a *word-start
+prefix*, so `"siap"` matched inside `"siapa"` and `"berapa"` inside `"berapa
+lama"`, and one English-only display string leaks into every Malay answer), and
+every `DI_FACTS` figure must still appear on the pricing page. `/ask` is in
+`public/sitemap.xml`, whose five retired `.html` twins were still being
+advertised to crawlers — now pointed at the React routes and pinned by a test.
 
 ## Environment variables
 

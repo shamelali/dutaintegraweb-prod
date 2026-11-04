@@ -1,38 +1,147 @@
+# GitLab CI is the pipeline that actually runs for this repository.
+#
+# `.github/workflows/ci.yml` carries the same gate, but every GitHub job for this
+# account ends `failed` with `runner_name: ""` and the annotation "your account is
+# locked due to a billing issue", so nothing there has executed since the lock.
+# The two files are deliberately parallel: change a gate in one and change it in
+# the other, or the account that recovers starts enforcing a different set of rules.
+#
+# What the previous version of this file did NOT have: any test at all. It built
+# `public/` and pushed it to the live `dutaintegra.my` origin on every commit to
+# main, which is how the deploy history reads as six production uploads in twelve
+# hours while `npm test` had never been run by a machine. The gate is now in front
+# of the deploy, and the deploy is a manual click: production still changes only
+# when someone chooses to change it.
+
+workflow:
+  rules:
+    # A merge request builds its own pipeline; suppress the branch pipeline for the
+    # same commit so the two do not race for the same runner and double the minutes.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
 stages:
+  - verify
   - build
   - deploy
 
-build:
-  stage: build
+default:
   image: node:22
-  only:
-    - main
+  interruptible: true
+
+# `web-new/` is the only install in the repo (the server has zero runtime
+# dependencies), and its lockfile is the cache key. Two jobs need it; without a
+# cache each pays for the same 70 packages from scratch.
+.web-deps:
   cache:
     key:
       files:
         - web-new/package-lock.json
-      prefix: ${CI_COMMIT_REF_SLUG}
     paths:
       - web-new/node_modules/
+    policy: pull-push
+
+# The API the marketing site posts leads to. This is the suite that proves the
+# Cloudflare fork boots, the schema matches the migrations, and the hand-written
+# static tree still resolves every link and translation key.
+server-tests:
+  stage: verify
+  timeout: 15m
+  needs: []
+  script:
+    - npm test
+
+frontend-tests:
+  stage: verify
+  timeout: 20m
+  needs: []
+  extends: .web-deps
   script:
     - npm --prefix web-new ci
-    - npm --prefix web-new run build
-    - node scripts/sync-web.mjs
+    # vitest run && tsc -p tsconfig.vitest.json --noEmit
+    - npm --prefix web-new test
+    - npm --prefix web-new run lint
+    # No `npm run build` here even though the GitHub job has one: artifact-drift
+    # runs `npm run build:web`, which is `ci && tsc -b && vite build && sync-web`,
+    # so the app typecheck and the bundle both get exercised - once, in the job
+    # whose verdict depends on them.
+
+# .env.example is the contract for every variable the server reads; a name used in
+# code but undocumented (or documented but gone) fails here rather than in a cold
+# start on Pages.
+env-docs:
+  stage: verify
+  timeout: 5m
+  needs: []
+  script:
+    - node scripts/validate-env.mjs
+
+# Warnings never fail the build; only a credential the provider confirms as live
+# does. History is scanned too, because a secret committed and later deleted is
+# still recoverable from any clone — that needs GIT_DEPTH 0, since GitLab clones
+# 20 commits by default.
+secret-scan:
+  stage: verify
+  timeout: 15m
+  needs: []
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - node scripts/scan-secrets.mjs --verify
+    - node scripts/scan-secrets.mjs --history --verify
+
+# Guards the failure this repo has already hit twice: a bundle committed into the
+# deploy trees that no longer matches web-new/ source. Checks BOTH trees, because
+# Vercel serves Web/ and Cloudflare Pages serves public/, and a half-synced pair
+# ships the old app to one of them. Porcelain rather than `git diff` so a newly
+# emitted hashed bundle counts as drift too.
+artifact-drift:
+  stage: build
+  timeout: 20m
+  extends: .web-deps
+  script:
+    - npm run build:web
+    - |
+      if [ -n "$(git status --porcelain -- Web/ public/)" ]; then
+        echo "Web/ or public/ is out of date with web-new/ source."
+        echo "Run 'npm run build:web' and commit the result."
+        git status --porcelain -- Web/ public/
+        exit 1
+      fi
+      echo "Both deploy trees match a fresh build of web-new/."
   artifacts:
+    name: "pages-public"
     paths:
       - public/
     expire_in: 1 week
 
+# Uploads exactly the public/ tree the drift job just rebuilt and verified, so the
+# bytes that got shipped are the bytes that got checked.
+#
+# Manual on purpose: pushing to main must not change dutaintegra.my by itself. Set
+# CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID) as masked, protected CI/CD
+# variables; with no token the job is not even added to the pipeline.
 deploy-pages:
   stage: deploy
-  image: node:22
-  only:
-    - main
+  timeout: 15m
   needs:
-    - build
-  script:
-    - npm install -g wrangler
-    - wrangler pages deploy public --project-name=dutaintegra
+    - job: artifact-drift
+      artifacts: true
+  rules:
+    # allow_failure: true so a green pipeline means "the gate passed", not "someone
+    # forgot to click". The deploy is an action you take, never a pending state the
+    # pipeline has to be rescued out of.
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CLOUDFLARE_API_TOKEN
+      when: manual
+      allow_failure: true
   environment:
     name: production
     url: https://dutaintegra.my
+  script:
+    - npm install -g wrangler
+    # --commit-hash is why this runs from CI at all: an upload without it records the
+    # deploying shell's CF_PAGES_COMMIT_SHA as the Pages "Source", which is provenance
+    # about the machine, not about the commit. Here it is the pipeline's own SHA.
+    - wrangler pages deploy public --project-name=dutaintegra --commit-hash "$CI_COMMIT_SHA" --commit-message "GitLab CI pipeline $CI_PIPELINE_ID"
