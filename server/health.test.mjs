@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { healthReport, resetHealthProbeCache } from "./health.mjs";
 import { resetBackendWarnings } from "./store.mjs";
 
-const ENV_KEYS = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "NODE_ENV", "VERCEL", "CONTACT_INBOX_EMAIL", "ADMIN_EMAIL", "HITPAY_API_KEY", "HITPAY_SECRET_KEY", "BILLPLZ_API_KEY", "BILLPLZ_COLLECTION_ID"];
+const ENV_KEYS = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "NODE_ENV", "VERCEL", "CONTACT_INBOX_EMAIL", "ADMIN_EMAIL", "HITPAY_API_KEY", "HITPAY_SECRET_KEY", "BILLPLZ_API_KEY", "BILLPLZ_COLLECTION_ID", "HEREPAY_API_KEY", "HEREPAY_SECRET_KEY", "HEREPAY_PRIVATE_KEY"];
 
 let saved;
 let originalFetch;
@@ -168,7 +168,7 @@ test("inbox status is reported separately from the datastore", async () => {
 
 test("payments.providersConfigured reflects whether each provider has its keys", async () => {
   let report = await healthReport();
-  assert.deepEqual(report.payments.providersConfigured, { hitpay: false, billplz: false });
+  assert.deepEqual(report.payments.providersConfigured, { hitpay: false, billplz: false, herepay: false });
 
   process.env.HITPAY_API_KEY = "hp_key";
   process.env.HITPAY_SECRET_KEY = "hp_secret";
@@ -181,5 +181,18 @@ test("payments.providersConfigured reflects whether each provider has its keys",
   process.env.BILLPLZ_COLLECTION_ID = "bp_coll";
   resetHealthProbeCache();
   report = await healthReport();
-  assert.deepEqual(report.payments.providersConfigured, { hitpay: true, billplz: true });
+  assert.deepEqual(report.payments.providersConfigured, { hitpay: true, billplz: true, herepay: false });
+
+  // HerePay needs three keys, so two of three must not read as configured —
+  // the uptime watch pages on this flag, and a half-set provider cannot charge.
+  process.env.HEREPAY_API_KEY = "hr_key";
+  process.env.HEREPAY_SECRET_KEY = "hr_secret";
+  resetHealthProbeCache();
+  report = await healthReport();
+  assert.equal(report.payments.providersConfigured.herepay, false);
+
+  process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+  resetHealthProbeCache();
+  report = await healthReport();
+  assert.deepEqual(report.payments.providersConfigured, { hitpay: true, billplz: true, herepay: true });
 });

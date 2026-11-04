@@ -145,6 +145,7 @@ export async function healthReport({ now = Date.now(), force = false } = {}) {
       providersConfigured: {
         hitpay: Boolean(process.env.HITPAY_API_KEY && process.env.HITPAY_SECRET_KEY),
         billplz: Boolean(process.env.BILLPLZ_API_KEY && process.env.BILLPLZ_COLLECTION_ID),
+        herepay: Boolean(process.env.HEREPAY_API_KEY && process.env.HEREPAY_SECRET_KEY && process.env.HEREPAY_PRIVATE_KEY),
       },
     },
     // Retained so the deployed uptime automation keeps parsing while it is

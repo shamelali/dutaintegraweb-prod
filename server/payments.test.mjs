@@ -28,6 +28,9 @@ let ipCounter = 0;
 const realFetch = globalThis.fetch;
 let hitpayCalls = 0;
 let billplzCalls = 0;
+let herepayCalls = 0;
+/** The form-encoded body of the last HerePay initiate call, parsed. */
+let herepayLastFields = null;
 
 function nextIp() {
   ipCounter += 1;
@@ -52,6 +55,15 @@ globalThis.fetch = async (url, init) => {
     return new Response(
       JSON.stringify({ id: "bp_test_1", url: "https://www.billplz.com/api/v3/payments/bp_test_1" }),
       { status: 200, headers: { "content-type": "application/json" } },
+    );
+  }
+  if (u.includes("/api/v1/herepay/initiate")) {
+    herepayCalls += 1;
+    herepayLastFields = Object.fromEntries(new URLSearchParams(String(init?.body ?? "")).entries());
+    // HerePay answers with an auto-submitting FPX form, not JSON.
+    return new Response(
+      '<html><body><form method="post" action="https://uat.herepay.org/fpx/redirect/hr_test_1"><input type="submit"></form></body></html>',
+      { status: 200, headers: { "content-type": "text/html" } },
     );
   }
   return realFetch(url, init);
@@ -100,6 +112,9 @@ function scrubEnv() {
   delete process.env.HITPAY_SECRET_KEY;
   delete process.env.BILLPLZ_API_KEY;
   delete process.env.BILLPLZ_COLLECTION_ID;
+  delete process.env.HEREPAY_API_KEY;
+  delete process.env.HEREPAY_SECRET_KEY;
+  delete process.env.HEREPAY_PRIVATE_KEY;
   delete process.env.WEBHOOK_BASE_URL;
 }
 
@@ -121,6 +136,8 @@ beforeEach(async () => {
   scrubEnv();
   hitpayCalls = 0;
   billplzCalls = 0;
+  herepayCalls = 0;
+  herepayLastFields = null;
   resetAuthRateLimit();
 });
 
@@ -191,6 +208,56 @@ describe("POST /api/billing/checkout", () => {
     assert.equal(res.body.payment.plan, "growth");
     assert.equal(res.body.payment.amount, 189900);
     assert.equal(res.body.checkoutUrl, "https://www.billplz.com/api/v3/payments/bp_test_1");
+  });
+
+  test("400 when HerePay is not configured", async () => {
+    const { token } = await authenticatedCompany();
+    const res = await post("/api/billing/checkout", { provider: "herepay", plan: "starter" }, { cookie: `dutaos_session=${token}` });
+    assert.equal(res.status, 400);
+    assert.equal(res.body.error, "Herepay not configured");
+    assert.equal(herepayCalls, 0);
+  });
+
+  /**
+   * HerePay charges need a real payer and a real bank selection. The branch that
+   * creates the payment used to read those off `metadata` — an object built only
+   * from { companyId, plan, orderId } — so it always sent name "Customer" and
+   * phone "0123456789", then threw on the missing bank_prefix before any HTTP
+   * call. Checkout is now refused loudly instead of inventing a payer.
+   */
+  test("HerePay checkout is refused until the caller supplies the payer", async () => {
+    process.env.HEREPAY_API_KEY = "hr_key";
+    process.env.HEREPAY_SECRET_KEY = "hr_secret";
+    process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+    const { token } = await authenticatedCompany();
+    const res = await post("/api/billing/checkout", { provider: "herepay", plan: "starter" }, { cookie: `dutaos_session=${token}` });
+    assert.equal(res.status, 400);
+    assert.match(res.body.error, /HerePay checkout needs the customer/i);
+    assert.equal(herepayCalls, 0, "must fail before any provider call, not charge a fabricated payer");
+  });
+
+  test("HerePay checkout sends the payer's own details and bank prefix", async () => {
+    process.env.HEREPAY_API_KEY = "hr_key";
+    process.env.HEREPAY_SECRET_KEY = "hr_secret";
+    process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+    const { token } = await authenticatedCompany();
+    const res = await post(
+      "/api/billing/checkout",
+      {
+        provider: "herepay",
+        plan: "starter",
+        customer: { name: "Ahmad Bin Mokhtar", email: "ahmad@mokhtar-trading.my", phone: "0123456789", bankPrefix: "MBB2E" },
+      },
+      { cookie: `dutaos_session=${token}` },
+    );
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(herepayCalls, 1);
+    assert.equal(res.body.checkoutUrl, "https://uat.herepay.org/fpx/redirect/hr_test_1");
+    assert.equal(herepayLastFields.name, "Ahmad Bin Mokhtar");
+    assert.equal(herepayLastFields.email, "ahmad@mokhtar-trading.my");
+    assert.equal(herepayLastFields.bank_prefix, "MBB2E");
+    assert.equal(herepayLastFields.amount, "79900");
+    assert.ok(herepayLastFields.checksum, "the form carries an HMAC checksum");
   });
 
   test("payment history lists only the authenticated company's payments", async () => {
@@ -299,6 +366,129 @@ describe("POST /api/payments/webhook/billplz", () => {
     const paid = payments.body.payments.find((p) => p.metadata.orderId === orderId);
     assert.ok(paid);
     assert.equal(paid.status, "paid");
+  });
+});
+
+describe("POST /api/payments/webhook/herepay", () => {
+  const HERE = { apiKey: "hr_key", secretKey: "hr_secret", privateKey: "hr_private" };
+
+  function configureHerepay() {
+    process.env.HEREPAY_API_KEY = HERE.apiKey;
+    process.env.HEREPAY_SECRET_KEY = HERE.secretKey;
+    process.env.HEREPAY_PRIVATE_KEY = HERE.privateKey;
+  }
+
+  /** HerePay calls back form-encoded; checksum is the HMAC of every other field. */
+  function herepayCallback(fields) {
+    const payload = Object.keys(fields).sort().map((k) => fields[k]).join(",");
+    const checksum = createHmac("sha256", HERE.privateKey).update(payload).digest("hex");
+    return new URLSearchParams({ ...fields, checksum }).toString();
+  }
+
+  async function postForm(body) {
+    const res = await fetch(`${base}/api/payments/webhook/herepay`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", "x-forwarded-for": nextIp() },
+      body,
+    });
+    const text = await res.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch { /* HerePay's 200 is plain text */ }
+    return { status: res.status, text, body: parsed };
+  }
+
+  /**
+   * HEREPAY_PRIVATE_KEY is unset in the Pages environment today, so this is the
+   * only callback shape production can actually receive. Verifying by computing
+   * the HMAC first meant createHmac(undefined) threw and the route answered 500;
+   * hitpay and billplz already answer 401 here.
+   */
+  test("401, not 500, while HerePay is unconfigured", async () => {
+    const res = await postForm(herepayCallback({ payment_code: "dutaos-starter-aaaaaaaa", status_code: "00" }));
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error, "Invalid checksum");
+  });
+
+  test("401 when the checksum does not match", async () => {
+    configureHerepay();
+    const res = await postForm(new URLSearchParams({
+      payment_code: "dutaos-starter-aaaaaaaa",
+      status_code: "00",
+      checksum: "f".repeat(64),
+    }).toString());
+    assert.equal(res.status, 401);
+  });
+
+  test("400 on a JSON body that is not an object", async () => {
+    configureHerepay();
+    const res = await webhook("/api/payments/webhook/herepay", JSON.stringify(7), null);
+    assert.equal(res.status, 400);
+  });
+
+  test("answers plain OK and upgrades the company when paid", async () => {
+    configureHerepay();
+    const { token } = await authenticatedCompany();
+    const checkout = await post(
+      "/api/billing/checkout",
+      {
+        provider: "herepay",
+        plan: "growth",
+        customer: { name: "Ahmad Bin Mokhtar", email: "ahmad@mokhtar-trading.my", phone: "0123456789", bankPrefix: "MBB2E" },
+      },
+      { cookie: `dutaos_session=${token}` },
+    );
+    assert.equal(checkout.status, 200, JSON.stringify(checkout.body));
+    const orderId = checkout.body.payment.metadata.orderId;
+
+    const res = await postForm(herepayCallback({ payment_code: orderId, status_code: "00", reference_code: "hr_ref_1" }));
+    assert.equal(res.status, 200);
+    assert.equal(res.text, "OK", "HerePay expects the literal string OK, not JSON");
+
+    const payments = await get("/api/billing/payments", { cookie: `dutaos_session=${token}` });
+    const paid = payments.body.payments.find((p) => p.metadata.orderId === orderId);
+    assert.equal(paid.status, "paid");
+    assert.equal(paid.providerPaymentId, "hr_ref_1");
+
+    const me = await get("/api/companies", { cookie: `dutaos_session=${token}` });
+    assert.equal(me.body.company.subscriptionTier, "growth");
+    assert.equal(me.body.company.subscriptionStatus, "active");
+  });
+
+  test("status_code 29 stays pending and does not upgrade", async () => {
+    configureHerepay();
+    const { token } = await authenticatedCompany();
+    const checkout = await post(
+      "/api/billing/checkout",
+      {
+        provider: "herepay",
+        plan: "growth",
+        customer: { name: "Ahmad Bin Mokhtar", email: "ahmad@mokhtar-trading.my", phone: "0123456789", bankPrefix: "MBB2E" },
+      },
+      { cookie: `dutaos_session=${token}` },
+    );
+    const orderId = checkout.body.payment.metadata.orderId;
+
+    const res = await postForm(herepayCallback({ payment_code: orderId, status_code: "29" }));
+    assert.equal(res.status, 200);
+
+    const payments = await get("/api/billing/payments", { cookie: `dutaos_session=${token}` });
+    assert.equal(payments.body.payments.find((p) => p.metadata.orderId === orderId).status, "pending");
+    const me = await get("/api/companies", { cookie: `dutaos_session=${token}` });
+    assert.equal(me.body.company.subscriptionTier, "starter");
+  });
+
+  /**
+   * A verified payload naming an order we never minted must not match anything.
+   * Without the id guard the lookup degrades to ilike '%null%', which would flip
+   * whichever row happens to come first.
+   */
+  test("an unknown payment_code changes no rows", async () => {
+    configureHerepay();
+    const { token } = await authenticatedCompany();
+    const res = await postForm(herepayCallback({ payment_code: "dutaos-growth-deadbeef", status_code: "00" }));
+    assert.equal(res.status, 200);
+    const payments = await get("/api/billing/payments", { cookie: `dutaos_session=${token}` });
+    assert.equal(payments.body.payments.length, 0);
   });
 });
 

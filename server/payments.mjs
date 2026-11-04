@@ -328,9 +328,14 @@ async function herepayCreatePayment({ amount, orderId, description, returnUrl, c
 }
 
 function herepayVerifyChecksum(fields, privateKey) {
+  const received = fields?.checksum;
+  // Fail closed on a missing key, the same rule hitpayVerifySignature and
+  // billplzVerifySignature apply. Computing the HMAC first meant an unset
+  // HEREPAY_PRIVATE_KEY reached createHmac(undefined) and the callback answered
+  // 500 instead of 401.
+  if (!privateKey || typeof received !== "string" || received.length === 0) return false;
   const expected = herepayChecksum(fields, privateKey);
-  const received = fields.checksum;
-  if (!received || expected.length !== received.length) return false;
+  if (expected.length !== received.length) return false;
   return timingSafeEqual(Buffer.from(expected), Buffer.from(received));
 }
 
@@ -342,7 +347,7 @@ function siteBaseUrl(req) {
   return host ? `${proto}://${host}` : process.env.WEBHOOK_BASE_URL ?? "";
 }
 
-async function createCheckout(companyId, { provider, plan, baseUrl }) {
+async function createCheckout(companyId, { provider, plan, baseUrl, customer = {} }) {
   if (!PROVIDERS.has(provider)) throw new Error("Unknown payment provider");
   const amount = planAmount(plan);
   if (amount === null) throw new Error("Unknown plan");
@@ -374,20 +379,34 @@ async function createCheckout(companyId, { provider, plan, baseUrl }) {
       metadata,
     });
   } else if (provider === "herepay") {
-    // Herepay requires customer details and bank selection
-    const customerName = metadata.customerName ?? "Customer";
-    const customerEmail = metadata.customerEmail ?? "";
-    const customerPhone = metadata.customerPhone ?? "0123456789";
-    const bankPrefix = metadata.bankPrefix;
+    // HerePay's FPX charge names a real payer and a bank they picked. Reading
+    // these off `metadata` (which only ever holds companyId/plan/orderId) meant
+    // every attempt sent name "Customer" and phone "0123456789" and then threw
+    // on the missing bank_prefix, so checkout could not work at all. It now
+    // fails closed unless the caller supplies the payer.
+    // Configuration first, then the payer: an unset provider must still answer
+    // "not configured" rather than blaming the caller for missing fields.
+    const cfg = herepayConfig();
+    if (!cfg.secretKey || !cfg.apiKey || !cfg.privateKey) throw new Error("Herepay not configured");
+    const name = customer?.name;
+    const email = customer?.email;
+    const phone = customer?.phone;
+    const bankPrefix = customer?.bankPrefix;
+    if (!name || !email || !phone) {
+      throw new Error("HerePay checkout needs the customer's name, email and phone");
+    }
+    if (!bankPrefix) {
+      throw new Error("HerePay checkout needs the customer's selected bank (bankPrefix)");
+    }
     providerResult = await herepayCreatePayment({
       amount,
       orderId,
       description,
       returnUrl,
       callbackUrl,
-      name: customerName,
-      email: customerEmail,
-      phone: customerPhone,
+      name,
+      email,
+      phone,
       bankPrefix,
       metadata,
     });
@@ -456,6 +475,9 @@ async function processHerepayWebhook(rawBody, headers) {
   } else {
     try { fields = JSON.parse(rawBody.toString("utf8")); } catch { return { status: 400, body: { error: "Invalid payload" } }; }
   }
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) {
+    return { status: 400, body: { error: "Invalid payload" } };
+  }
   if (!herepayVerifyChecksum(fields, cfg.privateKey)) {
     return { status: 401, body: { error: "Invalid checksum" } };
   }
@@ -470,8 +492,12 @@ async function processHerepayWebhook(rawBody, headers) {
 }
 
 async function updatePaymentStatusByOrderId(orderId, status, providerPaymentId) {
+  // The id comes from the provider's payload, not from us: a missing one must not
+  // degrade into the literal search "%null%", and it is encoded so it cannot add
+  // PostgREST filters to the query.
+  if (!orderId || typeof orderId !== "string") return null;
   if (usingSupabase()) {
-    const res = await sbFetch(PAYMENT_TABLE, `?metadata=ilike.%${orderId}%&select=*`);
+    const res = await sbFetch(PAYMENT_TABLE, `?metadata=ilike.%${encodeURIComponent(orderId)}%&select=*`);
     if (!res.ok) throw new Error(`Supabase payment lookup failed: ${res.status}`);
     const rows = await res.json();
     if (rows.length === 0) return null;
@@ -520,12 +546,12 @@ async function handleBillingCheckout(req, res) {
 
   const parsed = await readJsonBodyLocal(req);
   if (parsed.error) return sendJson(res, parsed.error.status, parsed.error.body);
-  const { provider, plan } = parsed.data ?? {};
+  const { provider, plan, customer } = parsed.data ?? {};
   if (!provider || !plan) return sendJson(res, 400, { error: "provider and plan are required" });
 
   const baseUrl = siteBaseUrl(req);
   try {
-    const { payment, checkoutUrl } = await createCheckout(companyId, { provider, plan, baseUrl });
+    const { payment, checkoutUrl } = await createCheckout(companyId, { provider, plan, baseUrl, customer });
     return sendJson(res, 200, { payment, checkoutUrl });
   } catch (err) {
     return sendJson(res, 400, { error: err.message });
