@@ -72,3 +72,12 @@ supabase/.temp/
 .backup/
 DutaIntegra-*Patch*/
 DutaIntegra-*-Patch*.zip
+
+# Root-level shell-typo artifacts. `npm_config_X= npm run build:web` and
+# `tsc -b` at the prompt (rather than inside a package.json script) create
+# zero-length files named after the argument the shell misparsed. The build:web
+# script already prefixes npm_config_allow_scripts= *inside* the npm script;
+# a copy-paste of that line to the shell is what drops these files.
+/tsc
+/npm_config_*
+/*@*.*.*

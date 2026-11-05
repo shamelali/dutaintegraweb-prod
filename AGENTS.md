@@ -838,6 +838,28 @@ every `DI_FACTS` figure must still appear on the pricing page. `/ask` is in
 `public/sitemap.xml`, whose five retired `.html` twins were still being
 advertised to crawlers — now pointed at the React routes and pinned by a test.
 
+**Live on `dutaintegra.my` as of 2026-11-04.** Deployment `548c7679` (Source
+`6519a81`) is current; `2c2fc9d8` was the initial ship, and the two commits
+between them fixed the tier setup fees that were hard-coded as `RM1,500`/
+`RM3,500` alongside every other number formatted through `money()`. Verified
+locally against `wrangler pages dev public` (workerd, same runtime as
+production) before the push: 200 rule answers, honest hand-off for GST,
+GET → 405, 429 with `Retry-After` on the 11th same-IP POST, `Cache-Control:
+no-store`, and no secret leak in the 429 body. `web-new/src/pages/ask.test.tsx`
+covers the same contract in 12 vitest cases (the client-side mirror of the
+server's 2000-char cap, and busy-state disabling of the input, send button,
+and all four quick-prompt chips).
+
+**Two things are still open, deliberately.** `LLM_BASE_URL` and `LLM_API_KEY`
+are unset, so every answer is on the rule path — setting both in the Pages
+env upgrades the answers without a redeploy, and nothing in this feature waits
+on that credential. And the five edge-cached legacy paths on the apex
+(`/services`, `/about`, `/contact`, `/quiz`, `/pricing`) still show the old
+static HTML to visitors because `edge_cache_ttl=7200` overrides the deployed
+`max-age=0` — the new navbar link is invisible there until that TTL is lowered
+in the Cloudflare dashboard, which the `wrangler` token cannot do. Not fixable
+in code.
+
 ## Environment variables
 
 `.env.example` documents every variable the code reads. There is a test-adjacent
