@@ -169,4 +169,46 @@ describe("Ask Duta page", () => {
     await waitFor(() => expect(askBody()).toBeDefined())
     expect(JSON.parse(String(askBody()?.body)).message).toBe("What does it cost?")
   })
+
+  it("caps the question at the 2000-character limit the server enforces", () => {
+    // ask-duta.mjs rejects anything longer with 400; the textarea should refuse
+    // the extra characters up-front so visitors get no error at submit time.
+    renderAsk()
+    const input = screen.getByLabelText(/What would you like to know/) as HTMLTextAreaElement
+    expect(input.maxLength).toBe(2000)
+  })
+
+  it("disables the input, send button, and quick prompts while a request is in flight", async () => {
+    let resolveFetch: (v: ReturnType<typeof jsonResponse>) => void = () => undefined
+    globalThis.fetch = vi.fn(
+      () => new Promise((resolve) => { resolveFetch = resolve }),
+    )
+    renderAsk()
+    typeQuestion("pricing please")
+    submitChat()
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    const input = screen.getByLabelText(/What would you like to know/) as HTMLTextAreaElement
+    const send = screen.getByRole("button", { name: "Ask" }) as HTMLButtonElement
+    const quickPrompts = screen.getAllByRole("button", {
+      name: /what does it cost|book a free ai audit|what is dutaos|do you handle pdpa/i,
+    }) as HTMLButtonElement[]
+    expect(input.disabled).toBe(true)
+    expect(send.disabled).toBe(true)
+    expect(quickPrompts).toHaveLength(4)
+    for (const chip of quickPrompts) expect(chip.disabled).toBe(true)
+
+    // Release the pending fetch so jsdom doesn't see a dangling promise and the
+    // next case starts with busy=false.
+    resolveFetch(jsonResponse({ answer: "done", answered: true, topic: "pricing", source: "rule", lang: "en" }))
+    await waitFor(() => expect(input.disabled).toBe(false))
+  })
+
+  it("refuses to send a whitespace-only question", () => {
+    renderAsk()
+    typeQuestion("   \n  ")
+    const send = screen.getByRole("button", { name: "Ask" }) as HTMLButtonElement
+    expect(send.disabled).toBe(true)
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
 })
