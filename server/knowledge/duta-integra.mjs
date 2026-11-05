@@ -60,12 +60,12 @@ export const DI_FACTS = {
     {
       name: "AI Growth",
       priceMYR: 1490,
-      setup: { en: "One-time setup: RM1,500", bm: "Setup sekali bayar: RM1,500" },
+      setup: { en: `One-time setup: ${money(1500)}`, bm: `Setup sekali bayar: ${money(1500)}` },
     },
     {
       name: "AI Operations",
       priceMYR: 2990,
-      setup: { en: "One-time setup: RM3,500", bm: "Setup sekali bayar: RM3,500" },
+      setup: { en: `One-time setup: ${money(3500)}`, bm: `Setup sekali bayar: ${money(3500)}` },
     },
   ],
   dutaConnect: {
@@ -164,7 +164,7 @@ export const DI_FACTS = {
 const PERIOD = { en: "month", bm: "bulan" };
 const FROM = { en: "from", bm: "dari" };
 
-const money = (n) => `RM ${n.toLocaleString("en-MY")}`;
+function money(n) { return `RM ${n.toLocaleString("en-MY")}`; }
 
 const tierLines = (lang) =>
   DI_FACTS.managedTiers
