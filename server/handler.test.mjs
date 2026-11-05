@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { adminTokenValid, handle, resetRateLimit, validateEnquiry } from "./handler.mjs";
 import { listEnquiries, resolveInboxEmail, storePath } from "./enquiries.mjs";
@@ -438,7 +439,7 @@ describe("store location", () => {
     try {
       const resolved = storePath();
       // Absolute and fully resolved, anchored to paths.mjs rather than cwd.
-      assert.ok(resolved.startsWith("/"), `expected an absolute path, got ${resolved}`);
+      assert.ok(isAbsolute(resolved), `expected an absolute path, got ${resolved}`);
       assert.ok(
         !resolved.includes(".."),
         `store path should be fully resolved, got ${resolved}`,
@@ -1487,8 +1488,8 @@ describe("deploy outputs", () => {
      * Cloudflare Pages — which answers www.dutaintegra.my — served the SPA
      * shell at that URL instead of the disclosure contact.
      */
-    const web = await walk(new URL("../Web", import.meta.url).pathname);
-    const pages = await walk(new URL("../public", import.meta.url).pathname);
+    const web = await walk(fileURLToPath(new URL("../Web", import.meta.url)));
+    const pages = await walk(fileURLToPath(new URL("../public", import.meta.url)));
     const onlyWeb = web.filter((f) => !pages.includes(f));
     const onlyPages = pages.filter((f) => !web.includes(f));
 

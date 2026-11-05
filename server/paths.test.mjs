@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { dataDir, dataFile } from "./paths.mjs";
@@ -70,7 +71,7 @@ test("no store module rebuilds the data/ path instead of using paths.mjs", () =>
  * only way to exercise that shape without running workerd.
  */
 test("dataDir survives a bundle with no import.meta.url", async () => {
-  const dir = mkdtempSync(join("/tmp", "duta-bundle-"));
+  const dir = mkdtempSync(join(tmpdir(), "duta-bundle-"));
   const bundled = join(dir, "paths-bundled.mjs");
   const source = readFileSync(join(SERVER_DIR, "paths.mjs"), "utf8").replaceAll("import.meta.url", "undefined");
   assert.ok(!source.includes("import.meta.url"), "the copy must not read the module URL anywhere");
