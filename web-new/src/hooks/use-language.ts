@@ -14,7 +14,6 @@ export function useLanguage() {
   const [lang, setLang] = useState<Language>(getInitialLanguage)
 
   useEffect(() => {
-    document.documentElement.lang = lang === "bm" ? "ms" : "en"
     localStorage.setItem("language", lang)
   }, [lang])
 
