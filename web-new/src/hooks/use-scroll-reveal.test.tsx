@@ -9,8 +9,8 @@ function Probe() {
   const ref = useScrollReveal<HTMLDivElement>()
   return (
     <div ref={ref}>
-      <p className="reveal">Managed IT services</p>
-      <p className="reveal">Cybersecurity</p>
+      <p className="reveal">Managed Infrastructure Services</p>
+      <p className="reveal">Cyber Resilience</p>
     </div>
   )
 }
@@ -39,7 +39,7 @@ describe("useScrollReveal", () => {
 
     render(<Probe />)
 
-    for (const text of ["Managed IT services", "Cybersecurity"]) {
+    for (const text of ["Managed Infrastructure Services", "Cyber Resilience"]) {
       expect(screen.getByText(text).classList.contains("visible")).toBe(true)
     }
   })

@@ -70,6 +70,7 @@ import {
 
 import {
   handleAIChat,
+  handleChatHistory,
   handleDutaosBrief,
 } from "./ai.mjs";
 
@@ -197,25 +198,16 @@ export function validateEnquiry(body) {
 
 const WINDOW_MS = 60_000;
 const LIMIT_PER_WINDOW = 5;
+const MAX_IP_ENTRIES = 1000; // prevent unbounded Map growth
 
-/**
- * Login gets a tighter budget than the marketing endpoints. The generic
- * 5/min limiter is sized for a contact form; applied to a credential
- * endpoint it still permits thousands of password guesses per IP per day,
- * which is far more than a password reset flow needs to absorb.
- */
-const LOGIN_WINDOW_MS = 60_000;
-const LOGIN_LIMIT_PER_WINDOW = 5;
-
-const hits = new Map();
-
-/**
- * Sliding-window counter per key. Exported for tests.
- *
- * `limit` and `windowMs` default to the marketing-endpoint budget; auth
- * routes pass their own.
- */
+/** Sliding-window counter per key. Exported for tests. */
 export function rateLimit(key, now = Date.now(), limit = LIMIT_PER_WINDOW, windowMs = WINDOW_MS) {
+  // Purge entries beyond max size to keep the Map bounded
+  if (hits.size >= MAX_IP_ENTRIES) {
+    const oldestKey = hits.keys().next().value;
+    hits.delete(oldestKey);
+  }
+  // Purge stale timestamps per key
   const cutoff = now - windowMs;
   const recent = (hits.get(key) ?? []).filter((t) => t > cutoff);
   if (recent.length >= limit) {
@@ -240,7 +232,16 @@ export function resetRateLimit() {
 
 export function clientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.trim()) return forwarded.split(",")[0].trim();
+  // Only trust X-Forwarded-For when behind a trusted proxy.
+  // If your app is fronted by a reverse proxy (Cloudflare, NGINX, etc.) that
+  // sets this header, configure TRUSTED_PROXY_IPS below. Otherwise clients
+  // can spoof their IP and share a rate-limit bucket.
+  const trusted = process.env.TRUSTED_PROXY_IPS
+    ? process.env.TRUSTED_PROXY_IPS.split(",").includes(forwarded?.split(",")[0]?.trim() ?? "")
+    : false;
+  if (trusted && typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
   return req.socket?.remoteAddress ?? null;
 }
 
@@ -259,7 +260,7 @@ export function corsHeaders(req) {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, POST, OPTIONS",
-    "access-control-allow-headers": "Content-Type",
+    "access-control-allow-headers": "Content-Type, X-CSRF-Token",
     "access-control-max-age": "600",
     vary: "Origin",
   };
@@ -279,7 +280,8 @@ export function checkOrigin(req) {
 }
 
 /** CSRF token validation — compares cookie token with header token.
- *  Only enforced for cross-origin requests (Origin header present). */
+ *  Enforced for any request with an Origin header (same-origin browsers
+ *  always attach Origin to POST fetches, cross-origin requests too). */
 export function validateCsrf(req) {
   // Same-origin requests (no Origin header) don't need CSRF tokens
   if (!req.headers.origin) return true;
@@ -1556,6 +1558,7 @@ export async function handle(req, res) {
     // ── DutaOS AI (grounded on the company's compliance brief) ───────────────
     if (pathname === "/api/dutaos/brief") return await handleDutaosBrief(req, res);
     if (pathname === "/api/ai/chat") return await handleAIChat(req, res);
+    if (pathname === "/api/ai/chat/history") return await handleChatHistory(req, res);
 
     // ── Ask Duta: public assistant about Duta Integra itself. No session, no
     //    datastore write, metered by source IP. ───────────────────────────────

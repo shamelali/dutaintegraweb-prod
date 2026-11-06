@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import {
   ArrowRight,
+  BarChart3,
   Bot,
   Building2,
   Check,
@@ -11,8 +12,10 @@ import {
   Cog,
   Headphones,
   Laptop2,
+  Mail,
   MessageCircle,
   Network,
+  Route,
   ShieldCheck,
   UsersRound,
 } from "lucide-react"
@@ -46,30 +49,63 @@ const pilotFaqs = [
 
 const LANDING_COPY = {
   en: {
-    heroEyebrow: "Technology for a stronger Malaysian SME sector",
-    heroTitle: ["IT, security, cloud and AI—", "working together", "for your business."],
-    heroDescription: "Practical technology services for Malaysian SMEs, from day-to-day IT support to cloud projects and custom AI.",
-    heroSecondary: "Explore services",
-    trust: ["Built for Malaysian SMEs", "Practical, people-first approach", "Secure, reliable and future-ready"],
-    servicesEyebrow: "Our services",
-    servicesTitle: "One partner. Four ways to move forward.",
-    servicesDescription: "End-to-end IT and AI services, tailored for Malaysian SMEs. Practical, secure and designed to help your business grow.",
+    heroEyebrow: "Technology should move your business forward. Not slow it down.",
+    heroTitle: ["One partner for IT, AI, cloud and business automation.", "We help Malaysian businesses simplify operations, connect their systems, strengthen security and automate everyday work — without the complexity of managing multiple technology vendors.", "Built for Malaysian businesses"],
+    heroDescription: "Practical AI adoption, managed technology and clear business outcomes — without the complexity of managing multiple technology vendors.",
+    heroSecondary: "Get Your Free Business Assessment",
+    trust: ["Practical AI adoption", "Managed technology", "Clear business outcomes"],
+    servicesEyebrow: "Four connected capabilities",
+    servicesTitle: "One accountable technology partner, from business assessment and implementation to ongoing operations.",
+    servicesDescription: "We help Malaysian businesses connect their systems, automate repetitive work, strengthen IT security and operate with greater confidence.",
     services: [
-      ["Managed IT", "Reliable day-to-day IT support so your team can focus on what matters."],
-      ["IT Security", "Protect your systems, data and people, and reduce risk."],
-      ["Cloud Migration", "Move and modernize your workloads with minimal disruption."],
-      ["AI Development", "Automate practical business workflows with custom AI solutions."],
+      ["Building a Reliable IT Infrastructure for Growth", "Managed IT — Reliable infrastructure, support and daily operations."],
+      ["Security & Compliance", "Security & Compliance — Protect systems, data and business continuity."],
+      ["Cloud & Integration", "Cloud & Integration — Connect applications, data and infrastructure."],
+      ["AI & Automation", "AI & Automation — Automate processes and build practical business solutions."],
     ],
-    serviceLink: "Explore service",
-    productsEyebrow: "Products & platforms",
-    productsTitle: "Tools that make your business stronger.",
-    productsDescription: "Our products are built for Malaysian businesses and work seamlessly with our services, or on their own.",
+    serviceLink: "Explore Our Solutions",
+    productsEyebrow: "Proprietary products and platforms",
+    productsTitle: "Duta Integra ecosystem",
+    productsDescription: "DutaConnect, Autonomous Ops and other tools as part of the wider ecosystem.",
     products: [
-      ["Autonomous Ops", "AI-assisted infrastructure monitoring with human approval for critical actions."],
       ["DutaConnect", "Capture, prioritize and follow up WhatsApp enquiries."],
+      ["Autonomous Ops", "AI-assisted infrastructure monitoring with human approval for critical actions."],
+      ["DutaStart", "SME entry — Essential managed IT, basic monitoring and support from RM799/month."],
+      ["DutaGrowth", "Growth — Managed IT and cloud, workflow automation, AI implementation, security and operational reporting from custom monthly plans."],
+      ["DutaEnterprise", "Enterprise — Enterprise architecture and integration, security and governance, SLA-backed support, managed infrastructure, custom AI and automation."],
+      ["DutaGuard", "Security monitoring, threat detection and compliance automation."],
+      ["DutaSense", "AI-powered learning, skill assessment and knowledge management."],
     ],
     howEyebrow: "How we work",
-    howTitle: "A simple path from today to tomorrow.",
+    howTitle: "Discover → Assess → Design → Implement → Operate → Improve.",
+    bm: {
+      heroEyebrow: "Teknologi sepatutnya memajukan perniagaan anda. Jangan membuatnya pelan.",
+      heroTitle: ["Satu rakan untuk IT, AI, awan dan otomatisasi perniagaan.", "Kami membantu perniagaan Malaysia menyederhanakan operasi, menyambungkan sistem, memperkuat keselamatan dan mengotomatisasi kerja seharian — tanpa kompleksnya mengurus banyak penjual teknologi.", "Dibina untuk perniagaan Malaysia"],
+      heroDescription: "Penyertaan AI praktikal, teknologi yang diurus dan hasil perniagaan yang jelas — tanpa kompleksnya mengurus banyak penjual teknologi.",
+      heroSecondary: "Tempah Penilaian Perniagaan Percuma",
+      trust: ["Penyertaan AI praktikal", "Teknologi yang diurus", "Hasil perniagaan yang jelas"],
+      servicesEyebrow: "Empat kemampuan terikat",
+      servicesTitle: "Satu rakan bertanggungjawab, dari penilaian perniagaan dan pemasangan sehingga operasi yang berterusan.",
+      servicesDescription: "Kami membantu perniagaan Malaysia menyambungkan sistem, mengautomasikan kerja yang berulang, memperkuat keselamatan IT dan mengoperasikan dengan lebih besar keyakinan.",
+      services: [
+        ["Membangun Infrastruktur yang Berdaya untuk Pertumbuhan", "Managed IT — Infrastruktur yang boleh dipercayai, sokongan dan operasi seharian."],
+        ["Keselamatan & Taadbir", "Keselamatan & Taadbir — Lindungi sistem, data dan kelanjutan perniagaan."],
+        ["Awan & Integrasi", "Awan & Integrasi — Sambungkan aplikasi, data dan infrastruktur."],
+        ["AI & Otomisasi", "AI & Otomisasi —Automasi proses dan cipta penyelesaian perniagaan praktikal."],
+      ],
+      serviceLink: "Lihat Penyelesaian Kami",
+      productsEyebrow: "Produk dan platform khusus",
+      productsTitle: "Ekosistem Duta Integra",
+      productsDescription: "DutaConnect, Autonomous Ops dan alat-alat lain sebagai bahagian ekosistem yang lebih besar.",
+      products: [
+        ["DutaConnect", "Tangkap, utamakan dan susuli soalan WhatsApp."],
+        ["Autonomous Ops", "Pemantauan infrastruktur dibantu AI dengan kelulusan manusia untuk tindakan kritikal."],
+        ["DutaStart", "Masukan SME — Essential managed IT, basic monitoring and support from RM799/bulan."],
+        ["DutaGrowth", "Pertumbuhan — Managed IT and cloud, workflow automation, AI implementation, security and operational reporting from custom monthly plans."],
+        ["DutaEnterprise", "Enterprise — Enterprise architecture and integration, security and governance, SLA-backed support, managed infrastructure, custom AI and automation."],
+    ],
+    howEyebrow: "Bagaimana kita bekerja",
+    howTitle: "Didapati -> Assessment -> Reka -> Paparkan -> Operasikan -> Tingkatkan.",
     howDescription: "A proven approach to deliver real results for your business, with clear communication at every step.",
     steps: [
       ["Assess", "Understand your needs, evaluate your current setup, and define the right solution."],
@@ -114,18 +150,23 @@ const LANDING_COPY = {
     servicesTitle: "Satu rakan kongsi. Empat cara untuk bergerak ke hadapan.",
     servicesDescription: "Perkhidmatan IT dan AI menyeluruh untuk PKS Malaysia. Praktikal, selamat dan direka untuk membantu perniagaan anda berkembang.",
     services: [
-      ["IT Terurus", "Sokongan IT harian yang boleh dipercayai supaya pasukan anda boleh fokus pada perkara penting."],
-      ["Keselamatan IT", "Lindungi sistem, data dan orang anda, serta kurangkan risiko."],
-      ["Migrasi Awan", "Pindahkan dan modenkan beban kerja anda dengan gangguan minimum."],
-      ["Pembangunan AI", "Automasi aliran kerja perniagaan praktikal dengan penyelesaian AI tersuai."],
+      ["Infrastruktur Diurus", "Sokongan IT harian yang boleh dipercayai supaya pasukan anda boleh fokus pada perkara penting."],
+      ["Ketahanan Siber & Tadbir Urus", "Lindungi sistem, data dan orang anda, serta kurangkan risiko."],
+      ["Modenisasi Awan", "Pindahkan dan modenkan beban kerja anda dengan gangguan minimum."],
+      ["Penyelesaian Enterprise Pintar", "Automasi aliran kerja perniagaan praktikal dengan penyelesaian AI tersuai."],
     ],
     serviceLink: "Terokai perkhidmatan",
     productsEyebrow: "Produk dan platform",
     productsTitle: "Alat yang menjadikan perniagaan anda lebih kukuh.",
     productsDescription: "Produk kami dibina untuk perniagaan Malaysia dan berfungsi lancar dengan perkhidmatan kami, atau secara tersendiri.",
     products: [
-      ["Autonomous Ops", "Pemantauan infrastruktur dibantu AI dengan kelulusan manusia untuk tindakan kritikal."],
+      ["DutaOps", "Pemantauan infrastruktur dibantu AI dengan kelulusan manusia untuk tindakan kritikal."],
       ["DutaConnect", "Tangkap, utamakan dan susuli pertanyaan WhatsApp."],
+      ["DutaGuard", "Pemantauan keselamatan, pengesanan ancaman dan automasi pematuhan."],
+      ["DutaSight", "Papan pemuka kecerdasan perniagaan dan analitik bertenaga AI."],
+      ["DutaFlow", "Automasi e-mel bertenaga AI dan kecerdasan peti masuk."],
+      ["DutaTrack", "Penjejakan aliran kerja operasi dan pengoptimuman proses."],
+      ["DutaSense", "Pembelajaran bertenaga AI, penilaian kemahiran dan pengurusan pengetahuan."],
     ],
     howEyebrow: "Cara kami bekerja",
     howTitle: "Laluan mudah dari hari ini ke hari esok.",
@@ -166,7 +207,7 @@ const LANDING_COPY = {
 } as const
 
 const SERVICE_ICONS = [Laptop2, ShieldCheck, Cloud, Network]
-const PRODUCT_ICONS = [Bot, MessageCircle]
+const PRODUCT_ICONS = [Bot, MessageCircle, ShieldCheck, BarChart3, Mail, Route, Bot]
 const STEP_ICONS = [ClipboardCheck, Cog, UsersRound]
 const DASHBOARD_ICONS = [Cloud, Headphones, Network, ShieldCheck]
 const DASHBOARD_NAV_ICONS = [Building2, Headphones, ShieldCheck, Cloud, Bot, ClipboardCheck]
@@ -269,6 +310,18 @@ export function HomePage() {
       <div className="landing-hero-actions"><Button asChild size="xl" className="landing-primary-button"><a href="#pilot">{t("pilotHeroCta")} <ArrowRight /></a></Button><Button asChild variant="outline" size="xl" className="landing-secondary-button"><a href="#lead-leakage-check">{t("llcTitle")}</a></Button></div>
       <p className="landing-hero-note"><a href="#services">{copy.heroSecondary}</a></p>
       <div className="landing-trust-points"><span><Building2 />{copy.trust[0]}</span><span><UsersRound />{copy.trust[1]}</span><span><ShieldCheck />{copy.trust[2]}</span></div>
+      {/* Hero image accent — brand-colored shape inside the hero grid */}
+      <svg
+        className="absolute top-0 right-0 w-64 h-64 -mr-10 -mr-24 opacity-20"
+        viewBox="0 0 200 200"
+        aria-hidden="true"
+      >
+        <path
+          fill="#0a2540"
+          fill-opacity="0.6"
+          d="M100 20 C60 80, 140 80, 100 20 Z M100 180 C60 120, 140 120, 100 180 Z"
+        />
+      </svg>
     </div><DashboardPreview /></div></section>
 
     <LeadLeakageCheck />

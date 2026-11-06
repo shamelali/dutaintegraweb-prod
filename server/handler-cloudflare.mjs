@@ -89,6 +89,7 @@ import {
 
 import {
   handleAIChat,
+  handleChatHistory,
   handleDutaosBrief,
 } from "./ai.mjs";
 
@@ -1200,6 +1201,7 @@ export async function handleApi(req) {
     // DutaOS AI — grounded on the company's compliance brief, audited in ai_actions
     if (pathname === "/api/dutaos/brief") return await runNodeHandler(req, handleDutaosBrief);
     if (pathname === "/api/ai/chat") return await runNodeHandler(req, handleAIChat);
+    if (pathname === "/api/ai/chat/history") return await runNodeHandler(req, handleChatHistory);
 
     // Ask Duta — public assistant about Duta Integra itself. Same Node handler as
     // the local fork (no ask-duta-cloudflare.mjs), metered by source IP, and it

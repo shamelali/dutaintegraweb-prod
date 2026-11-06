@@ -1,5 +1,5 @@
 import { rateLimit } from "./auth.mjs";
-import { callModel, llmConfigured } from "./ai.mjs";
+import { callModelWithFallback, llmConfigured } from "./ai.mjs";
 import { answerLocally, DI_FACTS } from "./knowledge/duta-integra.mjs";
 import { buildAskDutaPrompt } from "./prompts/ask-duta.mjs";
 
@@ -86,7 +86,7 @@ export async function handleAskDuta(req, res, clientIp) {
 
   if (llmConfigured()) {
     try {
-      const reply = await callModel([
+      const reply = await callModelWithFallback([
         { role: "system", content: buildAskDutaPrompt(lang) },
         { role: "user", content: question },
       ]);

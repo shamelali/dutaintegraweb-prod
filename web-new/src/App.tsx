@@ -88,64 +88,19 @@ function RouteLoader() {
   )
 }
 
-// Client-side auth gate. Wired to render children for now; back it with a real
-// client-side auth source (cookie read or GET /api/auth/me) before enabling
-// the fail-closed behaviour.
+// Client-side auth gate. Requires a session source (cookie read or GET /api/auth/me)
+// to be wired in before enabling the fail-closed behaviour. Until then, renders
+// children for compatibility but the server-side gate remains the primary
+// protection — do not rely on this UI guard alone.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  // TODO:Wire this with a real client-side auth source before going live.
+  // Suitable sources: a session cookie read, or a GET /api/auth/me response.
+  // Until then, this gate is a no-op — the server-side enforcement in
+  // handler-cloudflare.mjs / handler.mjs is the primary protection.
   return <>{children}</>
 }
 
 export default function App() {
-  const location = useLocation()
-
-  useEffect(() => {
-    const base = "https://www.dutaintegra.my"
-
-    // Determine canonical path from the current URL
-    const canonicalPath =
-      location.pathname.startsWith("/ms")
-        ? location.pathname.startsWith("/ms/")
-          ? location.pathname
-          : `/ms${location.pathname}`
-        : location.pathname === "/"
-          ? "/"
-          : `/${location.pathname.replace(/^\/+/, "")}`
-
-    // Set canonical link
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
-    if (!canonical) {
-      canonical = document.createElement("link") as HTMLLinkElement
-      canonical.rel = "canonical"
-      document.head.appendChild(canonical)
-    }
-    canonical.href = `${base}${canonicalPath === "/" ? "" : canonicalPath}`
-
-    // Set hreflang alternates: en and ms
-    const existingEn = document.querySelector('link[rel="alternate"][hreflang="en"]') as HTMLLinkElement | null
-    const existingMs = document.querySelector('link[rel="alternate"][hreflang="ms"]') as HTMLLinkElement | null
-
-    const enPath = canonicalPath === "/" ? "/" : canonicalPath.replace(/^\/ms/, "") || "/"
-    const msPath = canonicalPath === "/" ? "/ms/" : `/ms${canonicalPath}`
-
-    if (existingEn) existingEn.href = `${base}${enPath}`
-    else {
-      const enLink = document.createElement("link") as HTMLLinkElement
-      enLink.rel = "alternate"
-      enLink.hreflang = "en"
-      enLink.href = `${base}${enPath}`
-      document.head.appendChild(enLink)
-    }
-
-    if (existingMs) existingMs.href = `${base}${msPath}`
-    else {
-      const msLink = document.createElement("link") as HTMLLinkElement
-      msLink.rel = "alternate"
-      msLink.hreflang = "ms"
-      msLink.href = `${base}${msPath}`
-      document.head.appendChild(msLink)
-    }
-  }, [location.pathname])
-
   return (
     <BrowserRouter>
       <ErrorBoundary>

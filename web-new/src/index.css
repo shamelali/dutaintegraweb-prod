@@ -318,7 +318,7 @@ h1, h2, h3, h4, h5, h6 {
 /* ── Reference landing page ── */
 .landing-container { width: min(100% - 3rem, 1010px); margin-inline: auto; }
 .landing-nav .landing-container { width: min(100% - 3rem, 1010px); }
-.landing-hero { position: relative; overflow: hidden; background: linear-gradient(180deg, #fff 0%, #fff 72%, #f0faf8 100%); }
+.landing-hero { position: relative; overflow: hidden; background: linear-gradient(180deg, #f0faf8 0%, #e2e8f0 72%, #1e293b 100%); }
 .landing-hero-grid { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); align-items: center; gap: 2.25rem; min-height: 405px; padding-block: 2.75rem 2.25rem; }
 .landing-hero-copy { position: relative; z-index: 2; }
 .landing-eyebrow { color: #607078; font-size: .62rem; font-weight: 700; letter-spacing: .11em; line-height: 1.4; text-transform: uppercase; }

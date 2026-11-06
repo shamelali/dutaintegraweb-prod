@@ -3,66 +3,84 @@ import { renderHook, act } from "@testing-library/react"
 
 import { useDarkMode } from "./use-dark-mode"
 
+// Fresh localStorage per case so one case's preference doesn't leak into another.
 function stubStorage() {
   let store: Record<string, string> = {}
   return {
-    getItem: (key: string) => store[key] ?? null,
+    getItem: (key: string) => (key in store ? store[key] : null),
     setItem: (key: string, value: string) => {
-      store[key] = value
+      store[key] = String(value)
     },
     removeItem: (key: string) => {
       delete store[key]
+    },
+    clear: () => {
+      store = {}
     },
   }
 }
 
 beforeEach(() => {
-  // Fresh localStorage per case so one case's "disabled" doesn't leak into another.
   const storage = stubStorage()
   vi.stubGlobal("localStorage", storage)
+  document.documentElement.classList.remove("dark")
 })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  document.documentElement.classList.remove("dark")
 })
 
-describe("useDarkMode default", () => {
-  it("defaults to dark when no localStorage preference exists", () => {
-    const { result } = renderHook(() => useDarkMode())
-    expect(result.current.isDark).toBe(true)
-  })
-
-  it("defaults to light when localStorage says disabled", () => {
-    localStorage.setItem("darkMode", "disabled")
+describe("useDarkMode", () => {
+  it("defaults to light mode when nothing is stored", () => {
     const { result } = renderHook(() => useDarkMode())
     expect(result.current.isDark).toBe(false)
+    expect(document.documentElement.classList.contains("dark")).toBe(false)
   })
 
-  it("stays dark when localStorage says enabled", () => {
+  it("reads stored 'enabled' from localStorage on init", () => {
     localStorage.setItem("darkMode", "enabled")
     const { result } = renderHook(() => useDarkMode())
     expect(result.current.isDark).toBe(true)
+    expect(document.documentElement.classList.contains("dark")).toBe(true)
   })
 
-  it("persists the toggle to localStorage and the document class", () => {
+  it("reads stored 'disabled' from localStorage on init", () => {
+    localStorage.setItem("darkMode", "disabled")
     const { result } = renderHook(() => useDarkMode())
-    expect(document.documentElement.classList.contains("dark")).toBe(true)
-    expect(localStorage.getItem("darkMode")).toBe("enabled")
-
-    act(() => {
-      result.current.toggle()
-    })
-
     expect(result.current.isDark).toBe(false)
     expect(document.documentElement.classList.contains("dark")).toBe(false)
-    expect(localStorage.getItem("darkMode")).toBe("disabled")
+  })
 
+  it("toggle() enables dark mode and persists it", () => {
+    const { result } = renderHook(() => useDarkMode())
     act(() => {
       result.current.toggle()
     })
-
     expect(result.current.isDark).toBe(true)
     expect(document.documentElement.classList.contains("dark")).toBe(true)
     expect(localStorage.getItem("darkMode")).toBe("enabled")
+  })
+
+  it("toggle() twice returns to light mode and persists 'disabled'", () => {
+    const { result } = renderHook(() => useDarkMode())
+    act(() => {
+      result.current.toggle()
+      result.current.toggle()
+    })
+    expect(result.current.isDark).toBe(false)
+    expect(document.documentElement.classList.contains("dark")).toBe(false)
+    expect(localStorage.getItem("darkMode")).toBe("disabled")
+  })
+
+  it("tolerates localStorage.setItem throwing (private mode / blocked storage)", () => {
+    const throwing = stubStorage()
+    throwing.setItem = () => {
+      throw new Error("QuotaExceededError")
+    }
+    vi.stubGlobal("localStorage", throwing)
+
+    const { result } = renderHook(() => useDarkMode())
+    expect(() => act(() => result.current.toggle())).not.toThrow()
   })
 })

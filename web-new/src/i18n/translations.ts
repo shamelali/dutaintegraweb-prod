@@ -40,8 +40,8 @@ export const translations = {
     bm: "Penilaian Digital",
   },
   navAutonomousOps: {
-    en: "Autonomous Ops",
-    bm: "Autonomous Ops",
+    en: "DutaOps",
+    bm: "DutaOps",
   },
   navCaseStudies: {
     en: "Case Studies",
@@ -108,32 +108,32 @@ export const translations = {
     bm: "Kami menggabungkan pembangunan AI tercanggih dengan IT terurus yang mantap — jadi anda tidak perlu berurusan dengan banyak vendor lagi.",
   },
   idxSvc1Title: {
-    en: "AI Software Development",
-    bm: "Pembangunan Perisian AI",
+    en: "Intelligent Enterprise Solutions",
+    bm: "Penyelesaian Enterprise Pintar",
   },
   idxSvc1Desc: {
     en: "Custom AI applications, smart chatbots, and process automation built specifically for your business workflows.",
     bm: "Aplikasi AI tersuai, chatbot pintar, dan automasi proses yang dibina khusus untuk aliran kerja perniagaan anda.",
   },
   idxSvc2Title: {
-    en: "Managed IT Services",
-    bm: "Perkhidmatan IT Diurus",
+    en: "Managed Infrastructure Services",
+    bm: "Perkhidmatan Infrastruktur Diurus",
   },
   idxSvc2Desc: {
     en: "End-to-end IT management — cloud infrastructure, helpdesk, network security, and hardware maintenance.",
     bm: "Pengurusan IT end-to-end — infrastruktur awan, helpdesk, keselamatan rangkaian, dan penyelenggaraan perkakasan.",
   },
   idxSvc3Title: {
-    en: "Cloud Migration & Management",
-    bm: "Pemindahan & Pengurusan Awan",
+    en: "Cloud Modernization",
+    bm: "Modenisasi Awan",
   },
   idxSvc3Desc: {
     en: "Move your business to the cloud smoothly with planning, migration, and ongoing cloud management.",
     bm: "Pindahkan perniagaan anda ke awan dengan lancar dengan perancangan, pemindahan, dan pengurusan awan berterusan.",
   },
   idxSvc4Title: {
-    en: "IT Security & Compliance",
-    bm: "Keselamatan & Pematuhan IT",
+    en: "Cyber Resilience & Governance",
+    bm: "Ketahanan Siber & Tadbir Urus",
   },
   idxSvc4Desc: {
     en: "PDPA compliance audits, cybersecurity monitoring, and data protection policies for your peace of mind.",
@@ -208,8 +208,8 @@ export const translations = {
     bm: "Hari Ke Cadangan Pertama",
   },
   idxStat2Label: {
-    en: "24/7 Managed IT Support",
-    bm: "Sokongan IT Terurus 24/7",
+    en: "24/7 Managed Infrastructure Support",
+    bm: "Sokongan Infrastruktur Diurus 24/7",
   },
   idxStat3Label: {
     en: "Lock-In Contracts",
@@ -240,20 +240,40 @@ export const translations = {
     bm: "Perkhidmatan",
   },
   idxFooterAiDev: {
-    en: "AI Development",
-    bm: "Pembangunan AI",
+    en: "Intelligent Enterprise Solutions",
+    bm: "Penyelesaian Enterprise Pintar",
   },
   idxFooterManagedIt: {
-    en: "Managed IT",
-    bm: "IT Terurus",
+    en: "Managed Infrastructure Services",
+    bm: "Perkhidmatan Infrastruktur Diurus",
   },
   idxFooterCloudMig: {
-    en: "Cloud Migration",
-    bm: "Pemindahan Awan",
+    en: "Cloud Modernization",
+    bm: "Modenisasi Awan",
   },
   idxFooterItSec: {
-    en: "IT Security",
-    bm: "Keselamatan IT",
+    en: "Cyber Resilience & Governance",
+    bm: "Ketahanan Siber & Tadbir Urus",
+  },
+  idxFooterDutaGuard: {
+    en: "DutaGuard",
+    bm: "DutaGuard",
+  },
+  idxFooterDutaSight: {
+    en: "DutaSight",
+    bm: "DutaSight",
+  },
+  idxFooterDutaFlow: {
+    en: "DutaFlow",
+    bm: "DutaFlow",
+  },
+  idxFooterDutaTrack: {
+    en: "DutaTrack",
+    bm: "DutaTrack",
+  },
+  idxFooterDutaSense: {
+    en: "DutaSense",
+    bm: "DutaSense",
   },
   idxFooterCopy: {
     en: "© 2026 Duta Integra Solutions Sdn Bhd. All rights reserved. | Tamarind Suites, Cyberjaya, Selangor",
@@ -280,40 +300,40 @@ export const translations = {
     bm: "Apa Yang Kami Sampaikan",
   },
   svc1Title: {
-    en: "AI Software Development",
-    bm: "Pembangunan Perisian AI",
+    en: "Intelligent Enterprise Solutions",
+    bm: "Penyelesaian Enterprise Pintar",
   },
   svc1Desc: {
     en: "We design and build custom AI-powered applications that automate repetitive tasks, extract insights from your data, and create smarter customer experiences.",
     bm: "Kami mereka bentuk dan membina aplikasi AI tersuai yang mengautomasi tugas berulang, mengekstrak pandangan dari data anda, dan mencipta pengalaman pelanggan yang lebih pintar.",
   },
   svc2Title: {
-    en: "Managed IT Services",
-    bm: "Perkhidmatan IT Diurus",
+    en: "Managed Infrastructure Services",
+    bm: "Perkhidmatan Infrastruktur Diurus",
   },
   svc2Desc: {
     en: "We take full ownership of your IT infrastructure so you never have to worry about downtime, security breaches, or outdated systems again.",
     bm: "Kami mengambil alih sepenuhnya infrastruktur IT anda supaya anda tidak perlu risau tentang masa henti, pelanggaran keselamatan, atau sistem usang lagi.",
   },
   svc3Title: {
-    en: "Cloud Migration & Management",
-    bm: "Pemindahan & Pengurusan Awan",
+    en: "Cloud Modernization",
+    bm: "Modenisasi Awan",
   },
   svc3Desc: {
     en: "Move your business to the cloud safely and efficiently. We handle everything from planning to post-migration support on AWS, Azure, and Google Cloud.",
     bm: "Pindahkan perniagaan anda ke awan dengan selamat dan cekap. Kami mengurus segalanya dari perancangan hingga sokongan pasca-pemindahan di AWS, Azure, dan Google Cloud.",
   },
   svc4Title: {
-    en: "IT Security & PDPA Compliance",
-    bm: "Keselamatan IT & Pematuhan PDPA",
+    en: "Cyber Resilience & Governance",
+    bm: "Ketahanan Siber & Tadbir Urus",
   },
   svc4Desc: {
     en: "Protect your business from cyber threats and ensure you're fully compliant with Malaysia's Personal Data Protection Act (PDPA) 2010.",
     bm: "Lindungi perniagaan anda daripada ancaman siber dan pastikan anda mematuhi sepenuhnya Akta Perlindungan Data Peribadi Malaysia (PDPA) 2010.",
   },
   svc5Title: {
-    en: "Business Intelligence",
-    bm: "Kecerdasan Perniagaan",
+    en: "DutaSight — Business Intelligence",
+    bm: "DutaSight — Kecerdasan Perniagaan",
   },
   svc5Desc: {
     en: "Finance, sales, operations and people KPIs in one live scorecard — with ranked exceptions, a daily executive brief, and approval triage against your delegation of authority.",
@@ -1243,8 +1263,8 @@ export const translations = {
   opsDont5: { en: "We will not provide legal advice; we provide PDPA-aware operational support.", bm: "Kami tidak memberi nasihat undang-undang; kami memberi sokongan operasi sedar PDPA." },
   opsDontNote: { en: "This keeps our recommendations honest — and helps you start only where automation genuinely pays off.", bm: "Ini mengekalkan kejujuran cadangan kami — dan membantu anda bermula hanya di tempat automasi benar-benar berbaloi." },
   priceAddonEyebrow: {
-    en: "AI Development",
-    bm: "Pembangunan AI",
+    en: "Intelligent Enterprise Solutions",
+    bm: "Penyelesaian Enterprise Pintar",
   },
   priceAddonTitle: {
     en: "AI Project Pricing",
@@ -1287,8 +1307,8 @@ export const translations = {
     bm: "Integrasikan alat AI seperti ChatGPT, API visi, atau model tersuai ke dalam sistem sedia ada anda.",
   },
   priceAddon5Title: {
-    en: "Cloud Migration",
-    bm: "Pemindahan Awan",
+    en: "Cloud Modernization",
+    bm: "Modenisasi Awan",
   },
   priceAddon5Desc: {
     en: "Full cloud migration project — planning, execution, and post-migration support included.",
@@ -1383,16 +1403,24 @@ export const translations = {
     bm: "Pembangunan Perisian AI",
   },
   contactServiceManaged: {
-    en: "Managed IT Services",
-    bm: "Perkhidmatan IT Terurus",
+    en: "Managed Infrastructure Services",
+    bm: "Perkhidmatan Infrastruktur Diurus",
   },
   contactServiceCloud: {
-    en: "Cloud Migration",
-    bm: "Migrasi Awan",
+    en: "Cloud Modernization",
+    bm: "Modenisasi Awan",
   },
   contactServiceSecurity: {
-    en: "IT Security & PDPA Compliance",
-    bm: "Keselamatan IT & Pematuhan PDPA",
+    en: "Cyber Resilience & Governance",
+    bm: "Ketahanan Siber & Tadbir Urus",
+  },
+  contactServiceDutaGuard: {
+    en: "DutaGuard — Security & Compliance",
+    bm: "DutaGuard — Keselamatan & Pematuhan",
+  },
+  contactServiceDutaSight: {
+    en: "DutaSight — Analytics & BI",
+    bm: "DutaSight — Analitik & BI",
   },
   contactServiceCustom: {
     en: "Custom / Multiple Services",
@@ -1491,8 +1519,8 @@ export const translations = {
     bm: "Pemilik SME bertanya soalan yang sama kepada kami. Berikut adalah jawapan langsung — tiada pitch jualan, tiada pukulan korporat.",
   },
   opsHeroLabel: {
-    en: "Autonomous Ops",
-    bm: "Autonomous Ops",
+    en: "DutaOps",
+    bm: "DutaOps",
   },
   opsHeroTitle: {
     en: "Your IT, Run by AI",

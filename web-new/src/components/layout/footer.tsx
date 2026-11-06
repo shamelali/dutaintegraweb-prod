@@ -16,6 +16,11 @@ const serviceLinks = [
   { key: "idxFooterManagedIt" as TranslationKey, to: "/services" },
   { key: "idxFooterCloudMig" as TranslationKey, to: "/services" },
   { key: "idxFooterItSec" as TranslationKey, to: "/services" },
+  { key: "idxFooterDutaGuard" as TranslationKey, to: "/products" },
+  { key: "idxFooterDutaSight" as TranslationKey, to: "/products" },
+  { key: "idxFooterDutaFlow" as TranslationKey, to: "/products" },
+  { key: "idxFooterDutaTrack" as TranslationKey, to: "/products" },
+  { key: "idxFooterDutaSense" as TranslationKey, to: "/products" },
 ]
 
 export function Footer() {
