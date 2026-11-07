@@ -16,9 +16,14 @@ if (!existsSync(dist)) {
 
 for (const target of targets) {
   const assets = join(target, "assets");
+  // Remove every previously built bundle, not just index-*. Vite emits a
+  // hashed chunk per route, so a route dropped or renamed leaves an orphan
+  // here that no longer matches web-new/ — which is exactly what the
+  // artifact-drift gate flags as an uncommitted change. Images in assets/ are
+  // hand-maintained and have no hash suffix, so only .js/.css are pruned.
   if (existsSync(assets)) {
     for (const file of readdirSync(assets)) {
-      if (/^index-.*\.(js|css)$/.test(file)) rmSync(join(assets, file));
+      if (/\.(js|css)$/.test(file)) rmSync(join(assets, file));
     }
   }
   mkdirSync(assets, { recursive: true });
