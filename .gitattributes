@@ -1,0 +1,11 @@
+# Normalise line endings on commit so the repo does not depend on each
+# machine's core.autocrlf setting. Everything text is already LF in the index,
+# so this pins the existing state instead of changing it.
+* text=auto
+
+# Assets (images, fonts, PDFs, most SVGs) are already detected as non-text by
+# git, so they are deliberately NOT declared here: an explicit `binary`
+# attribute overrides that detection and rewrites those blobs.
+
+# Shell scripts run under bash in CI; CRLF breaks them.
+*.sh text eol=lf

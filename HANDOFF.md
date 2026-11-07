@@ -1,7 +1,15 @@
 # Handoff: Brand Pages & Documentation Project
 
-**Date:** 2026-09-15
-**Status:** 🟢 Completed — Implementation Done
+> **⚠️ SUPERSEDED — do not follow the Deployment section.**
+> This file predates the current repo state (see `AGENTS.md`). Production is
+> **Cloudflare Pages** via `npm run cf:deploy`, not Vercel; `vercel --prod` ships
+> nothing to `dutaintegra.my`. The two steps still marked ⏳ below were never
+> completed: the working tree sits on a single baseline commit with no push and
+> no deploy. The 6 brand pages and 10 docs below are verified present on disk, so
+> "Completed — Implementation Done" is accurate for the build, not for shipping.
+>
+> **Date:** 2026-09-15
+> **Status:** 🟢 Implementation done / 🔴 Not committed, not deployed
 
 ---
 
