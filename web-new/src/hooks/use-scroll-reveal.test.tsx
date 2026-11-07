@@ -48,7 +48,7 @@ describe("useScrollReveal", () => {
     stubMatchMedia(true)
     render(<Probe />)
 
-    expect(screen.getByText("Cybersecurity").classList.contains("visible")).toBe(true)
+    expect(screen.getByText("Cyber Resilience").classList.contains("visible")).toBe(true)
   })
 })
 

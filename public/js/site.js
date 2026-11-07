@@ -41,6 +41,10 @@
     navContact:       { en: 'Contact Us',    bm: 'Hubungi Kami' },
     navQuiz:          { en: 'Free IT Audit',  bm: 'Audit IT Percuma' },
     navDutaOps:       { en: 'DutaOps',       bm: 'DutaOps' },
+    navAutonomousOps: { en: 'Autonomous Ops', bm: 'Autonomous Ops' },
+    navFlowmail:      { en: 'DutaFlow',      bm: 'DutaFlow' },
+    navOntrac:        { en: 'DutaTrack',     bm: 'DutaTrack' },
+    navSensai:        { en: 'DutaSense',     bm: 'DutaSense' },
     navDutaConnect:   { en: 'DutaConnect',   bm: 'DutaConnect' },
     navDutaFlow:      { en: 'DutaFlow',      bm: 'DutaFlow' },
     navDutaSense:     { en: 'DutaSense',     bm: 'DutaSense' },
@@ -320,7 +324,11 @@
     opsFeedSub:       { en: 'A real-time aggregate view of AI actions across all managed environments.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua persekitaran terurus.' },
 
     // ---- DUTATRACK PAGE ----
+    "duta-trackFeedSub": { en: 'A real-time aggregate view of AI actions across all managed operational workflows.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua aliran kerja operasi terurus.' },
     dutatrackFeedSub: { en: 'A real-time aggregate view of AI actions across all managed operational workflows.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua aliran kerja operasi terurus.' },
+
+    // ---- ONTRAC PAGE ----
+    ontracFeedSub:    { en: 'A real-time aggregate view of AI actions across all managed operational workflows.', bm: 'Pandangan agregat masa nyata tindakan AI merentasi semua aliran kerja operasi terurus.' },
 
     // ---- CASES PAGE ----
     casesHeroTitle:   { en: 'Case Studies',  bm: 'Kajian Kes' },

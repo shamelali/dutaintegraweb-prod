@@ -200,6 +200,17 @@ const WINDOW_MS = 60_000;
 const LIMIT_PER_WINDOW = 5;
 const MAX_IP_ENTRIES = 1000; // prevent unbounded Map growth
 
+/**
+ * Login gets a tighter budget than the marketing endpoints. The generic
+ * 5/min limiter is sized for a contact form; applied to a credential
+ * endpoint it still permits thousands of password guesses per IP per day,
+ * which is far more than a password reset flow needs to absorb.
+ */
+const LOGIN_WINDOW_MS = 60_000;
+const LOGIN_LIMIT_PER_WINDOW = 5;
+
+const hits = new Map();
+
 /** Sliding-window counter per key. Exported for tests. */
 export function rateLimit(key, now = Date.now(), limit = LIMIT_PER_WINDOW, windowMs = WINDOW_MS) {
   // Purge entries beyond max size to keep the Map bounded
@@ -232,16 +243,20 @@ export function resetRateLimit() {
 
 export function clientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
-  // Only trust X-Forwarded-For when behind a trusted proxy.
-  // If your app is fronted by a reverse proxy (Cloudflare, NGINX, etc.) that
-  // sets this header, configure TRUSTED_PROXY_IPS below. Otherwise clients
-  // can spoof their IP and share a rate-limit bucket.
-  const trusted = process.env.TRUSTED_PROXY_IPS
-    ? process.env.TRUSTED_PROXY_IPS.split(",").includes(forwarded?.split(",")[0]?.trim() ?? "")
-    : false;
-  if (trusted && typeof forwarded === "string" && forwarded.trim()) {
-    return forwarded.split(",")[0].trim();
+  // The platform in front of this process (Cloudflare Pages, Vercel) sets and
+  // sanitises X-Forwarded-For, so the first entry is the real client. Falling
+  // back to the socket address here would bucket every request behind the
+  // proxy into one rate-limit key. TRUSTED_PROXY_IPS is honoured when set, for
+  // the case where the process sits behind a proxy you control and the header
+  // must not be believed otherwise.
+  const trusted = (process.env.TRUSTED_PROXY_IPS ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (trusted.length && !trusted.includes(req.socket?.remoteAddress)) {
+    return req.socket?.remoteAddress ?? null;
   }
+  if (typeof forwarded === "string" && forwarded.trim()) return forwarded.split(",")[0].trim();
   return req.socket?.remoteAddress ?? null;
 }
 
