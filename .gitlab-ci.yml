@@ -144,4 +144,10 @@ deploy-pages:
     # --commit-hash is why this runs from CI at all: an upload without it records the
     # deploying shell's CF_PAGES_COMMIT_SHA as the Pages "Source", which is provenance
     # about the machine, not about the commit. Here it is the pipeline's own SHA.
-    - wrangler pages deploy public --project-name=dutaintegra --commit-hash "$CI_COMMIT_SHA" --commit-message "GitLab CI pipeline $CI_PIPELINE_ID"
+    #
+    # --branch main is load-bearing. CI checks out a detached HEAD, so wrangler cannot
+    # infer the branch from git and falls back to "head" — which Cloudflare treats as a
+    # preview, not production. Without it the upload lands on
+    # head.dutaintegra.pages.dev and the custom domain keeps serving the previous
+    # bundle, so a "successful" deploy ships nothing.
+    - wrangler pages deploy public --project-name=dutaintegra --branch main --commit-hash "$CI_COMMIT_SHA" --commit-message "GitLab CI pipeline $CI_PIPELINE_ID"
