@@ -9,9 +9,11 @@
 # What the previous version of this file did NOT have: any test at all. It built
 # `public/` and pushed it to the live `dutaintegra.my` origin on every commit to
 # main, which is how the deploy history reads as six production uploads in twelve
-# hours while `npm test` had never been run by a machine. The gate is now in front
-# of the deploy, and the deploy is a manual click: production still changes only
-# when someone chooses to change it.
+# hours while `npm test` had never been run by a machine. The gate now sits in
+# front of the deploy, and a green main deploys on its own. verify-deploy then
+# confirms the bundle production serves is the one this pipeline built, so a
+# deploy that silently no-ops — the preview-upload failure this repo has hit —
+# goes red instead of passing unnoticed.
 
 workflow:
   rules:
@@ -26,6 +28,7 @@ stages:
   - verify
   - build
   - deploy
+  - verify-deploy
 
 default:
   image: node:22
@@ -120,9 +123,9 @@ artifact-drift:
 # Uploads exactly the public/ tree the drift job just rebuilt and verified, so the
 # bytes that got shipped are the bytes that got checked.
 #
-# Manual on purpose: pushing to main must not change dutaintegra.my by itself. Set
-# CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID) as masked, protected CI/CD
-# variables; with no token the job is not even added to the pipeline.
+# Runs on every green main. Set CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID) as
+# masked, protected CI/CD variables; with no token the job is not added to the
+# pipeline at all, which is why the rule omits rather than fails.
 deploy-pages:
   stage: deploy
   timeout: 15m
@@ -152,3 +155,19 @@ deploy-pages:
     # head.dutaintegra.pages.dev and the custom domain keeps serving the previous
     # bundle, so a "successful" deploy ships nothing.
     - wrangler pages deploy public --project-name=dutaintegra --branch main --commit-hash "$CI_COMMIT_SHA" --commit-message "GitLab CI pipeline $CI_PIPELINE_ID"
+
+# Closes the gap between "the deploy job returned 0" and "the site changed". Runs
+# only after a real deploy on main, using the same public/ artifact the deploy
+# uploaded, and fails if the custom domain never starts serving this bundle.
+verify-deploy:
+  stage: verify-deploy
+  timeout: 10m
+  needs:
+    - job: artifact-drift
+      artifacts: true
+    - job: deploy-pages
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CLOUDFLARE_API_TOKEN
+      when: on_success
+  script:
+    - node scripts/verify-deploy.mjs

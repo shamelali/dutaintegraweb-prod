@@ -179,6 +179,11 @@ jobs:
       name: production
       url: https://dutaintegra.my
     steps:
+      # Checkout is only for scripts/verify-deploy.mjs; the bytes that ship come
+      # from the artifact below, which is downloaded after and overwrites public/.
+      - name: Checkout the verify script
+        uses: actions/checkout@v4
+
       - name: Download the artifact-drift output
         uses: actions/download-artifact@v4
         with:
@@ -209,3 +214,10 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: wrangler pages deploy public --project-name=dutaintegra --branch main --commit-hash "$COMMIT_SHA" --commit-message "GitHub Actions $RUN_URL"
+
+      # A green deploy step only proves wrangler returned 0, not that the site
+      # changed — a preview upload leaves the custom domain on the old bundle.
+      # This fails the run unless production serves the bundle just uploaded.
+      - name: Verify production serves this build
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        run: node scripts/verify-deploy.mjs

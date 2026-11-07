@@ -2,7 +2,7 @@
   "name": "dutaintegra-web",
   "version": "1.0.0",
   "private": true,
-  "description": "dutaintegra.my — Duta Integra Solutions marketing site plus its lead-capture API",
+  "description": "dutaintegra.my \u2014 Duta Integra Solutions marketing site plus its lead-capture API",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -20,6 +20,7 @@
     "verify": "npm run test && npm run build:web && npm run test:web && npm run lint:web && npm run validate:env",
     "cf:preview": "wrangler pages dev public --port 8788 --ip 127.0.0.1",
     "cf:deploy": "wrangler pages deploy public --project-name=dutaintegra",
+    "verify:deploy": "node scripts/verify-deploy.mjs",
     "cf:build": "npm_config_allow_scripts= npm --prefix web-new ci && npm --prefix web-new run build",
     "validate:env": "node scripts/validate-env.mjs"
   }
