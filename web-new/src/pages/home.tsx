@@ -340,43 +340,43 @@ export function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       {/* 1. HERO SECTION: Clean, focused, high-converting */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-background to-background pt-12 pb-20 border-b border-border/40">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-background to-background dark:from-slate-900/60 dark:via-background dark:to-background pt-12 pb-20 border-b border-border/40">
         <div className="landing-container relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             {/* SME / PKS Announcement Pill */}
             <div className="inline-block mb-6">
               <a
                 href="/pks.html"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all shadow-2xs"
               >
                 <span>{copy.pillText}</span>
-                <ArrowRight className="w-4 h-4 text-emerald-700" />
+                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </a>
             </div>
 
-            <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary/70 mb-3">
+            <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] mb-3">
               {copy.heroEyebrow}
             </p>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-navy leading-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-navy dark:text-white leading-tight mb-6">
               {copy.heroTitle}
             </h1>
 
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground dark:text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
               {copy.heroSubtitle}
             </p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <Button asChild size="xl" className="w-full sm:w-auto bg-[#0a2540] hover:bg-[#1565C0] text-white px-8 py-3.5 text-base font-semibold shadow-md">
+              <Button asChild size="xl" className="w-full sm:w-auto bg-[#0a2540] hover:bg-[#1565C0] dark:bg-[#00d4ff] dark:hover:bg-[#00b8e6] text-white dark:text-[#0a0f1d] px-8 py-3.5 text-base font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
                 <a href="/pks.html">
                   {copy.primaryCta}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </a>
               </Button>
-              <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-primary/30 text-primary hover:bg-primary/5 px-8 py-3.5 text-base font-semibold">
+              <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-border/80 dark:border-slate-700 text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/60 px-8 py-3.5 text-base font-semibold">
                 <a href="#pilot">
                   {copy.secondaryCta}
                 </a>
@@ -384,10 +384,10 @@ export function HomePage() {
             </div>
 
             {/* Trust points */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 border-t border-border/50 text-xs sm:text-sm font-medium text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 border-t border-border/50 text-xs sm:text-sm font-medium text-muted-foreground dark:text-slate-400">
               {copy.trust.map((point) => (
                 <div key={point} className="inline-flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#1565C0]" />
+                  <Check className="w-4 h-4 text-[#1565C0] dark:text-[#00d4ff]" />
                   <span>{point}</span>
                 </div>
               ))}
@@ -395,63 +395,63 @@ export function HomePage() {
           </div>
 
           {/* Interactive Visual Flow Mockup (Simple & Clean) */}
-          <div className="mt-14 max-w-4xl mx-auto rounded-2xl bg-card border border-border shadow-xl p-4 sm:p-6">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60">
+          <div className="mt-14 max-w-4xl mx-auto rounded-2xl bg-card dark:bg-[#111927] border border-border dark:border-slate-800 shadow-xl p-4 sm:p-6">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-400" />
                 <span className="w-3 h-3 rounded-full bg-amber-400" />
                 <span className="w-3 h-3 rounded-full bg-emerald-400" />
                 <span className="text-xs font-mono text-muted-foreground ml-2">Aliran Automasi Bisnes Duta Integra</span>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Sistem Aktif 24/7
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center sm:text-left">
-              <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 flex flex-col justify-between">
+              <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 flex flex-col justify-between">
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
                     <Globe className="w-4 h-4" />
                   </div>
-                  <h4 className="text-xs font-bold text-navy">1. Laman Web Jualan</h4>
-                  <p className="text-[11px] text-muted-foreground mt-1">Pelanggan layari profil atau laman tempahan</p>
+                  <h4 className="text-xs font-bold text-navy dark:text-white">1. Laman Web Jualan</h4>
+                  <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1">Pelanggan layari profil atau laman tempahan</p>
                 </div>
-                <span className="text-[10px] font-semibold text-blue-700 mt-2 block">Trafik Tempatan ⚡</span>
+                <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-400 mt-2 block">Trafik Tempatan ⚡</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 flex flex-col justify-between">
+              <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 flex flex-col justify-between">
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
                     <MessageCircle className="w-4 h-4" />
                   </div>
-                  <h4 className="text-xs font-bold text-emerald-950">2. WhatsApp Auto-Reply</h4>
-                  <p className="text-[11px] text-muted-foreground mt-1">DutaConnect jawab soalan & kunci tempahan serta-merta</p>
+                  <h4 className="text-xs font-bold text-emerald-950 dark:text-emerald-300">2. WhatsApp Auto-Reply</h4>
+                  <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1">DutaConnect jawab soalan & kunci tempahan serta-merta</p>
                 </div>
-                <span className="text-[10px] font-semibold text-emerald-700 mt-2 block">Balas Dalam 5 Saat 💬</span>
+                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mt-2 block">Balas Dalam 5 Saat 💬</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-100 flex flex-col justify-between">
+              <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 flex flex-col justify-between">
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
                     <Zap className="w-4 h-4" />
                   </div>
-                  <h4 className="text-xs font-bold text-amber-950">3. MyInvois LHDN</h4>
-                  <p className="text-[11px] text-muted-foreground mt-1">Resit & e-Invois dijana automatik tanpa taip manual</p>
+                  <h4 className="text-xs font-bold text-amber-950 dark:text-amber-300">3. MyInvois LHDN</h4>
+                  <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1">Resit & e-Invois dijana automatik tanpa taip manual</p>
                 </div>
-                <span className="text-[10px] font-semibold text-amber-700 mt-2 block">Patuh LHDN 2025/2026 📋</span>
+                <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 mt-2 block">Patuh LHDN 2025/2026 📋</span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 flex flex-col justify-between">
+              <div className="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex flex-col justify-between">
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
-                  <h4 className="text-xs font-bold text-indigo-950">4. Sandaran & Sokongan</h4>
-                  <p className="text-[11px] text-muted-foreground mt-1">Data selamat di awan & bantuan IT jika ada masalah</p>
+                  <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-300">4. Sandaran & Sokongan</h4>
+                  <p className="text-[11px] text-muted-foreground dark:text-slate-400 mt-1">Data selamat di awan & bantuan IT jika ada masalah</p>
                 </div>
-                <span className="text-[10px] font-semibold text-indigo-700 mt-2 block">Sentiasa Selamat 🛡️</span>
+                <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 mt-2 block">Sentiasa Selamat 🛡️</span>
               </div>
             </div>
           </div>
@@ -459,16 +459,16 @@ export function HomePage() {
       </section>
 
       {/* 2. 3 CORE SOLUTIONS: Structured & Plain Language */}
-      <section ref={solutionsRef} className="py-16 sm:py-24 bg-card">
+      <section ref={solutionsRef} className="py-16 sm:py-24 bg-card dark:bg-[#0a0f1d]">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] block mb-2">
               {copy.solutionsEyebrow}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy dark:text-white tracking-tight mb-3">
               {copy.solutionsTitle}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground dark:text-slate-300">
               {copy.solutionsDesc}
             </p>
           </div>
@@ -479,28 +479,28 @@ export function HomePage() {
               return (
                 <div
                   key={sol.title}
-                  className="rounded-2xl border border-border p-6 bg-background shadow-xs hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between"
+                  className="rounded-2xl border border-border dark:border-slate-800 p-6 bg-background dark:bg-[#111927] shadow-xs hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1565C0] flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-[#1565C0] dark:text-[#00d4ff] flex items-center justify-center">
                         <Icon className="w-6 h-6" />
                       </div>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted dark:bg-slate-800 text-muted-foreground dark:text-slate-300">
                         {sol.badge}
                       </span>
                     </div>
-                    <h3 className="text-lg font-bold text-navy mb-2.5">
+                    <h3 className="text-lg font-bold text-navy dark:text-white mb-2.5">
                       {sol.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground dark:text-slate-400 leading-relaxed">
                       {sol.desc}
                     </p>
                   </div>
-                  <div className="pt-6 mt-6 border-t border-border/50">
+                  <div className="pt-6 mt-6 border-t border-border/50 dark:border-slate-800">
                     <a
                       href="/pks.html"
-                      className="inline-flex items-center text-xs font-bold text-[#1565C0] hover:text-[#0a2540] transition-colors"
+                      className="inline-flex items-center text-xs font-bold text-[#1565C0] dark:text-[#00d4ff] hover:underline transition-colors"
                     >
                       <span>Lihat Perincian Solusi</span>
                       <ChevronRight className="w-4 h-4 ml-1" />
@@ -514,16 +514,16 @@ export function HomePage() {
       </section>
 
       {/* 3. THREE TIERS: Core, Advance, Pro */}
-      <section ref={tiersRef} className="py-16 sm:py-24 bg-muted/30 border-y border-border/40">
+      <section ref={tiersRef} className="py-16 sm:py-24 bg-muted/30 dark:bg-slate-950/40 border-y border-border/40 dark:border-slate-800/80">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-xs font-bold uppercase tracking-wider text-[#F04E00] block mb-2">
               {copy.tiersEyebrow}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy dark:text-white tracking-tight mb-3">
               {copy.tiersTitle}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground dark:text-slate-300">
               {copy.tiersDesc}
             </p>
           </div>
@@ -534,8 +534,8 @@ export function HomePage() {
                 key={tier.id}
                 className={`rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all ${
                   tier.highlight
-                    ? "bg-card border-2 border-[#1565C0] shadow-xl relative scale-100 md:scale-105 z-10"
-                    : "bg-card border border-border shadow-xs hover:shadow-md"
+                    ? "bg-card dark:bg-[#152238] border-2 border-[#1565C0] dark:border-[#00d4ff] shadow-xl relative scale-100 md:scale-105 z-10"
+                    : "bg-card dark:bg-[#111927] border border-border dark:border-slate-800 shadow-xs hover:shadow-md"
                 }`}
               >
                 {tier.highlight && (
@@ -545,23 +545,23 @@ export function HomePage() {
                 )}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-extrabold text-navy">{tier.name}</h3>
+                    <h3 className="text-xl font-extrabold text-navy dark:text-white">{tier.name}</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4 min-h-[36px]">
+                  <p className="text-xs text-muted-foreground dark:text-slate-400 mb-4 min-h-[36px]">
                     {tier.desc}
                   </p>
-                  <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-border/60">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-navy">
+                  <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-border/60 dark:border-slate-800">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-navy dark:text-white">
                       {tier.price}
                     </span>
-                    <span className="text-xs text-muted-foreground font-medium">
+                    <span className="text-xs text-muted-foreground dark:text-slate-400 font-medium">
                       {tier.period}
                     </span>
                   </div>
                   <ul className="space-y-3 mb-8">
                     {tier.features.map((feat) => (
-                      <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90">
-                        <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90 dark:text-slate-200">
+                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -574,8 +574,8 @@ export function HomePage() {
                     size="lg"
                     className={`w-full font-bold ${
                       tier.highlight
-                        ? "bg-[#1565C0] hover:bg-[#0a2540] text-white shadow-sm"
-                        : "bg-secondary hover:bg-secondary/80 text-foreground"
+                        ? "bg-[#1565C0] hover:bg-[#0a2540] dark:bg-[#00d4ff] dark:hover:bg-[#00b8e6] text-white dark:text-[#0a0f1d] shadow-sm"
+                        : "bg-secondary dark:bg-slate-800 hover:bg-secondary/80 dark:hover:bg-slate-700 text-foreground dark:text-white"
                     }`}
                   >
                     <a href="/pks.html">
@@ -591,7 +591,7 @@ export function HomePage() {
           <div className="mt-10 text-center">
             <a
               href="/pks.html"
-              className="text-xs sm:text-sm font-semibold text-[#1565C0] hover:underline"
+              className="text-xs sm:text-sm font-semibold text-[#1565C0] dark:text-[#00d4ff] hover:underline"
             >
               {copy.allPksDetails}
             </a>
@@ -603,30 +603,30 @@ export function HomePage() {
       <LeadLeakageCheck />
 
       {/* 5. HOW WE WORK (3 Simple Steps) */}
-      <section ref={stepsRef} className="py-16 sm:py-20 bg-card border-t border-border/40">
+      <section ref={stepsRef} className="py-16 sm:py-20 bg-card dark:bg-[#0a0f1d] border-t border-border/40 dark:border-slate-800">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] block mb-2">
               {copy.howEyebrow}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy dark:text-white tracking-tight mb-3">
               {copy.howTitle}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground dark:text-slate-300">
               {copy.howDesc}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {copy.steps.map((st) => (
-              <div key={st.number} className="relative p-6 rounded-2xl bg-background border border-border">
-                <span className="text-3xl font-extrabold text-[#1565C0]/25 block mb-2">
+              <div key={st.number} className="relative p-6 rounded-2xl bg-background dark:bg-[#111927] border border-border dark:border-slate-800">
+                <span className="text-3xl font-extrabold text-[#1565C0]/25 dark:text-[#00d4ff]/30 block mb-2">
                   {st.number}
                 </span>
-                <h3 className="text-lg font-bold text-navy mb-2">
+                <h3 className="text-lg font-bold text-navy dark:text-white mb-2">
                   {st.title}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground dark:text-slate-400 leading-relaxed">
                   {st.desc}
                 </p>
               </div>
@@ -636,36 +636,36 @@ export function HomePage() {
       </section>
 
       {/* 6. REAL CLIENT STORIES */}
-      <section ref={casesRef} className="py-16 sm:py-20 bg-muted/20 border-t border-border/40">
+      <section ref={casesRef} className="py-16 sm:py-20 bg-muted/20 dark:bg-slate-950/30 border-t border-border/40 dark:border-slate-800">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] block mb-2">
               {copy.casesEyebrow}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy dark:text-white tracking-tight mb-3">
               {copy.casesTitle}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground dark:text-slate-300">
               {copy.casesDesc}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {copy.cases.map((c) => (
-              <div key={c.sector} className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+              <div key={c.sector} className="p-6 rounded-2xl bg-card dark:bg-[#111927] border border-border dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-[#1565C0] uppercase tracking-wider block mb-2">
+                  <span className="text-[11px] font-bold text-[#1565C0] dark:text-[#00d4ff] uppercase tracking-wider block mb-2">
                     {c.sector}
                   </span>
-                  <h4 className="text-base font-bold text-navy mb-3">
+                  <h4 className="text-base font-bold text-navy dark:text-white mb-3">
                     {c.highlight}
                   </h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-xs sm:text-sm text-muted-foreground dark:text-slate-400 leading-relaxed">
                     "{c.story}"
                   </p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <div className="mt-6 pt-4 border-t border-border/50 dark:border-slate-800 flex items-center gap-2 text-xs text-muted-foreground dark:text-slate-400">
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Kesan Terbukti di Malaysia</span>
                 </div>
               </div>
@@ -675,16 +675,16 @@ export function HomePage() {
       </section>
 
       {/* 7. PILOT BOOKING & FAQS: Gated by automated tests */}
-      <section id="pilot" className="py-16 sm:py-24 bg-card border-t border-border/40">
+      <section id="pilot" className="py-16 sm:py-24 bg-card dark:bg-[#0a0f1d] border-t border-border/40 dark:border-slate-800">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] block mb-2">
               {t("pilotHeroBadge")}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy dark:text-white tracking-tight mb-3">
               {t("pilotHeroTitle")}
             </h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground dark:text-slate-300">
               {t("pilotHeroDesc")}
             </p>
           </div>
@@ -692,23 +692,23 @@ export function HomePage() {
           <div className="grid md:grid-cols-2 gap-8 items-start mb-12">
             {/* Left: Pricing & Fit Cards */}
             <div className="space-y-6">
-              <Card className="p-6 border border-border">
-                <h3 className="text-lg font-heading font-semibold mb-3">{t("pilotPriceTitle")}</h3>
-                <p className="text-sm text-muted-foreground">{t("pilotPricePilot")}</p>
-                <p className="text-sm text-muted-foreground mt-2">{t("pilotPriceOngoing")}</p>
-                <p className="text-sm font-medium mt-3 text-navy">{t("pilotPriceCondition")}</p>
+              <Card className="p-6 border border-border dark:border-slate-800 bg-background dark:bg-[#111927]">
+                <h3 className="text-lg font-heading font-semibold mb-3 text-foreground dark:text-white">{t("pilotPriceTitle")}</h3>
+                <p className="text-sm text-muted-foreground dark:text-slate-400">{t("pilotPricePilot")}</p>
+                <p className="text-sm text-muted-foreground dark:text-slate-400 mt-2">{t("pilotPriceOngoing")}</p>
+                <p className="text-sm font-medium mt-3 text-navy dark:text-white">{t("pilotPriceCondition")}</p>
               </Card>
 
-              <Card className="p-6 border border-border">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#1565C0] mb-2">{t("rightForYouBadge")}</p>
-                <h3 className="text-lg font-heading font-semibold mb-2">{t("rightForYouTitle")}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t("rightForYouDesc")}</p>
+              <Card className="p-6 border border-border dark:border-slate-800 bg-background dark:bg-[#111927]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#1565C0] dark:text-[#00d4ff] mb-2">{t("rightForYouBadge")}</p>
+                <h3 className="text-lg font-heading font-semibold mb-2 text-foreground dark:text-white">{t("rightForYouTitle")}</h3>
+                <p className="text-sm text-muted-foreground dark:text-slate-400 mb-4">{t("rightForYouDesc")}</p>
                 
                 <p className="text-xs font-semibold uppercase tracking-wide mb-2">{t("rightForYouFitHeading")}</p>
                 <ul className="space-y-2 mb-4">
                   {FIT_KEYS.map((key) => (
                     <li key={key} className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                       <span>{t(key)}</span>
                     </li>
                   ))}
@@ -718,7 +718,7 @@ export function HomePage() {
                 <ul className="space-y-2">
                   {NEEDS_KEYS.map((key) => (
                     <li key={key} className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                       <span>{t(key)}</span>
                     </li>
                   ))}
@@ -727,11 +727,11 @@ export function HomePage() {
             </div>
 
             {/* Right: Booking Form */}
-            <div className="bg-background rounded-2xl border border-border p-6 sm:p-8 shadow-sm">
-              <h3 className="text-lg font-heading font-semibold mb-2">
+            <div className="bg-background dark:bg-[#111927] rounded-2xl border border-border dark:border-slate-800 p-6 sm:p-8 shadow-sm">
+              <h3 className="text-lg font-heading font-semibold mb-2 text-foreground dark:text-white">
                 {lang === "bm" ? "Hantar Butiran Tempahan Pilot" : "Send Your Pilot Details Directly"}
               </h3>
-              <p className="text-xs text-muted-foreground mb-6">
+              <p className="text-xs text-muted-foreground dark:text-slate-400 mb-6">
                 {lang === "bm"
                   ? "Isi borang ringkas di bawah. Pegawai teknikal kami akan menghubungi anda dalam tempoh 24 jam."
                   : "Fill in the simple form below. Our technical specialist will reach out within 24 hours."}
@@ -752,7 +752,7 @@ export function HomePage() {
                       placeholder="cth: Ahmad Razali"
                       value={pilotName}
                       onChange={(event) => setPilotName(event.target.value)}
-                      className="mt-1 text-sm"
+                      className="mt-1 text-sm bg-card dark:bg-[#0a0f1d] border-border dark:border-slate-800"
                     />
                   </div>
 
@@ -765,7 +765,7 @@ export function HomePage() {
                       placeholder="ahmad@syarikat.com"
                       value={pilotEmail}
                       onChange={(event) => setPilotEmail(event.target.value)}
-                      className="mt-1 text-sm"
+                      className="mt-1 text-sm bg-card dark:bg-[#0a0f1d] border-border dark:border-slate-800"
                     />
                   </div>
 
@@ -776,7 +776,7 @@ export function HomePage() {
                       placeholder="cth: Syarikat Maju Jaya Sdn Bhd"
                       value={pilotCompany}
                       onChange={(event) => setPilotCompany(event.target.value)}
-                      className="mt-1 text-sm"
+                      className="mt-1 text-sm bg-card dark:bg-[#0a0f1d] border-border dark:border-slate-800"
                     />
                   </div>
 
@@ -789,7 +789,7 @@ export function HomePage() {
                       placeholder="cth: 50"
                       value={pilotVolume}
                       onChange={(event) => setPilotVolume(event.target.value)}
-                      className="mt-1 text-sm"
+                      className="mt-1 text-sm bg-card dark:bg-[#0a0f1d] border-border dark:border-slate-800"
                     />
                   </div>
 
@@ -800,7 +800,7 @@ export function HomePage() {
                       placeholder="cth: Isnin 10:00 pagi"
                       value={pilotTime}
                       onChange={(event) => setPilotTime(event.target.value)}
-                      className="mt-1 text-sm"
+                      className="mt-1 text-sm bg-card dark:bg-[#0a0f1d] border-border dark:border-slate-800"
                     />
                   </div>
 
@@ -813,15 +813,15 @@ export function HomePage() {
                   <Button
                     type="submit"
                     disabled={!pilotEmail || !pilotVolume || pilotSubmitting}
-                    className="w-full bg-[#1565C0] hover:bg-[#0a2540] text-white mt-4 font-semibold"
+                    className="w-full bg-[#1565C0] hover:bg-[#0a2540] dark:bg-[#00d4ff] dark:hover:bg-[#00b8e6] text-white dark:text-[#0a0f1d] mt-4 font-bold"
                   >
                     {pilotSubmitting ? t("pilotFormSubmitting") : t("pilotFormCta")}
                   </Button>
                 </form>
               ) : (
-                <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                  <Check className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-                  <p className="text-sm font-bold text-emerald-900">{t("pilotFormSuccess")}</p>
+                <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                  <Check className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">{t("pilotFormSuccess")}</p>
                 </div>
               )}
             </div>
@@ -829,22 +829,22 @@ export function HomePage() {
 
           {/* Pilot FAQs */}
           <div className="mt-14 max-w-3xl mx-auto">
-            <h3 className="text-xl font-heading font-bold text-navy text-center mb-6">
+            <h3 className="text-xl font-heading font-bold text-navy dark:text-white text-center mb-6">
               {t("pilotFaqTitle")}
             </h3>
             <div className="space-y-3">
               {pilotFaqs.map((faq) => (
                 <details
                   key={faq.qKey}
-                  className="group rounded-xl border border-border/70 bg-card px-5 py-4 open:shadow-xs transition-all"
+                  className="group rounded-xl border border-border/70 dark:border-slate-800 bg-card dark:bg-[#111927] px-5 py-4 open:shadow-xs transition-all"
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-navy">
+                  <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-navy dark:text-white">
                     <span>{t(faq.qKey)}</span>
-                    <span className="text-[#1565C0] ml-4 shrink-0 transition-transform group-open:rotate-45 font-bold">
+                    <span className="text-[#1565C0] dark:text-[#00d4ff] ml-4 shrink-0 transition-transform group-open:rotate-45 font-bold">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                  <p className="mt-3 text-sm text-muted-foreground dark:text-slate-400 leading-relaxed">
                     {t(faq.aKey)}
                   </p>
                 </details>
@@ -855,7 +855,7 @@ export function HomePage() {
       </section>
 
       {/* 8. FINAL CTA SECTION: Broad, reassuring, direct action */}
-      <section className="py-16 sm:py-20 bg-navy text-white text-center relative overflow-hidden">
+      <section className="py-16 sm:py-20 bg-navy dark:bg-[#070b14] text-white text-center relative overflow-hidden border-t border-border/40 dark:border-slate-800">
         <div className="landing-container relative z-10 max-w-2xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-wider text-[#00d4ff] block mb-3">
             Satu Langkah Ke Hadapan
