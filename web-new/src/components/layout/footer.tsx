@@ -46,6 +46,14 @@ export function Footer() {
               {t("idxFooterCompany")}
             </h5>
             <ul className="space-y-2">
+              <li>
+                <a
+                  href="/pks.html"
+                  className="text-sm font-semibold text-emerald-400 hover:text-white transition-colors"
+                >
+                  🇲🇾 Hab PKS & Startup (RM199)
+                </a>
+              </li>
               {companyLinks.map((link) => (
                 <li key={link.to + link.key}>
                   <Link

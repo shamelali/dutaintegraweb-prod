@@ -127,6 +127,27 @@ export function PricingPage() {
       {/* Proof bar — real anonymised quotes, clearly labelled */}
       <OpsProofBar />
 
+      {/* PKS & Small SME Dedicated Banner */}
+      <section className="bg-emerald-950/40 border-y border-emerald-500/20 py-8 px-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div>
+            <div className="text-emerald-400 font-bold text-base flex items-center justify-center sm:justify-start gap-2">
+              <span>🇲🇾</span>
+              <span>Pemilik Kedai Runcit, Bengkel, Klinik atau Startup Awal?</span>
+            </div>
+            <p className="text-slate-300 text-sm mt-1">
+              Dapatkan pakej khas bina laman web rasmi, selesaikan WhatsApp lambat balas, dan bantuan IT serendah RM199/bulan.
+            </p>
+          </div>
+          <a
+            href="/pks.html"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm rounded-lg shrink-0 shadow-md transition-colors"
+          >
+            Lihat Pakej PKS & Startup ➔
+          </a>
+        </div>
+      </section>
+
       {/* DutaOS Modules — flagship product pricing (anchor target: #modules) */}
       <DutaosModulesSection id="modules" />
 

@@ -64,6 +64,14 @@ export function Navbar() {
               </Link>
             </li>
           ))}
+          <li>
+            <a
+              href="/pks.html"
+              className="py-1 px-3 rounded-full text-[12px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1 shadow-xs"
+            >
+              🇲🇾 PKS / SME
+            </a>
+          </li>
         </ul>
 
         {/* Right side controls */}
@@ -105,6 +113,13 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background px-6 py-4 space-y-2">
+          <a
+            href="/pks.html"
+            className="block py-2 text-sm font-bold text-emerald-700 bg-emerald-50 px-3 rounded-md"
+            onClick={() => setMobileOpen(false)}
+          >
+            🇲🇾 Hab PKS & Startup (Bermula RM199)
+          </a>
           {links.map((link) => (
             <Link
               key={link.to}
