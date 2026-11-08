@@ -299,7 +299,7 @@ export function HomePage() {
       >
         <path
           fill="#0a2540"
-          fill-opacity="0.6"
+          fillOpacity="0.6"
           d="M100 20 C60 80, 140 80, 100 20 Z M100 180 C60 120, 140 120, 100 180 Z"
         />
       </svg>
