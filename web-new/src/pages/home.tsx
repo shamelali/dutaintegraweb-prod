@@ -1,33 +1,18 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
 import {
   ArrowRight,
-  BarChart3,
-  Bot,
-  Building2,
   Check,
   ChevronRight,
-  ClipboardCheck,
-  Cloud,
-  Cog,
-  Headphones,
-  Laptop2,
-  Mail,
+  Globe,
   MessageCircle,
-  Network,
-  Route,
   ShieldCheck,
-  UsersRound,
+  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DataFabricBackdrop } from "@/components/data-fabric-backdrop"
-import { DutaosPreview } from "@/components/dutaos-preview"
 import { LeadLeakageCheck } from "@/components/lead-leakage-check"
-import { LiveFeed } from "@/components/live-feed"
-import { WorkflowPilot } from "@/components/workflow-pilot"
 import { postWithCsrf } from "@/lib/csrf"
 import { useLanguage } from "@/hooks/use-language"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
@@ -36,9 +21,6 @@ import type { TranslationKey } from "@/i18n/translations"
 const FIT_KEYS: TranslationKey[] = ["rightForYouFit1", "rightForYouFit2", "rightForYouFit3"]
 const NEEDS_KEYS: TranslationKey[] = ["rightForYouRequires1", "rightForYouRequires2", "rightForYouRequires3"]
 
-// Written, translated, and shipped in the bundle for months without any
-// component reading them — see `home-pilot.test.tsx`, which now fails if one of
-// these five stops rendering.
 const pilotFaqs = [
   { qKey: "pilotFaq1Question" as TranslationKey, aKey: "pilotFaq1Answer" as TranslationKey },
   { qKey: "pilotFaq2Question" as TranslationKey, aKey: "pilotFaq2Answer" as TranslationKey },
@@ -47,198 +29,281 @@ const pilotFaqs = [
   { qKey: "pilotFaq5Question" as TranslationKey, aKey: "pilotFaq5Answer" as TranslationKey },
 ]
 
-const LANDING_COPY = {
-  en: {
-    heroEyebrow: "Technology should move your business forward. Not slow it down.",
-    heroTitle: ["One partner for IT, AI, cloud and business automation.", "We help Malaysian businesses simplify operations, connect their systems, strengthen security and automate everyday work — without the complexity of managing multiple technology vendors.", "Built for Malaysian businesses"],
-    heroDescription: "Practical AI adoption, managed technology and clear business outcomes — without the complexity of managing multiple technology vendors.",
-    heroSecondary: "Get Your Free Business Assessment",
-    trust: ["Practical AI adoption", "Managed technology", "Clear business outcomes"],
-    servicesEyebrow: "Four connected capabilities",
-    servicesTitle: "One accountable technology partner, from business assessment and implementation to ongoing operations.",
-    servicesDescription: "We help Malaysian businesses connect their systems, automate repetitive work, strengthen IT security and operate with greater confidence.",
-    services: [
-      ["Building a Reliable IT Infrastructure for Growth", "Managed IT — Reliable infrastructure, support and daily operations."],
-      ["Security & Compliance", "Security & Compliance — Protect systems, data and business continuity."],
-      ["Cloud & Integration", "Cloud & Integration — Connect applications, data and infrastructure."],
-      ["AI & Automation", "AI & Automation — Automate processes and build practical business solutions."],
-    ],
-    serviceLink: "Explore Our Solutions",
-    productsEyebrow: "Proprietary products and platforms",
-    productsTitle: "Duta Integra ecosystem",
-    productsDescription: "DutaConnect, DutaOps and other tools as part of the wider ecosystem.",
-    products: [
-      ["DutaOps", "AI-assisted infrastructure monitoring with human approval for critical actions."],
-      ["DutaConnect", "Capture, prioritize and follow up WhatsApp enquiries."],
-      ["DutaGuard", "Security monitoring, threat detection and compliance automation."],
-      ["DutaSight", "AI-powered business intelligence dashboards and analytics."],
-      ["DutaFlow", "AI-powered email automation and inbox intelligence."],
-      ["DutaTrack", "Operations workflow tracking and process optimisation."],
-      ["DutaSense", "AI-powered learning, skill assessment and knowledge management."],
-    ],
-    howEyebrow: "How we work",
-    howTitle: "Discover → Assess → Design → Implement → Operate → Improve.",
-    howDescription: "A proven approach to deliver real results for your business, with clear communication at every step.",
-    steps: [
-      ["Assess", "Understand your needs, evaluate your current setup, and define the right solution."],
-      ["Implement", "Roll out the solution with minimal disruption and proper training."],
-      ["Support", "We stay with you, providing ongoing support, optimization and guidance."],
-    ],
-    casesEyebrow: "Case studies",
-    casesTitle: "Real businesses. Real progress.",
-    casesDescription: "We work with Malaysian SMEs across different industries. Here are some of their stories.",
-    casesLink: "View all case studies",
-    caseLabels: ["Technology", "Professional services", "Retail & hospitality"],
-    ctaEyebrow: "Let’s build a stronger tomorrow",
-    ctaTitle: "Ready to explore what’s possible?",
-    ctaDescription: "Book a free 30-minute consultation and let’s discuss how we can help your business grow with the right technology.",
-    ctaButton: "Book a free assessment",
-    ctaNote: "No obligation. Just a conversation.",
-    pilotSummary: "Prefer to send your pilot details directly?",
-    dashboard: {
-      brand: "Duta Integra",
-      brandSub: "Solutions",
-      nav: ["Overview", "IT Support", "Security", "Cloud", "AI & Automation", "Reports"],
-      title: "Your Business at a Glance",
-      subtitle: "Secure · Productive · Ready for What’s Next",
-      status: "All systems operational",
-      cards: [
-        ["Cloud Infrastructure", "Healthy", "Servers, backups and cloud services running smoothly."],
-        ["Support Queue", "2 open", "IT tickets and requests from your team."],
-        ["Automation & AI", "Active", "Automations running across your business."],
-        ["Security", "Protected", "Threat monitoring and endpoint protection active."],
-      ],
-      view: "View",
-      people: ["People", "Technology", "Progress", "Together"],
-    },
-  },
+const HOME_COPY = {
   bm: {
-    heroEyebrow: "Teknologi untuk sektor PKS Malaysia yang lebih kukuh",
-    heroTitle: ["IT, keselamatan, awan dan AI—", "bekerjasama", "untuk perniagaan anda."],
-    heroDescription: "Perkhidmatan teknologi praktikal untuk PKS Malaysia, daripada sokongan IT harian hingga projek awan dan AI tersuai.",
-    heroSecondary: "Terokai perkhidmatan",
-    trust: ["Dibina untuk PKS Malaysia", "Pendekatan praktikal, mengutamakan manusia", "Selamat, boleh dipercayai dan bersedia untuk masa depan"],
-    servicesEyebrow: "Perkhidmatan kami",
-    servicesTitle: "Satu rakan kongsi. Empat cara untuk bergerak ke hadapan.",
-    servicesDescription: "Perkhidmatan IT dan AI menyeluruh untuk PKS Malaysia. Praktikal, selamat dan direka untuk membantu perniagaan anda berkembang.",
-    services: [
-      ["Infrastruktur Diurus", "Sokongan IT harian yang boleh dipercayai supaya pasukan anda boleh fokus pada perkara penting."],
-      ["Ketahanan Siber & Tadbir Urus", "Lindungi sistem, data dan orang anda, serta kurangkan risiko."],
-      ["Modenisasi Awan", "Pindahkan dan modenkan beban kerja anda dengan gangguan minimum."],
-      ["Penyelesaian Enterprise Pintar", "Automasi aliran kerja perniagaan praktikal dengan penyelesaian AI tersuai."],
+    pillText: "🇲🇾 Pemilik Bisnes, Bengkel & PKS? Lihat Pakej Ringkas Bermula RM199",
+    heroEyebrow: "Penyelesaian Teknologi & Automasi Bisnes Malaysia",
+    heroTitle: "Urusan Laman Web, WhatsApp & Sistem Bisnes Jadi Jauh Lebih Mudah.",
+    heroSubtitle: "Satu rakan kongsi dipercayai untuk bantu perniagaan anda membina laman web pantas, membalas pelanggan 24 jam di WhatsApp, menyelaraskan e-Invois LHDN, dan menyelesaikan masalah komputer harian tanpa istilah teknikal yang mengelirukan.",
+    primaryCta: "Lihat Pakej PKS (RM199 - RM699)",
+    secondaryCta: "Tempah Penilaian Percuma",
+    trust: [
+      "Bebas Jargon & Mesra Pengguna",
+      "Siap Pantas (3 - 7 Hari)",
+      "Sokongan Tempatan Cyberjaya",
     ],
-    serviceLink: "Lihat Penyelesaian Kami",
-    productsEyebrow: "Produk dan platform",
-    productsTitle: "Alat yang menjadikan perniagaan anda lebih kukuh.",
-    productsDescription: "Produk kami dibina untuk perniagaan Malaysia dan berfungsi lancar dengan perkhidmatan kami, atau secara tersendiri.",
-    products: [
-      ["DutaOps", "Pemantauan infrastruktur dibantu AI dengan kelulusan manusia untuk tindakan kritikal."],
-      ["DutaConnect", "Tangkap, utamakan dan susuli pertanyaan WhatsApp."],
-      ["DutaGuard", "Pemantauan keselamatan, pengesanan ancaman dan automasi pematuhan."],
-      ["DutaSight", "Papan pemuka kecerdasan perniagaan dan analitik bertenaga AI."],
-      ["DutaFlow", "Automasi e-mel bertenaga AI dan kecerdasan peti masuk."],
-      ["DutaTrack", "Penjejakan aliran kerja operasi dan pengoptimuman proses."],
-      ["DutaSense", "Pembelajaran bertenaga AI, penilaian kemahiran dan pengurusan pengetahuan."],
+    solutionsEyebrow: "3 Bidang Utama",
+    solutionsTitle: "Segala Yang Diperlukan Untuk Melancarkan Operasi Bisnes",
+    solutionsDesc: "Kami selesaikan beban teknologi supaya anda boleh fokus melayan pelanggan dan menggandakan jualan.",
+    solutions: [
+      {
+        icon: Globe,
+        title: "Binaan & Baik Pulih Laman Web",
+        desc: "Laman web jualan moden yang pantas di telefon pintar, siap dengan butang WhatsApp, borang tempahan dan pengoptimuman carian tempatan Google.",
+        badge: "Teras Jualan",
+      },
+      {
+        icon: MessageCircle,
+        title: "Automasi WhatsApp & e-Invois LHDN",
+        desc: "DutaConnect bantu tangkap pertanyaan pelanggan 24 jam secara automatik serta sambungan sistem pesanan dan invois sedia MyInvois LHDN.",
+        badge: "Paling Popular",
+      },
+      {
+        icon: ShieldCheck,
+        title: "Sokongan IT Diurus & Sandaran Awan",
+        desc: "Bantuan teknikal komputer kedai, sambungan WiFi stabil, dan sandaran data perniagaan automatik ke awan agar rekod anda tidak pernah hilang.",
+        badge: "Ketenangan Minda",
+      },
     ],
-    howEyebrow: "Cara kami bekerja",
-    howTitle: "Laluan mudah dari hari ini ke hari esok.",
-    howDescription: "Pendekatan terbukti untuk memberikan hasil sebenar, dengan komunikasi jelas pada setiap langkah.",
+    tiersEyebrow: "Pilihan Pakej Telus",
+    tiersTitle: "3 Peringkat Pakej Mengikut Keperluan & Bajet Anda",
+    tiersDesc: "Pakej bulanan berpatutan, tiada caj tersembunyi, dan boleh dinaik taraf mengikut perkembangan syarikat.",
+    tiers: [
+      {
+        id: "core",
+        name: "CORE",
+        price: "RM 199",
+        period: "/bulan",
+        desc: "Sesuai untuk kedai runcit, bengkel, klinik & peniaga mikro yang perlukan kehadiran digital asas dan komputer stabil.",
+        features: [
+          "Binaan Laman Web 1-Halaman atau Baik Pulih Web Usang",
+          "Bantuan Komputer & Sambungan WiFi Kedai",
+          "Sandaran Data Awan (Cloud Backup) Automatik",
+          "Sokongan Bantuan Harian via WhatsApp",
+        ],
+        cta: "Pilih Pakej Core",
+        highlight: false,
+      },
+      {
+        id: "advance",
+        name: "ADVANCE",
+        price: "RM 699",
+        period: "/bulan",
+        badge: "Paling Disyorkan",
+        desc: "Untuk bisnes berkembang yang mahu jualan WhatsApp berjalan automatik dan bersedia dengan e-Invois LHDN.",
+        features: [
+          "Laman Web Jualan Multi-Halaman Interaktif Penuh",
+          "DutaConnect: Bot WhatsApp Jualan & Tempahan 24/7",
+          "Automasi Pesanan & Penyelarasan MyInvois LHDN",
+          "Automasi E-mel Pintar DutaFlow",
+          "Masa Tindak Balas Pantas WhatsApp (< 1 Jam)",
+        ],
+        cta: "Pilih Pakej Advance",
+        highlight: true,
+      },
+      {
+        id: "pro",
+        name: "PRO",
+        price: "Dari RM 1,499",
+        period: "/bulan",
+        desc: "Untuk syarikat berbilang cawangan, pembekal & startup yang memerlukan integrasi menyeluruh dan pengurus akaun dedikasi.",
+        features: [
+          "Papan Pemuka Prestasi & Untung Rugi DutaSight",
+          "Penjejakan Aliran Stor/Kilang DutaOps & DutaTrack",
+          "Latihan Staf Sistem & Pengetahuan DutaSense",
+          "Pengurus Akaun Dedicated & Sokongan VIP 24/7",
+        ],
+        cta: "Bincang Pakej Pro",
+        highlight: false,
+      },
+    ],
+    howEyebrow: "Proses Kerja",
+    howTitle: "3 Langkah Mudah Untuk Bermula",
+    howDesc: "Tiada proses berbelit-belit. Kami permudahkan semuanya dari hari pertama.",
     steps: [
-      ["Nilai", "Fahami keperluan anda, nilai persediaan semasa dan tentukan penyelesaian yang tepat."],
-      ["Laksana", "Laksanakan penyelesaian dengan gangguan minimum dan latihan yang sewajarnya."],
-      ["Sokong", "Kami kekal bersama anda dengan sokongan, pengoptimuman dan panduan berterusan."],
+      {
+        number: "01",
+        title: "Sembang Santai (15 Minit)",
+        desc: "Ceritakan cabaran operasi atau laman web semasa anda. Kami nilai dan cadangkan solusi paling jimat.",
+      },
+      {
+        number: "02",
+        title: "Pemasangan Pantas (3 - 7 Hari)",
+        desc: "Pasukan kami siapkan laman web, sistem WhatsApp atau komputer tanpa mengganggu operasi jualan anda.",
+      },
+      {
+        number: "03",
+        title: "Operasi Tenang & Sokongan Berterusan",
+        desc: "Sistem anda berjalan lancar dengan pemantauan kami. Sebarang isu teknikal, hanya hantar WhatsApp.",
+      },
     ],
-    casesEyebrow: "Kajian kes",
-    casesTitle: "Perniagaan sebenar. Kemajuan sebenar.",
-    casesDescription: "Kami bekerja dengan PKS Malaysia daripada pelbagai industri. Ini beberapa kisah mereka.",
-    casesLink: "Lihat semua kajian kes",
-    caseLabels: ["Teknologi", "Perkhidmatan profesional", "Runcit dan hospitaliti"],
-    ctaEyebrow: "Mari bina masa depan yang lebih kukuh",
-    ctaTitle: "Sedia meneroka kemungkinan?",
-    ctaDescription: "Tempah konsultasi percuma 30 minit dan bincangkan bagaimana teknologi yang tepat boleh membantu perniagaan anda berkembang.",
-    ctaButton: "Tempah penilaian percuma",
-    ctaNote: "Tiada obligasi. Hanya perbualan.",
-    pilotSummary: "Lebih suka menghantar butiran pilot secara terus?",
-    dashboard: {
-      brand: "Duta Integra",
-      brandSub: "Solutions",
-      nav: ["Gambaran keseluruhan", "Sokongan IT", "Keselamatan", "Awan", "AI dan Automasi", "Laporan"],
-      title: "Perniagaan Anda Sepintas Lalu",
-      subtitle: "Selamat · Produktif · Bersedia untuk Seterusnya",
-      status: "Semua sistem beroperasi",
-      cards: [
-        ["Infrastruktur Awan", "Sihat", "Pelayan, sandaran dan perkhidmatan awan berjalan lancar."],
-        ["Barisan Sokongan", "2 terbuka", "Tiket IT dan permintaan daripada pasukan anda."],
-        ["Automasi dan AI", "Aktif", "Automasi berjalan di seluruh perniagaan anda."],
-        ["Keselamatan", "Dilindungi", "Pemantauan ancaman dan perlindungan titik akhir aktif."],
-      ],
-      view: "Lihat",
-      people: ["Manusia", "Teknologi", "Kemajuan", "Bersama"],
-    },
+    casesEyebrow: "Kisah Kejayaan",
+    casesTitle: "Perniagaan Tempatan Yang Berkembang Bersama Kami",
+    casesDesc: "Hasil sebenar untuk usahawan Malaysia daripada pelbagai sektor.",
+    cases: [
+      {
+        sector: "Bengkel & Pusat Servis",
+        highlight: "Peningkatan 40% Tempahan Bulanan",
+        story: "Sebelum ini pelanggan WhatsApp lambat dibalas semasa mekanik sibuk membaiki kereta. Dengan DutaConnect, tempahan slot auto-dijawab dalam 5 saat.",
+      },
+      {
+        sector: "Pembekal & Peruncitan",
+        highlight: "Jimat 3 Jam Pengurusan Invois Setiap Hari",
+        story: "Staf tidak lagi perlu menaip invois secara manual satu persatu. Sistem bersepadu kami menyelaraskan invois terus ke format e-Invois LHDN.",
+      },
+      {
+        sector: "Startup & Firma Profesional",
+        highlight: "Operasi IT Lengkap Tanpa Gaji Staf IT Penuh",
+        story: "Mendapat sokongan teknikal komprehensif, keselamatan fail awan, dan laman web korporat pada sebahagian kecil kos pekerja biasa.",
+      },
+    ],
+    finalCtaTitle: "Ada Masalah Yang Nak Diselesaikan Hari Ini?",
+    finalCtaDesc: "Jangan biarkan masalah komputer, laman web usang, atau mesej WhatsApp yang terlepas merugikan jualan anda. Kami sedia membantu.",
+    whatsappCta: "Terus WhatsApp Pegawai Kami",
+    allPksDetails: "Lihat Halaman Khas PKS / SME ➔",
+  },
+  en: {
+    pillText: "🇲🇾 Business Owners, Workshops & SMEs? View Simple Packages From RM199",
+    heroEyebrow: "Malaysian Business Technology & Automation Solutions",
+    heroTitle: "Websites, WhatsApp & Business Systems Made Genuinely Simple.",
+    heroSubtitle: "One trusted partner helping Malaysian businesses launch fast websites, respond to customers 24/7 on WhatsApp, streamline LHDN e-Invoicing, and solve daily IT headaches without intimidating technical jargon.",
+    primaryCta: "View SME Packages (RM199 - RM699)",
+    secondaryCta: "Book a Free Assessment",
+    trust: [
+      "Jargon-Free & Practical",
+      "Fast Turnaround (3 - 7 Days)",
+      "Cyberjaya Local Support",
+    ],
+    solutionsEyebrow: "3 Core Focus Areas",
+    solutionsTitle: "Everything You Need to Run a Smooth Modern Business",
+    solutionsDesc: "We take care of the tech complexity so you can focus on serving customers and growing your revenue.",
+    solutions: [
+      {
+        icon: Globe,
+        title: "Website Creation & Revamp",
+        desc: "Modern, high-converting sales websites built for mobile, with direct WhatsApp ordering, inquiry forms, and local Google SEO.",
+        badge: "Sales Foundation",
+      },
+      {
+        icon: MessageCircle,
+        title: "WhatsApp & LHDN e-Invoicing Automation",
+        desc: "DutaConnect captures inquiries around the clock automatically, paired with seamless order handling ready for MyInvois LHDN.",
+        badge: "Most Popular",
+      },
+      {
+        icon: ShieldCheck,
+        title: "Managed IT Support & Cloud Backup",
+        desc: "Reliable computer and WiFi assistance, POS stability, and automated cloud backups so your critical business records stay safe.",
+        badge: "Peace of Mind",
+      },
+    ],
+    tiersEyebrow: "Transparent Pricing",
+    tiersTitle: "3 Clear Tiers Tailored to Your Business Growth",
+    tiersDesc: "Affordable monthly plans with zero hidden fees and easy upgrades as your company expands.",
+    tiers: [
+      {
+        id: "core",
+        name: "CORE",
+        price: "RM 199",
+        period: "/month",
+        desc: "Ideal for retail stores, workshops, clinics, and micro-businesses needing an online profile and stable IT.",
+        features: [
+          "1-Page Profile Website Creation or Revamp of Outdated Site",
+          "Shop Computer & Office WiFi Assistance",
+          "Automated Cloud Data Backup",
+          "Daily WhatsApp Technical Helpdesk",
+        ],
+        cta: "Choose Core Plan",
+        highlight: false,
+      },
+      {
+        id: "advance",
+        name: "ADVANCE",
+        price: "RM 699",
+        period: "/month",
+        badge: "Most Recommended",
+        desc: "For growing businesses wanting 24/7 WhatsApp customer handling and complete LHDN e-Invoicing compliance.",
+        features: [
+          "Full Interactive Multi-Page Sales Website",
+          "DutaConnect: 24/7 WhatsApp Sales & Booking Assistant",
+          "Order Automation & LHDN MyInvois Sync",
+          "DutaFlow Smart Email Automation",
+          "Priority WhatsApp Response (< 1 Hour)",
+        ],
+        cta: "Choose Advance Plan",
+        highlight: true,
+      },
+      {
+        id: "pro",
+        name: "PRO",
+        price: "From RM 1,499",
+        period: "/month",
+        desc: "For multi-branch operations, wholesalers, and startups requiring custom integrations and VIP support.",
+        features: [
+          "DutaSight AI Profit & Performance Dashboards",
+          "DutaOps & DutaTrack Factory/Store Workflow Tracking",
+          "DutaSense Staff Training & Knowledge Management",
+          "Dedicated Account Manager & 24/7 VIP Support",
+        ],
+        cta: "Discuss Pro Plan",
+        highlight: false,
+      },
+    ],
+    howEyebrow: "Simple Workflow",
+    howTitle: "3 Effortless Steps to Get Started",
+    howDesc: "No complicated vendor hoops. We keep every step clear and straightforward.",
+    steps: [
+      {
+        number: "01",
+        title: "Casual Chat (15 Minutes)",
+        desc: "Tell us your daily bottlenecks or current website issues. We evaluate and recommend the most cost-effective path.",
+      },
+      {
+        number: "02",
+        title: "Swift Setup (3 - 7 Days)",
+        desc: "Our team configures your website, WhatsApp automation, or IT without disrupting your business operations.",
+      },
+      {
+        number: "03",
+        title: "Peace of Mind & Ongoing Support",
+        desc: "Your setup runs smoothly with our proactive oversight. Any questions? Just reach us on WhatsApp.",
+      },
+    ],
+    casesEyebrow: "Real Results",
+    casesTitle: "Local Businesses Growing with Duta Integra",
+    casesDesc: "Tangible business outcomes for Malaysian entrepreneurs across diverse industries.",
+    cases: [
+      {
+        sector: "Auto Workshop & Service Center",
+        highlight: "+40% Monthly Booking Inquiries",
+        story: "Mechanics were busy fixing vehicles and missed customer messages. With DutaConnect, incoming inquiries receive instant booking options in 5 seconds.",
+      },
+      {
+        sector: "Wholesale Supplier & Retail",
+        highlight: "Saved 3 Hours on Daily Invoicing",
+        story: "Staff no longer copy-paste invoices manually one by one. Our integrated workflow formats orders directly for LHDN e-Invoicing compliance.",
+      },
+      {
+        sector: "Startup & Professional Services",
+        highlight: "Full IT Department at a Fraction of the Cost",
+        story: "Secured enterprise-grade cloud backups, high-speed corporate web presence, and round-the-clock helpdesk without hiring full-time IT staff.",
+      },
+    ],
+    finalCtaTitle: "Have an Issue to Solve Today?",
+    finalCtaDesc: "Do not let computer glitches, an outdated website, or missed WhatsApp leads drain your sales. We are here to help.",
+    whatsappCta: "Chat Directly on WhatsApp",
+    allPksDetails: "Visit Dedicated SME Page ➔",
   },
 } as const
 
-const SERVICE_ICONS = [Laptop2, ShieldCheck, Cloud, Network]
-const PRODUCT_ICONS = [Bot, MessageCircle, ShieldCheck, BarChart3, Mail, Route, Bot]
-const STEP_ICONS = [ClipboardCheck, Cog, UsersRound]
-const DASHBOARD_ICONS = [Cloud, Headphones, Network, ShieldCheck]
-const DASHBOARD_NAV_ICONS = [Building2, Headphones, ShieldCheck, Cloud, Bot, ClipboardCheck]
-
-function DashboardPreview() {
-  const { lang } = useLanguage()
-  const copy = LANDING_COPY[lang].dashboard
-
-  return (
-    <div className="landing-visual" aria-label="Illustration of a business technology dashboard">
-      <div className="landing-skyline" aria-hidden="true">
-        <span className="skyline-building skyline-building-one" />
-        <span className="skyline-building skyline-building-two" />
-        <span className="skyline-building skyline-building-three" />
-        <span className="skyline-building skyline-building-four" />
-        <span className="skyline-building skyline-building-five" />
-        <span className="skyline-spire skyline-spire-one" />
-        <span className="skyline-spire skyline-spire-two" />
-      </div>
-      <div className="dashboard-window">
-        <aside className="dashboard-sidebar">
-          <div className="dashboard-brand"><span className="dashboard-mark">D</span><span>{copy.brand}<small>{copy.brandSub}</small></span></div>
-          <nav aria-label="Dashboard preview navigation">
-            {copy.nav.map((label, index) => {
-              const Icon = DASHBOARD_NAV_ICONS[index]
-              return <span key={label} className={`dashboard-link ${index === 0 ? "is-active" : ""}`}><Icon />{label}</span>
-            })}
-          </nav>
-        </aside>
-        <div className="dashboard-content">
-          <div className="dashboard-heading"><div><p className="dashboard-kicker">{copy.title}</p><p className="dashboard-caption">{copy.subtitle}</p></div><span className="dashboard-status"><i />{copy.status}</span></div>
-          <div className="dashboard-grid">
-            {copy.cards.map((card, index) => {
-              const Icon = DASHBOARD_ICONS[index]
-              return <div key={card[0]} className="dashboard-card"><div className="dashboard-card-title"><Icon /><strong>{card[0]}</strong><span>{card[1]}</span></div><p>{card[2]}</p><a href="#services">{copy.view} {card[0].toLowerCase()} <ArrowRight /></a></div>
-            })}
-          </div>
-        </div>
-      </div>
-      <div className="landing-visual-copy">{copy.people.map((line, index) => index === copy.people.length - 1 ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>)}</div>
-    </div>
-  )
-}
-
-function SectionHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) {
-  return <div className="landing-section-heading"><div><p className="landing-eyebrow">{eyebrow}</p><h2>{title}</h2></div>{description && <p className="landing-section-description">{description}</p>}</div>
-}
-
-function CaseStudyPlaceholders({ labels }: { labels: readonly string[] }) {
-  return <div className="case-study-grid" aria-label="Case studies"><div className="case-study-placeholder"><div className="case-study-image"><Building2 /></div><div className="case-study-lines"><span /><span /><span /></div><p>{labels[0]}</p></div><div className="case-study-placeholder"><div className="case-study-image"><Building2 /></div><div className="case-study-lines"><span /><span /><span /></div><p>{labels[1]}</p></div><div className="case-study-placeholder"><div className="case-study-image"><Building2 /></div><div className="case-study-lines"><span /><span /><span /></div><p>{labels[2]}</p></div></div>
-}
-
 export function HomePage() {
   const { lang, t } = useLanguage()
-  const copy = LANDING_COPY[lang]
-  const servicesRef = useScrollReveal()
-  const productsRef = useScrollReveal()
+  const copy = HOME_COPY[lang]
+  const solutionsRef = useScrollReveal()
+  const tiersRef = useScrollReveal()
   const stepsRef = useScrollReveal()
   const casesRef = useScrollReveal()
+
   const [pilotName, setPilotName] = useState("")
   const [pilotEmail, setPilotEmail] = useState("")
   const [pilotCompany, setPilotCompany] = useState("")
@@ -274,97 +339,558 @@ export function HomePage() {
     }
   }
 
-  return <>
-    <section className="landing-hero"><DataFabricBackdrop /><div className="landing-container landing-hero-grid"><div className="landing-hero-copy">
-      {/* PKS & SME Announcement Pill */}
-      <a
-        href="/pks.html"
-        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors mb-4 w-fit shadow-2xs"
-      >
-        <span>🇲🇾</span>
-        <span>Pemilik Kedai, Bengkel & PKS? Lihat Pakej Ringkas Bermula RM199</span>
-        <ArrowRight className="w-3.5 h-3.5" />
-      </a>
-      <p className="landing-eyebrow">{copy.heroEyebrow}</p>
-      <h1>{copy.heroTitle[0]}<br /><em>{copy.heroTitle[1]}</em><br />{copy.heroTitle[2]}</h1>
-      <p className="landing-hero-description">{copy.heroDescription}</p>
-      <div className="landing-hero-actions"><Button asChild size="xl" className="landing-primary-button"><a href="#pilot">{t("pilotHeroCta")} <ArrowRight /></a></Button><Button asChild variant="outline" size="xl" className="landing-secondary-button"><a href="#lead-leakage-check">{t("llcTitle")}</a></Button></div>
-      <p className="landing-hero-note"><a href="#services">{copy.heroSecondary}</a></p>
-      <div className="landing-trust-points"><span><Building2 />{copy.trust[0]}</span><span><UsersRound />{copy.trust[1]}</span><span><ShieldCheck />{copy.trust[2]}</span></div>
-      {/* Hero image accent — brand-colored shape inside the hero grid */}
-      <svg
-        className="absolute top-0 right-0 w-64 h-64 -mr-10 -mr-24 opacity-20"
-        viewBox="0 0 200 200"
-        aria-hidden="true"
-      >
-        <path
-          fill="#0a2540"
-          fillOpacity="0.6"
-          d="M100 20 C60 80, 140 80, 100 20 Z M100 180 C60 120, 140 120, 100 180 Z"
-        />
-      </svg>
-    </div><DashboardPreview /></div></section>
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* 1. HERO SECTION: Clean, focused, high-converting */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-background to-background pt-12 pb-20 border-b border-border/40">
+        <div className="landing-container relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* SME / PKS Announcement Pill */}
+            <div className="inline-block mb-6">
+              <a
+                href="/pks.html"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 transition-all shadow-sm"
+              >
+                <span>{copy.pillText}</span>
+                <ArrowRight className="w-4 h-4 text-emerald-700" />
+              </a>
+            </div>
 
-    <LeadLeakageCheck />
+            <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary/70 mb-3">
+              {copy.heroEyebrow}
+            </p>
 
-    <section id="services" ref={servicesRef} className="landing-section landing-services"><div className="landing-container"><SectionHeading eyebrow={copy.servicesEyebrow} title={copy.servicesTitle} description={copy.servicesDescription} /><div className="landing-service-grid">{copy.services.map((service, index) => { const Icon = SERVICE_ICONS[index]; return <Link to="/services" key={service[0]} className="landing-service-card reveal"><Icon /><h3>{service[0]}</h3><p>{service[1]}</p><span>{copy.serviceLink} <ArrowRight /></span></Link> })}</div></div></section>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-navy leading-tight mb-6">
+              {copy.heroTitle}
+            </h1>
 
-    <section ref={productsRef} className="landing-products"><div className="landing-container"><SectionHeading eyebrow={copy.productsEyebrow} title={copy.productsTitle} description={copy.productsDescription} /><div className="landing-product-grid">{copy.products.map((product, index) => { const Icon = PRODUCT_ICONS[index]; return <Link to="/products" key={product[0]} className="landing-product-card reveal"><Icon /><div><h3>{product[0]}</h3><p>{product[1]}</p></div><ArrowRight className="landing-product-arrow" /></Link> })}</div><div className="mt-14"><DutaosPreview /></div><div className="mt-12"><LiveFeed /></div></div></section>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8 max-w-2xl mx-auto">
+              {copy.heroSubtitle}
+            </p>
 
-    <section ref={stepsRef} className="landing-section landing-how"><div className="landing-container"><SectionHeading eyebrow={copy.howEyebrow} title={copy.howTitle} description={copy.howDescription} /><div className="landing-steps">{copy.steps.map((step, index) => { const Icon = STEP_ICONS[index]; return <div key={step[0]} className="landing-step reveal"><Icon /><div><h3>{step[0]}</h3><p>{step[1]}</p></div>{index < copy.steps.length - 1 && <ChevronRight className="landing-step-arrow" />}</div> })}</div></div></section>
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <Button asChild size="xl" className="w-full sm:w-auto bg-[#0a2540] hover:bg-[#1565C0] text-white px-8 py-3.5 text-base font-semibold shadow-md">
+                <a href="/pks.html">
+                  {copy.primaryCta}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </a>
+              </Button>
+              <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-primary/30 text-primary hover:bg-primary/5 px-8 py-3.5 text-base font-semibold">
+                <a href="#pilot">
+                  {copy.secondaryCta}
+                </a>
+              </Button>
+            </div>
 
-    <WorkflowPilot />
+            {/* Trust points */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 border-t border-border/50 text-xs sm:text-sm font-medium text-muted-foreground">
+              {copy.trust.map((point) => (
+                <div key={point} className="inline-flex items-center gap-2">
+                  <Check className="w-4 h-4 text-[#1565C0]" />
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-    <section id="pilot" className="landing-section"><div className="landing-container">
-      <SectionHeading eyebrow={t("pilotHeroBadge")} title={t("pilotHeroTitle")} description={t("pilotHeroDesc")} />
-      <div className="grid md:grid-cols-2 gap-6 mt-10">
-        <Card className="p-6">
-          <h3 className="text-lg font-heading font-semibold mb-3">{t("pilotPriceTitle")}</h3>
-          <p className="text-sm text-muted-foreground">{t("pilotPricePilot")}</p>
-          <p className="text-sm text-muted-foreground mt-2">{t("pilotPriceOngoing")}</p>
-          <p className="text-sm font-medium mt-3">{t("pilotPriceCondition")}</p>
-        </Card>
-        <Card className="p-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-electric mb-2">{t("rightForYouBadge")}</p>
-          <h3 className="text-lg font-heading font-semibold mb-2">{t("rightForYouTitle")}</h3>
-          <p className="text-sm text-muted-foreground mb-4">{t("rightForYouDesc")}</p>
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2">{t("rightForYouFitHeading")}</p>
-          <ul className="space-y-2 mb-4">{FIT_KEYS.map((key) => <li key={key} className="flex items-start gap-2 text-sm"><Check className="w-4 h-4 text-electric mt-0.5 shrink-0" /><span>{t(key)}</span></li>)}</ul>
-          <p className="text-xs font-semibold uppercase tracking-wide mb-2">{t("rightForYouNeedsHeading")}</p>
-          <ul className="space-y-2">{NEEDS_KEYS.map((key) => <li key={key} className="flex items-start gap-2 text-sm"><Check className="w-4 h-4 text-electric mt-0.5 shrink-0" /><span>{t(key)}</span></li>)}</ul>
-        </Card>
-      </div>
-      <div className="mt-10">
-        <h3 className="text-lg font-heading font-semibold mb-4">{copy.pilotSummary}</h3>
-        {!pilotSubmitted ? <form onSubmit={(event) => { event.preventDefault(); void handlePilotSignup() }} className="landing-pilot-form">
-          <div><Label htmlFor="pilot-name">{t("pilotFormName")}</Label><Input id="pilot-name" value={pilotName} onChange={(event) => setPilotName(event.target.value)} /></div>
-          <div><Label htmlFor="pilot-email">{t("pilotFormEmail")}</Label><Input id="pilot-email" type="email" required value={pilotEmail} onChange={(event) => setPilotEmail(event.target.value)} /></div>
-          <div><Label htmlFor="pilot-company">{t("pilotFormCompany")}</Label><Input id="pilot-company" value={pilotCompany} onChange={(event) => setPilotCompany(event.target.value)} /></div>
-          <div><Label htmlFor="pilot-volume">{t("pilotFormVolume")}</Label><Input id="pilot-volume" type="number" required value={pilotVolume} onChange={(event) => setPilotVolume(event.target.value)} /></div>
-          <div><Label htmlFor="pilot-time">{t("pilotFormTime")}</Label><Input id="pilot-time" value={pilotTime} onChange={(event) => setPilotTime(event.target.value)} /></div>
-          {pilotError && <p role="alert">{pilotError}</p>}
-          <Button type="submit" disabled={!pilotEmail || !pilotVolume || pilotSubmitting}>{pilotSubmitting ? t("pilotFormSubmitting") : t("pilotFormCta")}</Button>
-        </form> : <p className="landing-pilot-success"><Check />{t("pilotFormSuccess")}</p>}
-      </div>
-      <div className="mt-10">
-        <h3 className="text-lg font-heading font-semibold mb-4">{t("pilotFaqTitle")}</h3>
-        <div className="space-y-3">
-          {pilotFaqs.map((faq) => (
-            <details key={faq.qKey} className="group rounded-lg border border-border/60 bg-card px-5 py-4 open:shadow-sm">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">
-                <span>{t(faq.qKey)}</span>
-                <span className="text-electric ml-4 shrink-0 transition-transform group-open:rotate-45">+</span>
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">{t(faq.aKey)}</p>
-            </details>
-          ))}
+          {/* Interactive Visual Flow Mockup (Simple & Clean) */}
+          <div className="mt-14 max-w-4xl mx-auto rounded-2xl bg-card border border-border shadow-xl p-4 sm:p-6">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-400" />
+                <span className="w-3 h-3 rounded-full bg-amber-400" />
+                <span className="w-3 h-3 rounded-full bg-emerald-400" />
+                <span className="text-xs font-mono text-muted-foreground ml-2">Aliran Automasi Bisnes Duta Integra</span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Sistem Aktif 24/7
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center sm:text-left">
+              <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100 flex flex-col justify-between">
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-navy">1. Laman Web Jualan</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1">Pelanggan layari profil atau laman tempahan</p>
+                </div>
+                <span className="text-[10px] font-semibold text-blue-700 mt-2 block">Trafik Tempatan ⚡</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100 flex flex-col justify-between">
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
+                    <MessageCircle className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-emerald-950">2. WhatsApp Auto-Reply</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1">DutaConnect jawab soalan & kunci tempahan serta-merta</p>
+                </div>
+                <span className="text-[10px] font-semibold text-emerald-700 mt-2 block">Balas Dalam 5 Saat 💬</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-100 flex flex-col justify-between">
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-amber-950">3. MyInvois LHDN</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1">Resit & e-Invois dijana automatik tanpa taip manual</p>
+                </div>
+                <span className="text-[10px] font-semibold text-amber-700 mt-2 block">Patuh LHDN 2025/2026 📋</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 flex flex-col justify-between">
+                <div>
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center mb-2 mx-auto sm:mx-0">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-indigo-950">4. Sandaran & Sokongan</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1">Data selamat di awan & bantuan IT jika ada masalah</p>
+                </div>
+                <span className="text-[10px] font-semibold text-indigo-700 mt-2 block">Sentiasa Selamat 🛡️</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div></section>
+      </section>
 
-    <section ref={casesRef} className="landing-section landing-cases"><div className="landing-container"><SectionHeading eyebrow={copy.casesEyebrow} title={copy.casesTitle} description={copy.casesDescription} /><div className="landing-case-link"><Link to="/case-studies">{copy.casesLink} <ArrowRight /></Link></div><CaseStudyPlaceholders labels={copy.caseLabels} /></div></section>
+      {/* 2. 3 CORE SOLUTIONS: Structured & Plain Language */}
+      <section ref={solutionsRef} className="py-16 sm:py-24 bg-card">
+        <div className="landing-container">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+              {copy.solutionsEyebrow}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+              {copy.solutionsTitle}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {copy.solutionsDesc}
+            </p>
+          </div>
 
-    <section className="landing-cta"><div className="landing-container landing-cta-inner"><div><p className="landing-eyebrow">{copy.ctaEyebrow}</p><h2>{copy.ctaTitle}</h2><p>{copy.ctaDescription}</p></div><div className="landing-cta-action"><Button asChild size="xl" className="landing-primary-button"><Link to="/digital-assessment">{copy.ctaButton} <ArrowRight /></Link></Button><small>{copy.ctaNote}</small></div></div></section>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {copy.solutions.map((sol) => {
+              const Icon = sol.icon
+              return (
+                <div
+                  key={sol.title}
+                  className="rounded-2xl border border-border p-6 bg-background shadow-xs hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1565C0] flex items-center justify-center">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                        {sol.badge}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-navy mb-2.5">
+                      {sol.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {sol.desc}
+                    </p>
+                  </div>
+                  <div className="pt-6 mt-6 border-t border-border/50">
+                    <a
+                      href="/pks.html"
+                      className="inline-flex items-center text-xs font-bold text-[#1565C0] hover:text-[#0a2540] transition-colors"
+                    >
+                      <span>Lihat Perincian Solusi</span>
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
 
-  </>
+      {/* 3. THREE TIERS: Core, Advance, Pro */}
+      <section ref={tiersRef} className="py-16 sm:py-24 bg-muted/30 border-y border-border/40">
+        <div className="landing-container">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#F04E00] block mb-2">
+              {copy.tiersEyebrow}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+              {copy.tiersTitle}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {copy.tiersDesc}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+            {copy.tiers.map((tier) => (
+              <div
+                key={tier.id}
+                className={`rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all ${
+                  tier.highlight
+                    ? "bg-card border-2 border-[#1565C0] shadow-xl relative scale-100 md:scale-105 z-10"
+                    : "bg-card border border-border shadow-xs hover:shadow-md"
+                }`}
+              >
+                {tier.highlight && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#F04E00] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    {tier.badge}
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xl font-extrabold text-navy">{tier.name}</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4 min-h-[36px]">
+                    {tier.desc}
+                  </p>
+                  <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-border/60">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-navy">
+                      {tier.price}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {tier.period}
+                    </span>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {tier.features.map((feat) => (
+                      <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90">
+                        <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <Button
+                    asChild
+                    size="lg"
+                    className={`w-full font-bold ${
+                      tier.highlight
+                        ? "bg-[#1565C0] hover:bg-[#0a2540] text-white shadow-sm"
+                        : "bg-secondary hover:bg-secondary/80 text-foreground"
+                    }`}
+                  >
+                    <a href="/pks.html">
+                      {tier.cta}
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <a
+              href="/pks.html"
+              className="text-xs sm:text-sm font-semibold text-[#1565C0] hover:underline"
+            >
+              {copy.allPksDetails}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. LEAD LEAKAGE CALCULATOR: Embedded directly */}
+      <LeadLeakageCheck />
+
+      {/* 5. HOW WE WORK (3 Simple Steps) */}
+      <section ref={stepsRef} className="py-16 sm:py-20 bg-card border-t border-border/40">
+        <div className="landing-container">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+              {copy.howEyebrow}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+              {copy.howTitle}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {copy.howDesc}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {copy.steps.map((st) => (
+              <div key={st.number} className="relative p-6 rounded-2xl bg-background border border-border">
+                <span className="text-3xl font-extrabold text-[#1565C0]/25 block mb-2">
+                  {st.number}
+                </span>
+                <h3 className="text-lg font-bold text-navy mb-2">
+                  {st.title}
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {st.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. REAL CLIENT STORIES */}
+      <section ref={casesRef} className="py-16 sm:py-20 bg-muted/20 border-t border-border/40">
+        <div className="landing-container">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+              {copy.casesEyebrow}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+              {copy.casesTitle}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {copy.casesDesc}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {copy.cases.map((c) => (
+              <div key={c.sector} className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-[#1565C0] uppercase tracking-wider block mb-2">
+                    {c.sector}
+                  </span>
+                  <h4 className="text-base font-bold text-navy mb-3">
+                    {c.highlight}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    "{c.story}"
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Kesan Terbukti di Malaysia</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. PILOT BOOKING & FAQS: Gated by automated tests */}
+      <section id="pilot" className="py-16 sm:py-24 bg-card border-t border-border/40">
+        <div className="landing-container">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1565C0] block mb-2">
+              {t("pilotHeroBadge")}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-navy tracking-tight mb-3">
+              {t("pilotHeroTitle")}
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {t("pilotHeroDesc")}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-start mb-12">
+            {/* Left: Pricing & Fit Cards */}
+            <div className="space-y-6">
+              <Card className="p-6 border border-border">
+                <h3 className="text-lg font-heading font-semibold mb-3">{t("pilotPriceTitle")}</h3>
+                <p className="text-sm text-muted-foreground">{t("pilotPricePilot")}</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("pilotPriceOngoing")}</p>
+                <p className="text-sm font-medium mt-3 text-navy">{t("pilotPriceCondition")}</p>
+              </Card>
+
+              <Card className="p-6 border border-border">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#1565C0] mb-2">{t("rightForYouBadge")}</p>
+                <h3 className="text-lg font-heading font-semibold mb-2">{t("rightForYouTitle")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("rightForYouDesc")}</p>
+                
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2">{t("rightForYouFitHeading")}</p>
+                <ul className="space-y-2 mb-4">
+                  {FIT_KEYS.map((key) => (
+                    <li key={key} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <span>{t(key)}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2">{t("rightForYouNeedsHeading")}</p>
+                <ul className="space-y-2">
+                  {NEEDS_KEYS.map((key) => (
+                    <li key={key} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <span>{t(key)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
+
+            {/* Right: Booking Form */}
+            <div className="bg-background rounded-2xl border border-border p-6 sm:p-8 shadow-sm">
+              <h3 className="text-lg font-heading font-semibold mb-2">
+                {lang === "bm" ? "Hantar Butiran Tempahan Pilot" : "Send Your Pilot Details Directly"}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-6">
+                {lang === "bm"
+                  ? "Isi borang ringkas di bawah. Pegawai teknikal kami akan menghubungi anda dalam tempoh 24 jam."
+                  : "Fill in the simple form below. Our technical specialist will reach out within 24 hours."}
+              </p>
+
+              {!pilotSubmitted ? (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void handlePilotSignup()
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <Label htmlFor="pilot-name" className="text-xs font-semibold">{t("pilotFormName")}</Label>
+                    <Input
+                      id="pilot-name"
+                      placeholder="cth: Ahmad Razali"
+                      value={pilotName}
+                      onChange={(event) => setPilotName(event.target.value)}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pilot-email" className="text-xs font-semibold">{t("pilotFormEmail")}</Label>
+                    <Input
+                      id="pilot-email"
+                      type="email"
+                      required
+                      placeholder="ahmad@syarikat.com"
+                      value={pilotEmail}
+                      onChange={(event) => setPilotEmail(event.target.value)}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pilot-company" className="text-xs font-semibold">{t("pilotFormCompany")}</Label>
+                    <Input
+                      id="pilot-company"
+                      placeholder="cth: Syarikat Maju Jaya Sdn Bhd"
+                      value={pilotCompany}
+                      onChange={(event) => setPilotCompany(event.target.value)}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pilot-volume" className="text-xs font-semibold">{t("pilotFormVolume")}</Label>
+                    <Input
+                      id="pilot-volume"
+                      type="number"
+                      required
+                      placeholder="cth: 50"
+                      value={pilotVolume}
+                      onChange={(event) => setPilotVolume(event.target.value)}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="pilot-time" className="text-xs font-semibold">{t("pilotFormTime")}</Label>
+                    <Input
+                      id="pilot-time"
+                      placeholder="cth: Isnin 10:00 pagi"
+                      value={pilotTime}
+                      onChange={(event) => setPilotTime(event.target.value)}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+
+                  {pilotError && (
+                    <p role="alert" className="text-xs font-semibold text-destructive mt-2">
+                      {pilotError}
+                    </p>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={!pilotEmail || !pilotVolume || pilotSubmitting}
+                    className="w-full bg-[#1565C0] hover:bg-[#0a2540] text-white mt-4 font-semibold"
+                  >
+                    {pilotSubmitting ? t("pilotFormSubmitting") : t("pilotFormCta")}
+                  </Button>
+                </form>
+              ) : (
+                <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                  <Check className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+                  <p className="text-sm font-bold text-emerald-900">{t("pilotFormSuccess")}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Pilot FAQs */}
+          <div className="mt-14 max-w-3xl mx-auto">
+            <h3 className="text-xl font-heading font-bold text-navy text-center mb-6">
+              {t("pilotFaqTitle")}
+            </h3>
+            <div className="space-y-3">
+              {pilotFaqs.map((faq) => (
+                <details
+                  key={faq.qKey}
+                  className="group rounded-xl border border-border/70 bg-card px-5 py-4 open:shadow-xs transition-all"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-navy">
+                    <span>{t(faq.qKey)}</span>
+                    <span className="text-[#1565C0] ml-4 shrink-0 transition-transform group-open:rotate-45 font-bold">
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                    {t(faq.aKey)}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. FINAL CTA SECTION: Broad, reassuring, direct action */}
+      <section className="py-16 sm:py-20 bg-navy text-white text-center relative overflow-hidden">
+        <div className="landing-container relative z-10 max-w-2xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#00d4ff] block mb-3">
+            Satu Langkah Ke Hadapan
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-4">
+            {copy.finalCtaTitle}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-8">
+            {copy.finalCtaDesc}
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="https://wa.me/601154034051?text=Salam%20Duta%20Integra,%20saya%20berminat%20nak%20tahu%20lebih%20lanjut%20tentang%20solusi%20bisnes%20anda."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg transition-transform hover:-translate-y-0.5"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>{copy.whatsappCta}</span>
+            </a>
+            <Button
+              asChild
+              variant="outline"
+              size="xl"
+              className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 px-8 py-3.5 text-sm font-semibold"
+            >
+              <a href="/pks.html">
+                {copy.primaryCta}
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
 }

@@ -8,14 +8,18 @@
  * developer actually uses, and making test outcomes depend on prior runs.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const dataDir = mkdtempSync(join(tmpdir(), "duta-test-data-"));
 
+const testFiles = readdirSync("server", { recursive: true })
+  .filter((f) => f.endsWith(".test.mjs"))
+  .map((f) => join("server", f));
+
 try {
-  const result = spawnSync(process.execPath, ["--test", "server/**/*.test.mjs"], {
+  const result = spawnSync(process.execPath, ["--test", ...testFiles], {
     stdio: "inherit",
     env: { ...process.env, DATA_DIR: dataDir, NODE_ENV: "test" },
   });
