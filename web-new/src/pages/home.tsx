@@ -276,6 +276,15 @@ export function HomePage() {
 
   return <>
     <section className="landing-hero"><DataFabricBackdrop /><div className="landing-container landing-hero-grid"><div className="landing-hero-copy">
+      {/* PKS & SME Announcement Pill */}
+      <a
+        href="/pks.html"
+        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors mb-4 w-fit shadow-2xs"
+      >
+        <span>🇲🇾</span>
+        <span>Pemilik Kedai, Bengkel & PKS? Lihat Pakej Ringkas Bermula RM199</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </a>
       <p className="landing-eyebrow">{copy.heroEyebrow}</p>
       <h1>{copy.heroTitle[0]}<br /><em>{copy.heroTitle[1]}</em><br />{copy.heroTitle[2]}</h1>
       <p className="landing-hero-description">{copy.heroDescription}</p>

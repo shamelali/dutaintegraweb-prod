@@ -4,8 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Duta Integra Solutions — Rakan Laman Web & IT PKS Malaysia</title>
+<meta name="description" content="Penyelesaian praktikal untuk kedai runcit, bengkel, pembekal & startup Malaysia. Bina laman web rasmi, balas WhatsApp jualan 24 jam & patuh e-Invois LHDN dari RM199/bulan.">
 <link rel="icon" type="image/png" href="/mark.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Open Graph / WhatsApp Social Preview -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dutaintegra.my/pks">
+<meta property="og:title" content="Duta Integra — Bantuan Laman Web, IT & WhatsApp Jualan PKS Malaysia (Bermula RM199)">
+<meta property="og:description" content="Urusan komputer kedai, laman web rasmi, WhatsApp jualan dan e-Invois LHDN jadi mudah. Tanpa istilah pening, tanpa kontrak mengikat.">
+<meta property="og:image" content="https://dutaintegra.my/og.png">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Duta Integra — Bantuan Laman Web & IT PKS Malaysia">
+<meta name="twitter:description" content="Penyelesaian praktikal untuk kedai runcit, bengkel & startup Malaysia. Bermula RM199/bulan.">
+<meta name="twitter:image" content="https://dutaintegra.my/og.png">
 <style>
   :root {
     --primary: #0a2540;            /* Brand Deep Navy from Logo */
@@ -1148,6 +1160,42 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- Section: Optional Formal Quote / Email Form -->
+<section style="background: white; border-top: 1px solid var(--border);">
+  <div class="container" style="max-width: 700px;">
+    <div class="section-header" style="margin-bottom: 24px;">
+      <div class="section-sub" data-key="quote_sub">Pilihan Sebut Harga Rasmi</div>
+      <h2 class="section-title" style="font-size: 24px;" data-key="quote_title">Perlukan Sebut Harga Bertulis / E-mel?</h2>
+      <p class="section-desc" data-key="quote_desc">Jika anda perlukan cadangan harga rasmi untuk pihak pengurusan, tinggalkan maklumat ringkas di bawah. Pasukan kami akan hantarkan terus ke e-mel atau WhatsApp anda.</p>
+    </div>
+
+    <form id="pksLeadForm" onsubmit="submitPksLead(event)" style="background: var(--bg-light); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+        <div>
+          <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);" data-key="f_name_l">Nama Anda:</label>
+          <input type="text" id="leadName" required placeholder="Contoh: En. Razak" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; background: white;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);" data-key="f_phone_l">Nombor Telefon / WhatsApp:</label>
+          <input type="tel" id="leadPhone" required placeholder="Contoh: 012-3456789" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; background: white;">
+        </div>
+      </div>
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);" data-key="f_email_l">Alamat E-mel (Pilihan):</label>
+        <input type="email" id="leadEmail" placeholder="nama@syarikat.com" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; background: white;">
+      </div>
+      <div style="margin-bottom: 18px;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--secondary);" data-key="f_msg_l">Pakej atau Masalah Kedai:</label>
+        <textarea id="leadMsg" rows="2" placeholder="Contoh: Berminat Pakej CORE untuk kedai tayar di Ipoh..." style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; background: white; font-family: inherit;"></textarea>
+      </div>
+      <button type="submit" id="btnSubmitLead" class="btn-pkg" style="width: 100%; border: none; cursor: pointer; padding: 12px; font-size: 15px;">
+        <span data-key="f_btn_submit">Dapatkan Sebut Harga Percuma</span>
+      </button>
+      <div id="leadFeedback" style="display: none; margin-top: 12px; font-size: 13px; text-align: center; font-weight: 600; padding: 8px; border-radius: 6px;"></div>
+    </form>
   </div>
 </section>
 
