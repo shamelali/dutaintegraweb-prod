@@ -235,81 +235,149 @@ export function PricingPage() {
               </p>
             </div>
 
-            {/* SME 3-Tier Grid */}
+            {/* SME 3-Tier Grid with Visual Mockups */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-16">
               {smeTiers.map((tier) => (
                 <div
                   key={tier.id}
-                  className={`rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all ${
+                  className={`rounded-2xl flex flex-col justify-between transition-all overflow-hidden ${
                     tier.highlight
                       ? "bg-card dark:bg-[#152238] border-2 border-[#1565C0] dark:border-[#00d4ff] shadow-xl relative scale-100 md:scale-105 z-10"
                       : "bg-card dark:bg-[#111927] border border-border dark:border-slate-800 shadow-xs hover:shadow-md"
                   }`}
                 >
                   {tier.badge && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#F04E00] text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    <div className="absolute top-3 right-4 bg-[#F04E00] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                       {tier.badge}
                     </div>
                   )}
 
-                  <div>
-                    <h3 className="text-xl font-extrabold text-navy dark:text-white mb-1">{tier.name}</h3>
-                    <p className="text-xs font-semibold text-[#1565C0] dark:text-[#00d4ff] mb-2">{tier.target}</p>
-                    <p className="text-xs text-muted-foreground dark:text-slate-400 mb-5 min-h-[36px]">
-                      {tier.desc}
-                    </p>
-
-                    <div className="mb-6 pb-6 border-b border-border/60 dark:border-slate-800">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl sm:text-4xl font-extrabold text-navy dark:text-white">
-                          {tier.price}
-                        </span>
-                        <span className="text-xs text-muted-foreground dark:text-slate-400 font-medium">
-                          {tier.period}
-                        </span>
+                  {/* Visual Mockup Header for Each Tier */}
+                  <div className="p-4 sm:p-5 bg-muted/40 dark:bg-slate-900/60 border-b border-border/60 dark:border-slate-800/80">
+                    {tier.id === "core" && (
+                      <div className="rounded-xl bg-background dark:bg-[#0a0f1d] border border-border/80 dark:border-slate-800 p-3 shadow-xs">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/40">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-red-400" />
+                            <span className="w-2 h-2 rounded-full bg-amber-400" />
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                            <span className="text-[10px] font-mono text-muted-foreground ml-1">web-profil.my</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            🔒 SSL Aktif
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="h-3 w-3/4 rounded-sm bg-primary/10 dark:bg-[#00d4ff]/10" />
+                          <div className="h-2 w-full rounded-sm bg-muted" />
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[9px] font-semibold text-[#1565C0] dark:text-[#00d4ff]">📍 Google Maps Kedai</span>
+                            <span className="text-[9px] font-semibold text-slate-500">☁️ Backup 10GB</span>
+                          </div>
+                        </div>
                       </div>
-                      {tier.pilotNote && (
-                        <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                          ⚡ {tier.pilotNote}
-                        </p>
-                      )}
-                    </div>
+                    )}
 
-                    <ul className="space-y-3 mb-8">
-                      {tier.features.map((feat) => (
-                        <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90 dark:text-slate-200">
-                          <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {tier.id === "advance" && (
+                      <div className="rounded-xl bg-emerald-950/20 border border-emerald-500/30 p-3 shadow-xs">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-emerald-500/20">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300">DutaConnect WhatsApp 24/7</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400">⚡ Auto-Reply</span>
+                        </div>
+                        <div className="space-y-2 text-[10px]">
+                          <div className="bg-white dark:bg-slate-800 p-1.5 rounded-lg rounded-tl-none border border-border/50 text-slate-700 dark:text-slate-200">
+                            💬 Pelanggan: <em>"Nak tempah slot servis esok?"</em>
+                          </div>
+                          <div className="bg-emerald-600 text-white p-1.5 rounded-lg rounded-tr-none ml-2 font-medium">
+                            🤖 Bot: <em>"Slot 10:30 Pagi disahkan! Invois LHDN dijana."</em>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {tier.id === "pro" && (
+                      <div className="rounded-xl bg-background dark:bg-[#0a0f1d] border border-border/80 dark:border-slate-800 p-3 shadow-xs">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/40">
+                          <span className="text-[10px] font-bold text-navy dark:text-white">Papan Pemuka DutaSight</span>
+                          <span className="text-[9px] font-bold text-blue-600 dark:text-[#00d4ff]">Cawangan 1-3</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="p-1.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40">
+                            <span className="text-[11px] font-extrabold text-navy dark:text-white block">+34%</span>
+                            <span className="text-[8px] text-muted-foreground">Untung Bersih</span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40">
+                            <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block">100%</span>
+                            <span className="text-[8px] text-muted-foreground">MyInvois LHDN</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Button
-                      asChild
-                      size="lg"
-                      className={`w-full font-bold ${
-                        tier.highlight
-                          ? "bg-[#1565C0] hover:bg-[#0a2540] dark:bg-[#00d4ff] dark:hover:bg-[#00b8e6] text-white dark:text-[#0a0f1d] shadow-sm"
-                          : "bg-secondary dark:bg-slate-800 hover:bg-secondary/80 dark:hover:bg-slate-700 text-foreground dark:text-white"
-                      }`}
-                    >
-                      <a
-                        href={`https://wa.me/601154034051?text=${encodeURIComponent(tier.whatsappMsg)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                  <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-extrabold text-navy dark:text-white mb-1">{tier.name}</h3>
+                      <p className="text-xs font-semibold text-[#1565C0] dark:text-[#00d4ff] mb-2">{tier.target}</p>
+                      <p className="text-xs text-muted-foreground dark:text-slate-400 mb-5 min-h-[36px]">
+                        {tier.desc}
+                      </p>
+
+                      <div className="mb-6 pb-6 border-b border-border/60 dark:border-slate-800">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl sm:text-4xl font-extrabold text-navy dark:text-white">
+                            {tier.price}
+                          </span>
+                          <span className="text-xs text-muted-foreground dark:text-slate-400 font-medium">
+                            {tier.period}
+                          </span>
+                        </div>
+                        {tier.pilotNote && (
+                          <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                            ⚡ {tier.pilotNote}
+                          </p>
+                        )}
+                      </div>
+
+                      <ul className="space-y-3 mb-8">
+                        {tier.features.map((feat) => (
+                          <li key={feat} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90 dark:text-slate-200">
+                            <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Button
+                        asChild
+                        size="lg"
+                        className={`w-full font-bold ${
+                          tier.highlight
+                            ? "bg-[#1565C0] hover:bg-[#0a2540] dark:bg-[#00d4ff] dark:hover:bg-[#00b8e6] text-white dark:text-[#0a0f1d] shadow-sm"
+                            : "bg-secondary dark:bg-slate-800 hover:bg-secondary/80 dark:hover:bg-slate-700 text-foreground dark:text-white"
+                        }`}
                       >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        <span>{tier.cta}</span>
+                        <a
+                          href={`https://wa.me/601154034051?text=${encodeURIComponent(tier.whatsappMsg)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          <span>{tier.cta}</span>
+                        </a>
+                      </Button>
+                      <a
+                        href="/pks.html"
+                        className="block text-center text-[11px] text-muted-foreground hover:text-foreground hover:underline pt-1"
+                      >
+                        Ketahui lebih lanjut di Hab PKS ➔
                       </a>
-                    </Button>
-                    <a
-                      href="/pks.html"
-                      className="block text-center text-[11px] text-muted-foreground hover:text-foreground hover:underline pt-1"
-                    >
-                      Ketahui lebih lanjut di Hab PKS ➔
-                    </a>
+                    </div>
                   </div>
                 </div>
               ))}
