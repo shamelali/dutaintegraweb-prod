@@ -121,6 +121,7 @@ export const WEBSITE_LEAD_SOURCES = [
   "proposal-form",
   "pilot-booking",
   "ask-duta",
+  "whatsapp",
 ];
 
 const WEBSITE_LEAD_SOURCE_SET = new Set(WEBSITE_LEAD_SOURCES);

@@ -68,6 +68,8 @@ import {
   handleHerepayWebhook,
 } from "./payments.mjs";
 
+import { handleWhatsAppWebhook } from "./whatsapp.mjs";
+
 import {
   handleAIChat,
   handleChatHistory,
@@ -1569,6 +1571,9 @@ export async function handle(req, res) {
     if (pathname === "/api/payments/webhook/hitpay") return await handleHitpayWebhook(req, res);
     if (pathname === "/api/payments/webhook/billplz") return await handleBillplzWebhook(req, res);
     if (pathname === "/api/payments/webhook/herepay") return await handleHerepayWebhook(req, res);
+
+    // ── DutaConnect WhatsApp Bot (Meta Cloud API Webhook) ─────────────────────
+    if (pathname === "/api/whatsapp/webhook") return await handleWhatsAppWebhook(req, res);
 
     // ── DutaOS AI (grounded on the company's compliance brief) ───────────────
     if (pathname === "/api/dutaos/brief") return await handleDutaosBrief(req, res);
