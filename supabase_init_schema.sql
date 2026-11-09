@@ -106,4 +106,25 @@ alter table public.whatsapp_optouts enable row level security;
 create policy "Allow service role full access on whatsapp_optouts" on public.whatsapp_optouts
   for all using (auth.role() = 'service_role');
 
+-- 6. WhatsApp Consent Audit Trail (PDPA 2010 Provable Consent Records)
+create table if not exists public.whatsapp_consents (
+  id uuid primary key default gen_random_uuid(),
+  phone text not null,
+  company text,
+  contact_name text not null,
+  consent_method text not null, -- 'onboarding_form', 'portal_checkbox', 'service_agreement'
+  form_version text not null default 'v1.0',
+  consent_at timestamptz not null default now(),
+  status text not null default 'active', -- 'active', 'revoked'
+  revoked_at timestamptz,
+  notes text
+);
+
+create index if not exists whatsapp_consents_phone_idx on public.whatsapp_consents(phone, status);
+
+alter table public.whatsapp_consents enable row level security;
+
+create policy "Allow service role full access on whatsapp_consents" on public.whatsapp_consents
+  for all using (auth.role() = 'service_role');
+
 

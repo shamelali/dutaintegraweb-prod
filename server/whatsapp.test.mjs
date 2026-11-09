@@ -15,6 +15,8 @@ import {
   recordWhatsAppOptOut,
   removeWhatsAppOptOut,
   isExactStopCommand,
+  recordWhatsAppConsent,
+  hasWhatsAppConsent,
 } from "./whatsapp.mjs";
 import { listEnquiries } from "./enquiries.mjs";
 
@@ -335,5 +337,22 @@ describe("generateBotReply unit tests", () => {
 
     // Clean up
     await removeWhatsAppOptOut(testPhone);
+  });
+
+  test("recordWhatsAppConsent validates input and persists consent record", async () => {
+    const res = await recordWhatsAppConsent({
+      phone: "+60123456789",
+      company: "Test Co Sdn Bhd",
+      contactName: "Ahmad Albab",
+      consentMethod: "onboarding_form",
+      formVersion: "v1.0",
+    });
+    assert.equal(res.phone, "60123456789");
+    assert.equal(res.contactName, "Ahmad Albab");
+
+    await assert.rejects(
+      () => recordWhatsAppConsent({ phone: "", contactName: "Ahmad" }),
+      /Phone number and contact name are required/
+    );
   });
 });

@@ -124,6 +124,78 @@ export async function isWhatsAppOptedOut(phone) {
 }
 
 /**
+ * Record provable customer consent for WhatsApp utility/marketing messaging (PDPA 2010 compliance).
+ */
+export async function recordWhatsAppConsent({
+  phone,
+  company = null,
+  contactName,
+  consentMethod = "onboarding_form",
+  formVersion = "v1.0",
+  notes = null,
+}) {
+  const cleanPhone = normaliseWaPhone(phone);
+  if (!cleanPhone || !contactName) {
+    throw new Error("Phone number and contact name are required to record WhatsApp consent");
+  }
+
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      const res = await fetch(`${REST_BASE}/whatsapp_consents`, {
+        method: "POST",
+        headers: {
+          ...SERVICE_HEADERS,
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          company: company || null,
+          contact_name: contactName,
+          consent_method: consentMethod,
+          form_version: formVersion,
+          status: "active",
+          consent_at: new Date().toISOString(),
+          notes: notes || null,
+        }),
+      });
+      if (!res.ok) {
+        console.warn(`[whatsapp] failed to insert consent record: ${res.status}`);
+      }
+    } catch (err) {
+      console.warn("[whatsapp] failed to persist consent record:", err.message);
+    }
+  }
+
+  return { phone: cleanPhone, contactName, consentMethod, formVersion };
+}
+
+/**
+ * Check if active provable consent exists for a recipient.
+ */
+export async function hasWhatsAppConsent(phone) {
+  const cleanPhone = normaliseWaPhone(phone);
+  if (!cleanPhone) return false;
+
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      const res = await fetch(
+        `${REST_BASE}/whatsapp_consents?phone=eq.${encodeURIComponent(cleanPhone)}&status=eq.active&select=id`,
+        { headers: SERVICE_HEADERS }
+      );
+      if (res.ok) {
+        const rows = await res.json();
+        return Array.isArray(rows) && rows.length > 0;
+      }
+    } catch (err) {
+      console.warn("[whatsapp] failed to check consent record:", err.message);
+    }
+  }
+  return false;
+}
+
+/**
  * Mark a message's processing outcome (processed or failed) in Supabase.
  */
 export async function markWhatsAppMessageProcessed(wamid, { status = "processed", error_message = null } = {}) {
