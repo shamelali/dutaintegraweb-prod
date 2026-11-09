@@ -238,15 +238,74 @@ The mechanism, with `wrangler` logged in as the account that owns the zone:
 
 | Cloudflare Pages project | Git | Domain | State |
 |---|---|---|---|
-| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `22b337fb` (2026-11-04, Source `2e267ba` = `main` tip) is live — apex `/` serves bundle `index-CTWEBryY.js`, which is exactly `HEAD:public/index.html`. It is one of **six** production uploads in the twelve hours before it (`794c2810`, `9a4baf45`, `1e696e61`, `a502c730`, `1f82b504`, `22b337fb`), so this project is being re-uploaded often; do not assume the deploy named in the history below is still current — re-check with `npx wrangler pages deployment list --project-name=dutaintegra` and `curl -s https://dutaintegra.my/ \| grep -o 'index-[A-Za-z0-9_-]*\.js'`. Only `npm run cf:deploy` — or the `deploy-pages` job in `.gitlab-ci.yml`, which until 2026-11-04 ran on **every** push to the `gitlab` remote with no test in front of it — changes it. See the CI section: pushing to GitHub ships nothing, pushing to GitLab used to ship everything. |
+| `dutaintegra` | **No** — direct `wrangler pages deploy` uploads | `dutaintegra.my`, `www.dutaintegra.my` | Production deploy `22b337fb` (2026-11-04, Source `2e267ba` = `main` tip) is live — apex `/` serves bundle `index-CTWEBryY.js`, which is exactly `HEAD:public/index.html`. It is one of **six** production uploads in the twelve hours before it (`794c2810`, `9a4baf45`, `1e696e61`, `a502c730`, `1f82b504`, `22b337fb`), so this project is being re-uploaded often; do not assume the deploy named in the history below is still current — re-check with `npx wrangler pages deployment list --project-name=dutaintegra` and `curl -s https://dutaintegra.my/ \| grep -o 'index-[A-Za-z0-9_-]*\.js'`. Only `npm run cf:deploy` — or the `deploy-pages` job in `.gitlab-ci.yml`, which until 2026-11-04 ran on **every** push to the `gitlab` remote with no test in front of it — changes it. See the CI section: pushing to GitHub ships nothing, and pushing to GitLab ships through the pipeline. |
 | `dutaintegraweb-main` | Yes — this repo, `main` | `dutaintegraweb-main.pages.dev` only | Builds on every push and **every build is `Failure`**. Not wired to the real domain. |
 
 Pushing `main` to **GitHub** still does not ship, and neither problem is git: the
 project that owns the domain has no git integration (production changes when
-someone runs `npm run cf:deploy`, or when the GitLab pipeline's manual deploy job
-is clicked), while the project that *does* watch `main` fails its builds and its
-hostname is not the one anyone visits. Pushing `main` to the **`gitlab` remote** did
-ship, untested, until the pipeline gained a gate — see the CI section.
+someone runs `npm run cf:deploy`), while the project that *does* watch `main` fails
+its builds and its hostname is not the one anyone visits. Pushing `main` to the
+**`gitlab` remote** ships through the pipeline's `deploy-pages` job — auto on a
+green default-branch pipeline as of `02eb0278`, and re-checked by `verify-deploy`.
+
+**Re-probed 2026-11-08: the `dutaintegra` project still has no Git integration.**
+`GET /accounts/{id}/pages/projects/dutaintegra` returns `source: null`, and every
+deployment in the recent history is `deployment_trigger.type: "ad_hoc"` — a direct
+`wrangler` upload, not a platform build. Each carries `branch: main` plus the exact
+`commit_hash` and `commit_message` of the matching `main` commit and lands 7-10
+seconds after it, so something local or CI-driven runs `cf:deploy` right after each
+push. Two consequences worth keeping straight:
+
+- The **served bytes are byte-identical** (sha256) to the committed `public/` tree,
+  which is the signature of an upload of committed output rather than a rebuild.
+- GitLab CI was **quota-dead** across `818ca79..f53b260` (nine pipelines, every job
+  `failure_reason: ci_quota_exceeded`, empty trace, namespace on the free plan). The
+  site stayed current regardless, which is the proof that the deploys did not come
+  from the pipeline.
+
+The project's stored `build_config.build_command` was also broken —
+`node tools/i18n-test.js && node tools/deploy-test.js`, and there is no `tools/`
+directory in the repo. It was corrected to `npm run build:web` with
+`destination_dir: public` on 2026-11-08. That value only takes effect once a Git
+integration is connected; until then it is inert.
+
+### The migration this repo should make: Cloudflare's own Git integration
+
+GitLab CI is on the free plan and its shared-runner minutes are spent, so every
+default-branch pipeline currently fails on `ci_quota_exceeded` before a runner
+starts. With `only_allow_merge_if_pipeline_succeeds` set, that also means **no merge
+request can merge** while the quota is exhausted — which is why recent work landed as
+direct pushes to `main`. Cloudflare Pages supports GitLab as a Git provider, so the
+pipeline does not have to be the thing that ships:
+
+1. Workers & Pages → `dutaintegra` → **Settings → Build → Connect to Git** → GitLab,
+   and authorize the Cloudflare GitLab application. (Self-hosted GitLab is not
+   supported; this is `gitlab.com`.)
+2. Set the production branch to `main`, the build command to `npm run build:web`, and
+   the build output directory to `public`. The build command is already corrected on
+   the project; the connection is the part that needs the dashboard, because it is an
+   OAuth grant.
+3. Cloudflare then builds from source on every push and deploys `public/` plus
+   `functions/` itself. Nothing in `.gitlab-ci.yml` needs to upload anything, and the
+   `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` variables stop being a deploy
+   dependency.
+
+Two things to settle before cutting over, because they change what the repo means:
+
+- **The repo commits its build output.** `public/` and `Web/` are checked in, and
+  `artifact-drift` asserts they match a fresh `npm run build:web`. A build-from-source
+  integration makes that gate redundant for the deployed tree — and if the committed
+  trees stop being the deployed artifact, the gate is guarding a copy nobody serves.
+  Decide whether the committed trees stay (and `artifact-drift` keeps its meaning) or
+  the build output moves to `.gitignore` and the gate is dropped.
+- **The build is currently deterministic** — a clean `npm run build:web` on the pinned
+  Node 22 produces zero drift against the committed tree — so a platform build and an
+  upload of the committed tree agree today. That is what makes either choice safe now.
+
+`docs/Deployment.md` still describes a Vercel `vercel --prod` flow. Vercel is
+connected to this repository (webhook `93188477`, plus `vercel.json` building `Web/`)
+but serves an old static-HTML build, not the current SPA; it is a stale second path,
+not the production origin.
 
 **Deploying `main` before `5a90c04` would have taken the whole API down.**
 `server/paths.mjs` resolved `PROJECT_ROOT` at module
@@ -483,7 +542,8 @@ under the table):
 | `frontend` / `frontend-tests` | `npm ci`, Vitest unit tests, `oxlint`, and `tsc -b && vite build` in `web-new/`; uploads `dist/`. |
 | `secret-scan` | `scripts/scan-secrets.mjs` over the working tree and the full git history. |
 | `artifact-drift` | Runs `npm run build:web`, then fails if a deploy tree no longer matches source. Checks **both** `Web/` and `public/` on either host, and publishes `public/` as the artifact the deploy job uploads. |
-| `deploy-pages` | Uploads that artifact to the `dutaintegra` Pages project. Manual on GitLab (`when: manual`), opt-in on GitHub (`vars.CF_PAGES_DEPLOY_ENABLED == 'true'`). |
+| `deploy-pages` | Uploads that artifact to the `dutaintegra` Pages project. Auto-runs on a green default-branch pipeline in both files (`when: on_success` / a plain step), gated only on `CLOUDFLARE_API_TOKEN` being present — with no token the job is omitted, not failed. |
+| `verify-deploy` | Runs `scripts/verify-deploy.mjs` after `deploy-pages` on the default branch. Fails if the custom domain never serves the bundle the artifact built, so a deploy that silently lands on a preview alias goes red. |
 
 Two GitHub-only defects fixed alongside the mirror. Its `artifact-drift` had only
 ever looked at `Web/`, so a `public/` — the tree production actually serves — could
@@ -491,9 +551,10 @@ drift and stay green; and its deploy condition read
 `secrets.CLOUDFLARE_API_TOKEN != ''`, which is not a context available to
 `jobs.<job_id>.if`, so the guard it appeared to have was never the one being
 evaluated. A job that ships to a live origin should not rest on a condition the
-runtime cannot see. The durable GitHub equivalent of GitLab's manual click is a
-required reviewer on the `production` environment (Settings → Environments); the
-variable only makes the job absent by default.
+runtime cannot see. The GitHub `deploy-pages` job now runs automatically on `main`
+as well (the `CF_PAGES_DEPLOY_ENABLED` opt-in was removed in `02eb0278`, matching
+GitLab), with the token check moved to the step level; the token guard is what keeps
+a repository without the secret green rather than red.
 
 **There is a third workflow file, and it was a second path to the same origin.**
 `.github/workflows/pages-deploy.yml` (added by `bb14165`, 2026-11-02) was not
@@ -566,11 +627,14 @@ uploads in twelve hours recorded above — they were CI, not someone typing
 
 The rewritten file runs the same gate GitLab can reach (`server-tests`,
 `frontend-tests`, `env-docs`, `secret-scan`, `artifact-drift`) and keeps the
-deploy, but as `when: manual` on the default branch, `needs: artifact-drift` with
-its `public/` artifact, and present in the pipeline only when
-`CLOUDFLARE_API_TOKEN` is defined. Pushing therefore cannot change production by
-itself, and the bytes uploaded are the bytes that were just rebuilt and checked
-rather than a second, unverified build. Set `CLOUDFLARE_API_TOKEN` (plus
+deploy, but as `when: on_success` on the default branch, `needs: artifact-drift`
+with its `public/` artifact, and present in the pipeline only when
+`CLOUDFLARE_API_TOKEN` is defined. A green default-branch pipeline therefore does
+change production on its own — the earlier `when: manual` + `allow_failure` pairing
+made a broken deploy invisible, so the click was removed on purpose. `verify-deploy`
+runs after it and fails the pipeline if the site never serves the built bundle. The
+bytes uploaded are the bytes that were just rebuilt and checked rather than a
+second, unverified build. Set `CLOUDFLARE_API_TOKEN` (plus
 `CLOUDFLARE_ACCOUNT_ID`) as masked, protected variables under Settings → CI/CD →
 Variables. The job also passes `--commit-hash $CI_COMMIT_SHA`, because a bare
 `wrangler pages deploy` records the uploading *machine*'s
