@@ -245,6 +245,22 @@ test("static pages: missing stylesheets are exactly the documented list", () => 
     `untracked stylesheets: ${offenders.join(" | ")} — if styles.css landed, drop the entry from PAGES_MISSING_THEIR_STYLESHEET`);
 });
 
+test("audit stylesheet covers interactive and report state classes", () => {
+  const css = readFileSync(join(PUBLIC_DIR, "css/styles.css"), "utf8");
+  const requiredClasses = [
+    ".is-on",
+    ".is-pass",
+    ".is-warn",
+    ".is-fail",
+    ".spinner",
+    ".audit-error-card",
+    ".score-ring",
+  ];
+  for (const cls of requiredClasses) {
+    assert.ok(css.includes(cls), `css/styles.css must cover required class ${cls}`);
+  }
+});
+
 test("Web/ and public/ carry the same static files", () => {
   // Pages deploys public/, Vercel deploys Web/. sync-web.mjs only rewrites
   // index.html and assets/, so everything else here is hand-maintained twice —
