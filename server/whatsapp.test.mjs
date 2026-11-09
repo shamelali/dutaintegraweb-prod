@@ -278,6 +278,12 @@ describe("generateBotReply unit tests", () => {
     assert.match(reply, /Sesi Perundingan Pegawai Teknikal/);
   });
 
+  test("generates unsubscribe confirmation for STOP command", () => {
+    const reply = generateBotReply("STOP");
+    assert.match(reply, /Pengesahan Nyahlanggan/);
+    assert.match(reply, /START/);
+  });
+
   test("sendWhatsAppTemplate safely handles mock mode when credentials unset", async () => {
     const result = await sendWhatsAppTemplate({
       to: "601154034051",

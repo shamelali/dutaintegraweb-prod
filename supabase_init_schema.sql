@@ -81,11 +81,29 @@ on conflict (id) do update set probed_at = now();
 create table if not exists public.whatsapp_messages (
   wamid text primary key,
   phone text,
-  created_at timestamptz not null default now()
+  sender_name text,
+  message text,
+  status text not null default 'pending', -- 'pending', 'processed', 'failed'
+  error_message text,
+  created_at timestamptz not null default now(),
+  processed_at timestamptz
 );
 
 alter table public.whatsapp_messages enable row level security;
 
 create policy "Allow service role full access on whatsapp_messages" on public.whatsapp_messages
   for all using (auth.role() = 'service_role');
+
+-- 5. WhatsApp User Opt-Out / Suppression List (STOP / BERHENTI Handling)
+create table if not exists public.whatsapp_optouts (
+  phone text primary key,
+  reason text default 'user_optout',
+  opted_out_at timestamptz not null default now()
+);
+
+alter table public.whatsapp_optouts enable row level security;
+
+create policy "Allow service role full access on whatsapp_optouts" on public.whatsapp_optouts
+  for all using (auth.role() = 'service_role');
+
 

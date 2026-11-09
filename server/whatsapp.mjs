@@ -16,11 +16,117 @@ import { supabaseConfigured, getSupabaseConfig } from "./supabase-client.mjs";
 const PROCESSED_MESSAGE_IDS = new Set();
 const MAX_PROCESSED_IDS = 1000;
 
+// In-memory set of opted-out phone numbers (STOP / BERHENTI)
+const OPTOUT_PHONES = new Set();
+
+/**
+ * Record a phone number opt-out into Supabase and local memory.
+ */
+export async function recordWhatsAppOptOut(phone) {
+  if (!phone) return;
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  OPTOUT_PHONES.add(cleanPhone);
+
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      await fetch(`${REST_BASE}/whatsapp_optouts`, {
+        method: "POST",
+        headers: {
+          ...SERVICE_HEADERS,
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          reason: "user_optout_stop",
+          opted_out_at: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.warn("[whatsapp] failed to persist opt-out to Supabase:", err.message);
+    }
+  }
+}
+
+/**
+ * Remove an opt-out when customer texts START / MULA.
+ */
+export async function removeWhatsAppOptOut(phone) {
+  if (!phone) return;
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  OPTOUT_PHONES.delete(cleanPhone);
+
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      await fetch(`${REST_BASE}/whatsapp_optouts?phone=eq.${encodeURIComponent(cleanPhone)}`, {
+        method: "DELETE",
+        headers: SERVICE_HEADERS,
+      });
+    } catch (err) {
+      console.warn("[whatsapp] failed to remove opt-out from Supabase:", err.message);
+    }
+  }
+}
+
+/**
+ * Check if a phone number is opted out of WhatsApp automated messages.
+ */
+export async function isWhatsAppOptedOut(phone) {
+  if (!phone) return false;
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  if (OPTOUT_PHONES.has(cleanPhone)) return true;
+
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      const res = await fetch(`${REST_BASE}/whatsapp_optouts?phone=eq.${encodeURIComponent(cleanPhone)}&select=phone`, {
+        headers: SERVICE_HEADERS,
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          OPTOUT_PHONES.add(cleanPhone);
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn("[whatsapp] failed to check opt-out in Supabase:", err.message);
+    }
+  }
+  return false;
+}
+
+/**
+ * Mark a message's processing outcome (processed or failed) in Supabase.
+ */
+export async function markWhatsAppMessageProcessed(wamid, { status = "processed", error_message = null } = {}) {
+  if (!wamid || !supabaseConfigured()) return;
+
+  try {
+    const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+    await fetch(`${REST_BASE}/whatsapp_messages?wamid=eq.${encodeURIComponent(wamid)}`, {
+      method: "PATCH",
+      headers: {
+        ...SERVICE_HEADERS,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        status,
+        processed_at: new Date().toISOString(),
+        error_message: error_message ? String(error_message).slice(0, 500) : null,
+      }),
+    });
+  } catch (err) {
+    console.warn(`[whatsapp] failed to update processed status for ${wamid}:`, err.message);
+  }
+}
+
 /**
  * Atomic deduplication check across Cloudflare isolates using Supabase.
  * Returns true if message is fresh and claimed, false if duplicate.
  */
-export async function claimWhatsAppMessage(wamid, phone = null) {
+export async function claimWhatsAppMessage(wamid, phone = null, senderName = null, messageText = null) {
   if (!wamid) return true;
 
   // 1. In-memory check (fast-path for same isolate)
@@ -41,6 +147,9 @@ export async function claimWhatsAppMessage(wamid, phone = null) {
         body: JSON.stringify({
           wamid,
           phone: phone || null,
+          sender_name: senderName || null,
+          message: messageText ? String(messageText).slice(0, 1000) : null,
+          status: "pending",
           created_at: new Date().toISOString(),
         }),
       });
@@ -60,11 +169,14 @@ export async function claimWhatsAppMessage(wamid, phone = null) {
           PROCESSED_MESSAGE_IDS.add(wamid);
           return false;
         }
-        // If table doesn't exist yet, warn and allow fallback to in-memory set
-        console.warn(`[whatsapp] Supabase dedupe record returned ${res.status}: ${errorText.slice(0, 100)}`);
+        // If table doesn't exist yet, emit loud error so operations team sees missing migration
+        console.error(
+          `[whatsapp] LOUD ERROR: Supabase whatsapp_messages table unreachable or not created (HTTP ${res.status}): ${errorText.slice(0, 100)}. ` +
+          `Durable cross-isolate deduplication is INACTIVE until supabase_init_schema.sql is applied in Supabase SQL editor!`
+        );
       }
     } catch (err) {
-      console.warn("[whatsapp] Supabase dedupe check error, falling back to in-memory:", err.message);
+      console.error("[whatsapp] LOUD ERROR: Supabase dedupe check threw error, falling back to in-memory:", err.message);
     }
   }
 
@@ -165,6 +277,11 @@ export async function sendWhatsAppTemplate({
   const cfg = whatsappConfig();
   const activePhoneId = phoneNumberId || cfg.phoneNumberId;
 
+  const cleanPhone = to.replace(/[^0-9]/g, "");
+  if (await isWhatsAppOptedOut(cleanPhone)) {
+    return { success: false, error: "Recipient has opted out (STOP)", optedOut: true };
+  }
+
   if (!cfg.accessToken || !activePhoneId) {
     return { mock: true, success: true, to, templateName, bodyParams, activePhoneId };
   }
@@ -208,6 +325,22 @@ export async function sendWhatsAppTemplate({
  */
 export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
   const text = String(rawText).trim().toLowerCase();
+
+  // STOP / UNSUBSCRIBE handling
+  if (
+    text === "stop" ||
+    text === "berhenti" ||
+    text === "unsubscribe" ||
+    text === "batal" ||
+    text === "keluar"
+  ) {
+    return (
+      `🛑 *Pengesahan Nyahlanggan / Unsubscribe Confirmed*\n\n` +
+      `Nombor anda telah dinyahlanggan daripada sebarang pemberitahuan dan mesej automatik Duta Integra.\n\n` +
+      `Tiada mesej lanjut akan dihantar ke nombor ini. Jika anda ingin berhubung semula dengan kami pada masa akan datang, balas *'START'* pada bila-bila masa.\n\n` +
+      `_Your number has been unsubscribed from automated messages. Reply 'START' at any time to re-subscribe._`
+    );
+  }
 
   // Greetings / Main Menu
   if (
@@ -375,16 +508,6 @@ export async function dispatchWebhookProcessing(payload) {
 
       for (const msg of messages) {
         const msgId = msg.id;
-
-        // Deduplication: prevent duplicate lead logging & double replies on Meta retries
-        if (msgId) {
-          const claimed = await claimWhatsAppMessage(msgId, msg.from);
-          if (!claimed) {
-            continue;
-          }
-        }
-
-        count += 1;
         const senderPhone = msg.from;
         const senderContact = contacts.find((c) => c.wa_id === senderPhone) || contacts[0];
         const senderName = senderContact?.profile?.name || "Pelanggan WhatsApp";
@@ -404,19 +527,55 @@ export async function dispatchWebhookProcessing(payload) {
           userText = `[Media: ${msg.type}]`;
         }
 
-        // Record incoming lead
-        try {
-          await recordEnquiry({
-            name: senderName,
-            company: null,
-            email: `${senderPhone}@wa.dutaintegra.my`,
-            phone: senderPhone,
-            service: "WhatsApp Lead",
-            message: userText,
-            source: "whatsapp",
-          });
-        } catch (err) {
-          console.error("[whatsapp] failed to record enquiry:", err);
+        // Deduplication: prevent duplicate lead logging & double replies on Meta retries
+        if (msgId) {
+          const claimed = await claimWhatsAppMessage(msgId, senderPhone, senderName, userText);
+          if (!claimed) {
+            continue;
+          }
+        }
+
+        count += 1;
+        const normalizedText = userText.trim().toLowerCase();
+        const isStopCommand = ["stop", "berhenti", "unsubscribe", "batal", "keluar"].includes(normalizedText);
+        const isStartCommand = ["start", "mula"].includes(normalizedText);
+
+        if (isStopCommand) {
+          await recordWhatsAppOptOut(senderPhone);
+        } else if (isStartCommand) {
+          await removeWhatsAppOptOut(senderPhone);
+        } else {
+          const alreadyOptedOut = await isWhatsAppOptedOut(senderPhone);
+          if (alreadyOptedOut) {
+            // Customer previously sent STOP: suppress automated replies unless they send START
+            if (msgId) {
+              await markWhatsAppMessageProcessed(msgId, {
+                status: "processed",
+                error_message: "Suppressed: recipient opted out",
+              });
+            }
+            continue;
+          }
+        }
+
+        let processingError = null;
+
+        // Record incoming lead (only if not an opt-out command)
+        if (!isStopCommand) {
+          try {
+            await recordEnquiry({
+              name: senderName,
+              company: null,
+              email: `${senderPhone}@wa.dutaintegra.my`,
+              phone: senderPhone,
+              service: "WhatsApp Lead",
+              message: userText,
+              source: "whatsapp",
+            });
+          } catch (err) {
+            processingError = err;
+            console.error(`[whatsapp] CRITICAL: failed to record enquiry for ${senderPhone}:`, err);
+          }
         }
 
         // Generate intelligent automated response
@@ -431,7 +590,16 @@ export async function dispatchWebhookProcessing(payload) {
             phoneNumberId: incomingPhoneId,
           });
         } catch (err) {
-          console.error("[whatsapp] failed to send auto-reply:", err);
+          processingError = err;
+          console.error(`[whatsapp] CRITICAL: failed to send auto-reply to ${senderPhone}:`, err);
+        }
+
+        // Update durable message record with processing outcome
+        if (msgId) {
+          await markWhatsAppMessageProcessed(msgId, {
+            status: processingError ? "failed" : "processed",
+            error_message: processingError ? processingError.message : null,
+          });
         }
       }
     }
