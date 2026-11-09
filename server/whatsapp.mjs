@@ -270,29 +270,38 @@ export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
 }
 
 /**
- * Handle incoming Meta WhatsApp webhook events.
+ * Validate incoming Meta webhook before acknowledging.
  * FAILS CLOSED: requires WHATSAPP_APP_SECRET and valid x-hub-signature-256 HMAC-SHA256 header.
  */
-export async function processWhatsAppWebhook(rawBody, headers = {}) {
+export function validateIncomingWebhook(rawBody, headers = {}) {
   const cfg = whatsappConfig();
   const signature = headers["x-hub-signature-256"];
 
   if (!cfg.appSecret || !verifyMetaSignature(rawBody, signature, cfg.appSecret)) {
     console.error("[whatsapp] Webhook rejected: missing WHATSAPP_APP_SECRET or invalid x-hub-signature-256 header");
-    return { status: 401, body: { error: "Unauthorized: Invalid or missing webhook signature" } };
+    return { ok: false, status: 401, body: { error: "Unauthorized: Invalid or missing webhook signature" } };
   }
 
   let payload;
   try {
     payload = JSON.parse(rawBody.toString("utf8"));
   } catch {
-    return { status: 400, body: { error: "Invalid JSON" } };
+    return { ok: false, status: 400, body: { error: "Invalid JSON" } };
   }
 
-  if (payload.object !== "whatsapp_business_account") {
-    return { status: 200, body: { received: true } };
+  return { ok: true, payload };
+}
+
+/**
+ * Background worker to deduplicate, log leads, and dispatch outbound bot replies.
+ * Executes asynchronously after the HTTP 200 has already been acknowledged to Meta.
+ */
+export async function dispatchWebhookProcessing(payload) {
+  if (!payload || payload.object !== "whatsapp_business_account") {
+    return { processed: 0 };
   }
 
+  let count = 0;
   const entries = Array.isArray(payload.entry) ? payload.entry : [];
   for (const entry of entries) {
     const changes = Array.isArray(entry.changes) ? entry.changes : [];
@@ -305,10 +314,12 @@ export async function processWhatsAppWebhook(rawBody, headers = {}) {
 
       for (const msg of messages) {
         const msgId = msg.id;
-        if (msgId && PROCESSED_MESSAGE_IDS.has(msgId)) {
-          continue; // Already processed
-        }
+
+        // Deduplication: prevent duplicate lead logging & double replies on Meta retries
         if (msgId) {
+          if (PROCESSED_MESSAGE_IDS.has(msgId)) {
+            continue;
+          }
           PROCESSED_MESSAGE_IDS.add(msgId);
           if (PROCESSED_MESSAGE_IDS.size > MAX_PROCESSED_IDS) {
             const first = PROCESSED_MESSAGE_IDS.values().next().value;
@@ -316,6 +327,7 @@ export async function processWhatsAppWebhook(rawBody, headers = {}) {
           }
         }
 
+        count += 1;
         const senderPhone = msg.from;
         const senderContact = contacts.find((c) => c.wa_id === senderPhone) || contacts[0];
         const senderName = senderContact?.profile?.name || "Pelanggan WhatsApp";
@@ -368,6 +380,27 @@ export async function processWhatsAppWebhook(rawBody, headers = {}) {
     }
   }
 
+  return { processed: count };
+}
+
+/**
+ * Handle incoming Meta WhatsApp webhook events.
+ * FAILS CLOSED: requires WHATSAPP_APP_SECRET and valid x-hub-signature-256 HMAC-SHA256 header.
+ */
+export async function processWhatsAppWebhook(rawBody, headers = {}, asyncDispatch = false) {
+  const validation = validateIncomingWebhook(rawBody, headers);
+  if (!validation.ok) {
+    return { status: validation.status, body: validation.body };
+  }
+
+  if (asyncDispatch) {
+    dispatchWebhookProcessing(validation.payload).catch((err) => {
+      console.error("[whatsapp] background processing error:", err);
+    });
+  } else {
+    await dispatchWebhookProcessing(validation.payload);
+  }
+
   return { status: 200, body: { status: "ok", received: true } };
 }
 
@@ -408,15 +441,31 @@ export async function handleWhatsAppWebhook(req, res) {
     for await (const chunk of req) chunks.push(chunk);
     const rawBody = Buffer.concat(chunks);
 
-    const result = await processWhatsAppWebhook(rawBody, req.headers);
-    const payload = JSON.stringify(result.body);
+    const validation = validateIncomingWebhook(rawBody, req.headers);
+    if (!validation.ok) {
+      const payload = JSON.stringify(validation.body);
+      res.writeHead(validation.status, {
+        "content-type": "application/json; charset=utf-8",
+        "content-length": Buffer.byteLength(payload),
+        "cache-control": "no-store",
+      });
+      res.end(payload);
+      return;
+    }
 
-    res.writeHead(result.status, {
+    // Fast ACK: return 200 immediately to Meta before background processing
+    const ack = JSON.stringify({ status: "ok", received: true });
+    res.writeHead(200, {
       "content-type": "application/json; charset=utf-8",
-      "content-length": Buffer.byteLength(payload),
+      "content-length": Buffer.byteLength(ack),
       "cache-control": "no-store",
     });
-    res.end(payload);
+    res.end(ack);
+
+    // Asynchronous processing (dedupe, lead logging, auto-reply)
+    dispatchWebhookProcessing(validation.payload).catch((err) => {
+      console.error("[whatsapp] async background processing error:", err);
+    });
     return;
   }
 

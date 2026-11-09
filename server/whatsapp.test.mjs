@@ -155,6 +155,9 @@ describe("POST /api/whatsapp/webhook (Inbound Message Ingestion & Auto-Reply)", 
     const data = await res.json();
     assert.equal(data.received, true);
 
+    // Yield for fast-ACK background processing to complete persistence
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     // Verify lead was stored
     const enquiries = await listEnquiries(10);
     const stored = enquiries.find((e) => e.phone === "60123456789");
