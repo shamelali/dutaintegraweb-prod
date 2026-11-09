@@ -31,6 +31,13 @@ const headers = {
 };
 
 async function purgeTable(table, filterQuery) {
+  // CRITICAL SAFEGUARD: Opt-outs must NEVER be purged under any circumstance.
+  // Deleting opt-outs would cause suppressed contacts who replied STOP to receive unwanted messages.
+  const STRICTLY_PROTECTED_TABLES = new Set(["whatsapp_optouts"]);
+  if (STRICTLY_PROTECTED_TABLES.has(table)) {
+    throw new Error(`CRITICAL ERROR: Attempted to purge permanently protected table '${table}'!`);
+  }
+
   const url = `${SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${table}?${filterQuery}`;
   
   if (DRY_RUN) {

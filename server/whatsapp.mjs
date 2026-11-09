@@ -20,11 +20,37 @@ const MAX_PROCESSED_IDS = 1000;
 const OPTOUT_PHONES = new Set();
 
 /**
+ * Normalise phone numbers to Meta wa_id standard (digits only without leading + or separators).
+ */
+export function normaliseWaPhone(phone) {
+  if (!phone) return "";
+  return String(phone).replace(/[^0-9]/g, "");
+}
+
+/**
+ * Strictly match explicit, whole-message unsubscribe requests.
+ * Ordinary words like 'batal' or 'keluar' are intentionally excluded to prevent accidental opt-outs
+ * during customer conversations (e.g. 'batal temu janji').
+ */
+export function isExactStopCommand(rawText = "") {
+  const trimmed = String(rawText).trim().toLowerCase();
+  return trimmed === "stop" || trimmed === "berhenti" || trimmed === "unsubscribe";
+}
+
+/**
+ * Strictly match explicit, whole-message re-subscribe requests.
+ */
+export function isExactStartCommand(rawText = "") {
+  const trimmed = String(rawText).trim().toLowerCase();
+  return trimmed === "start" || trimmed === "mula";
+}
+
+/**
  * Record a phone number opt-out into Supabase and local memory.
  */
 export async function recordWhatsAppOptOut(phone) {
-  if (!phone) return;
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  const cleanPhone = normaliseWaPhone(phone);
+  if (!cleanPhone) return;
   OPTOUT_PHONES.add(cleanPhone);
 
   if (supabaseConfigured()) {
@@ -52,8 +78,8 @@ export async function recordWhatsAppOptOut(phone) {
  * Remove an opt-out when customer texts START / MULA.
  */
 export async function removeWhatsAppOptOut(phone) {
-  if (!phone) return;
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  const cleanPhone = normaliseWaPhone(phone);
+  if (!cleanPhone) return;
   OPTOUT_PHONES.delete(cleanPhone);
 
   if (supabaseConfigured()) {
@@ -73,8 +99,8 @@ export async function removeWhatsAppOptOut(phone) {
  * Check if a phone number is opted out of WhatsApp automated messages.
  */
 export async function isWhatsAppOptedOut(phone) {
-  if (!phone) return false;
-  const cleanPhone = phone.replace(/[^0-9]/g, "");
+  const cleanPhone = normaliseWaPhone(phone);
+  if (!cleanPhone) return false;
   if (OPTOUT_PHONES.has(cleanPhone)) return true;
 
   if (supabaseConfigured()) {
@@ -128,6 +154,7 @@ export async function markWhatsAppMessageProcessed(wamid, { status = "processed"
  */
 export async function claimWhatsAppMessage(wamid, phone = null, senderName = null, messageText = null) {
   if (!wamid) return true;
+  const cleanPhone = normaliseWaPhone(phone);
 
   // 1. In-memory check (fast-path for same isolate)
   if (PROCESSED_MESSAGE_IDS.has(wamid)) {
@@ -146,7 +173,7 @@ export async function claimWhatsAppMessage(wamid, phone = null, senderName = nul
         },
         body: JSON.stringify({
           wamid,
-          phone: phone || null,
+          phone: cleanPhone || null,
           sender_name: senderName || null,
           message: messageText ? String(messageText).slice(0, 1000) : null,
           status: "pending",
@@ -326,14 +353,8 @@ export async function sendWhatsAppTemplate({
 export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
   const text = String(rawText).trim().toLowerCase();
 
-  // STOP / UNSUBSCRIBE handling
-  if (
-    text === "stop" ||
-    text === "berhenti" ||
-    text === "unsubscribe" ||
-    text === "batal" ||
-    text === "keluar"
-  ) {
+  // STOP / UNSUBSCRIBE handling (strictly exact whole-message match)
+  if (isExactStopCommand(rawText)) {
     return (
       `🛑 *Pengesahan Nyahlanggan / Unsubscribe Confirmed*\n\n` +
       `Nombor anda telah dinyahlanggan daripada sebarang pemberitahuan dan mesej automatik Duta Integra.\n\n` +
@@ -536,16 +557,16 @@ export async function dispatchWebhookProcessing(payload) {
         }
 
         count += 1;
-        const normalizedText = userText.trim().toLowerCase();
-        const isStopCommand = ["stop", "berhenti", "unsubscribe", "batal", "keluar"].includes(normalizedText);
-        const isStartCommand = ["start", "mula"].includes(normalizedText);
+        const cleanSenderPhone = normaliseWaPhone(senderPhone);
+        const isStopCommand = isExactStopCommand(userText);
+        const isStartCommand = isExactStartCommand(userText);
 
         if (isStopCommand) {
-          await recordWhatsAppOptOut(senderPhone);
+          await recordWhatsAppOptOut(cleanSenderPhone);
         } else if (isStartCommand) {
-          await removeWhatsAppOptOut(senderPhone);
+          await removeWhatsAppOptOut(cleanSenderPhone);
         } else {
-          const alreadyOptedOut = await isWhatsAppOptedOut(senderPhone);
+          const alreadyOptedOut = await isWhatsAppOptedOut(cleanSenderPhone);
           if (alreadyOptedOut) {
             // Customer previously sent STOP: suppress automated replies unless they send START
             if (msgId) {
@@ -566,15 +587,15 @@ export async function dispatchWebhookProcessing(payload) {
             await recordEnquiry({
               name: senderName,
               company: null,
-              email: `${senderPhone}@wa.dutaintegra.my`,
-              phone: senderPhone,
+              email: `${cleanSenderPhone}@wa.dutaintegra.my`,
+              phone: cleanSenderPhone,
               service: "WhatsApp Lead",
               message: userText,
               source: "whatsapp",
             });
           } catch (err) {
             processingError = err;
-            console.error(`[whatsapp] CRITICAL: failed to record enquiry for ${senderPhone}:`, err);
+            console.error(`[whatsapp] CRITICAL: failed to record enquiry for ${cleanSenderPhone}:`, err.message);
           }
         }
 
@@ -584,14 +605,14 @@ export async function dispatchWebhookProcessing(payload) {
         // Send reply back to customer
         try {
           await sendWhatsAppMessage({
-            to: senderPhone,
+            to: cleanSenderPhone,
             text: replyText,
             replyToMessageId: msgId,
             phoneNumberId: incomingPhoneId,
           });
         } catch (err) {
           processingError = err;
-          console.error(`[whatsapp] CRITICAL: failed to send auto-reply to ${senderPhone}:`, err);
+          console.error(`[whatsapp] CRITICAL: failed to send auto-reply to ${cleanSenderPhone}:`, err.message);
         }
 
         // Update durable message record with processing outcome
