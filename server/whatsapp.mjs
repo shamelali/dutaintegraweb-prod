@@ -37,11 +37,11 @@ function safeEqual(a, b) {
 }
 
 /**
- * Validate Meta's x-hub-signature-256 header when WHATSAPP_APP_SECRET is set.
+ * Validate Meta's x-hub-signature-256 header.
+ * FAILS CLOSED: requires appSecret, signatureHeader, and valid HMAC-SHA256.
  */
 export function verifyMetaSignature(rawBody, signatureHeader, appSecret) {
-  if (!appSecret) return true;
-  if (!signatureHeader || typeof signatureHeader !== "string") return false;
+  if (!appSecret || !signatureHeader || typeof signatureHeader !== "string") return false;
 
   const [prefix, signature] = signatureHeader.split("=");
   if (prefix !== "sha256" || !signature) return false;
@@ -170,7 +170,7 @@ export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
       `3️⃣ *Bantuan Komputer & IT Helpdesk Kedai*\n` +
       `4️⃣ *Sembang dengan Jurutera Teknikal*\n\n` +
       `Sila balas nombor (cth: *1* atau *2*), atau taip terus soalan anda.\n\n` +
-      `🔒 _Notis Privasi: Nombor & butiran anda disimpan sementara untuk tujuan menjawab pertanyaan ini selaras PDPA 2010 (https://dutaintegra.my/privacy)._`
+      `🔒 _Notis Privasi: Nombor & butiran anda disimpan untuk menjawab pertanyaan anda dan susulan perkhidmatan selaras PDPA 2010 (https://dutaintegra.my/privacy)._`
     );
   }
 
@@ -271,13 +271,15 @@ export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
 
 /**
  * Handle incoming Meta WhatsApp webhook events.
+ * FAILS CLOSED: requires WHATSAPP_APP_SECRET and valid x-hub-signature-256 HMAC-SHA256 header.
  */
 export async function processWhatsAppWebhook(rawBody, headers = {}) {
   const cfg = whatsappConfig();
   const signature = headers["x-hub-signature-256"];
 
-  if (cfg.appSecret && !verifyMetaSignature(rawBody, signature, cfg.appSecret)) {
-    return { status: 401, body: { error: "Invalid signature" } };
+  if (!cfg.appSecret || !verifyMetaSignature(rawBody, signature, cfg.appSecret)) {
+    console.error("[whatsapp] Webhook rejected: missing WHATSAPP_APP_SECRET or invalid x-hub-signature-256 header");
+    return { status: 401, body: { error: "Unauthorized: Invalid or missing webhook signature" } };
   }
 
   let payload;

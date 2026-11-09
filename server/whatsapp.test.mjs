@@ -94,14 +94,14 @@ describe("POST /api/whatsapp/webhook (Meta Webhook Signature)", () => {
     assert.equal(res.status, 401);
   });
 
-  test("verifyMetaSignature helper validates HMAC correctly", () => {
+  test("verifyMetaSignature helper validates HMAC correctly and fails closed without secret", () => {
     const raw = Buffer.from('{"hello":"world"}');
     const secret = "my_secret_key";
     const validSig = signPayload(raw, secret);
     assert.equal(verifyMetaSignature(raw, validSig, secret), true);
     assert.equal(verifyMetaSignature(raw, "sha256=deadbeef", secret), false);
     assert.equal(verifyMetaSignature(raw, null, secret), false);
-    assert.equal(verifyMetaSignature(raw, null, ""), true); // unconfigured secret
+    assert.equal(verifyMetaSignature(raw, null, ""), false); // fails closed
   });
 });
 
