@@ -33,16 +33,16 @@ export function normaliseWaPhone(phone) {
  * during customer conversations (e.g. 'batal temu janji').
  */
 export function isExactStopCommand(rawText = "") {
-  const trimmed = String(rawText).trim().toLowerCase();
-  return trimmed === "stop" || trimmed === "berhenti" || trimmed === "unsubscribe";
+  const normalized = String(rawText).trim().toLowerCase().replace(/[.!?]+$/, "");
+  return normalized === "stop" || normalized === "berhenti" || normalized === "unsubscribe";
 }
 
 /**
  * Strictly match explicit, whole-message re-subscribe requests.
  */
 export function isExactStartCommand(rawText = "") {
-  const trimmed = String(rawText).trim().toLowerCase();
-  return trimmed === "start" || trimmed === "mula";
+  const normalized = String(rawText).trim().toLowerCase().replace(/[.!?]+$/, "");
+  return normalized === "start" || normalized === "mula";
 }
 
 /**
