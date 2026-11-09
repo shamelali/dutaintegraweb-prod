@@ -7,7 +7,15 @@ import { join } from "node:path";
 import { createHmac } from "node:crypto";
 
 import { handle } from "./handler.mjs";
-import { generateBotReply, sendWhatsAppTemplate, verifyMetaSignature } from "./whatsapp.mjs";
+import {
+  generateBotReply,
+  sendWhatsAppTemplate,
+  sendWhatsAppMessage,
+  verifyMetaSignature,
+  recordWhatsAppOptOut,
+  removeWhatsAppOptOut,
+  isExactStopCommand,
+} from "./whatsapp.mjs";
 import { listEnquiries } from "./enquiries.mjs";
 
 let server;
@@ -87,7 +95,7 @@ describe("POST /api/whatsapp/webhook (Meta Webhook Signature)", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-hub-signature-256": "sha256=badsignature000000000000000000000000000000000000000000000000000000",
+        "x-hub-signature-256": "sha256=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
       },
       body,
     });
@@ -295,5 +303,37 @@ describe("generateBotReply unit tests", () => {
     assert.equal(result.success, true);
     assert.equal(result.templateName, "monthly_it_digest");
     assert.equal(result.bodyParams.length, 5);
+  });
+
+  test("isExactStopCommand handles case, whitespace, and trailing punctuation", () => {
+    assert.equal(isExactStopCommand("stop"), true);
+    assert.equal(isExactStopCommand("Stop "), true);
+    assert.equal(isExactStopCommand("  STOP!  "), true);
+    assert.equal(isExactStopCommand("berhenti."), true);
+    assert.equal(isExactStopCommand("batal tempahan"), false);
+    assert.equal(isExactStopCommand("keluar kedai"), false);
+  });
+
+  test("sendWhatsAppMessage and sendWhatsAppTemplate block sends to opted-out numbers", async () => {
+    const testPhone = "60199998888";
+    await recordWhatsAppOptOut(testPhone);
+
+    const msgResult = await sendWhatsAppMessage({
+      to: testPhone,
+      text: "Hello customer",
+    });
+    assert.equal(msgResult.success, false);
+    assert.equal(msgResult.blocked, true);
+
+    const templateResult = await sendWhatsAppTemplate({
+      to: testPhone,
+      templateName: "monthly_it_digest",
+      bodyParams: ["Test"],
+    });
+    assert.equal(templateResult.success, false);
+    assert.equal(templateResult.blocked, true);
+
+    // Clean up
+    await removeWhatsAppOptOut(testPhone);
   });
 });

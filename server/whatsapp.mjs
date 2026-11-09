@@ -255,21 +255,35 @@ export function verifyMetaSignature(rawBody, signatureHeader, appSecret) {
 
 /**
  * Send an outbound message back to customer via Meta Cloud API.
+ * Blocks transmission if recipient has opted out, unless explicitly bypassed (e.g. for STOP confirmation).
  */
-export async function sendWhatsAppMessage({ to, text, replyToMessageId = null, phoneNumberId = null }) {
+export async function sendWhatsAppMessage({
+  to,
+  text,
+  replyToMessageId = null,
+  phoneNumberId = null,
+  bypassOptOut = false,
+}) {
+  const cleanTo = normaliseWaPhone(to);
+  if (!cleanTo) return { success: false, error: "Missing or invalid recipient phone number" };
+
+  if (!bypassOptOut && (await isWhatsAppOptedOut(cleanTo))) {
+    return { success: false, blocked: true, error: "Recipient has opted out (STOP)", optedOut: true };
+  }
+
   const cfg = whatsappConfig();
   const activePhoneId = phoneNumberId || cfg.phoneNumberId;
 
   if (!cfg.accessToken || !activePhoneId) {
     // Development or unconfigured mode: record mock outbound
-    return { mock: true, success: true, to, text, activePhoneId };
+    return { mock: true, success: true, to: cleanTo, text, activePhoneId };
   }
 
   const endpoint = `https://graph.facebook.com/${cfg.graphVersion}/${activePhoneId}/messages`;
   const payload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
-    to: to.replace(/[^0-9]/g, ""),
+    to: cleanTo,
     type: "text",
     text: { preview_url: false, body: text },
   };
@@ -304,9 +318,9 @@ export async function sendWhatsAppTemplate({
   const cfg = whatsappConfig();
   const activePhoneId = phoneNumberId || cfg.phoneNumberId;
 
-  const cleanPhone = to.replace(/[^0-9]/g, "");
+  const cleanPhone = normaliseWaPhone(to);
   if (await isWhatsAppOptedOut(cleanPhone)) {
-    return { success: false, error: "Recipient has opted out (STOP)", optedOut: true };
+    return { success: false, blocked: true, error: "Recipient has opted out (STOP)", optedOut: true };
   }
 
   if (!cfg.accessToken || !activePhoneId) {
@@ -609,6 +623,7 @@ export async function dispatchWebhookProcessing(payload) {
             text: replyText,
             replyToMessageId: msgId,
             phoneNumberId: incomingPhoneId,
+            bypassOptOut: isStopCommand,
           });
         } catch (err) {
           processingError = err;
