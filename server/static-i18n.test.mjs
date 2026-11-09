@@ -222,15 +222,11 @@ test("static pages: every <a> href resolves to a real file or a React route", ()
 });
 
 /**
- * audit.html is styled by public/css/styles.css, which has never been committed
- * (`git log -- public/css/styles.css` is empty) and is not on disk, so the
- * free-audit page renders as unstyled HTML. The <link> cannot 404 either: the SPA
- * fallback answers it with index.html, which the browser rejects as text/css —
- * verified against https://dutaintegra.my/css/styles.css (200, 2004 B of HTML).
- * This list is tracked debt. It fails when the stylesheet lands without the entry
- * being removed, so the fix is announced rather than silently taken.
+ * Previously, audit.html was styled by public/css/styles.css, which had not been
+ * committed. Now that public/css/styles.css exists and is deployed, this list is
+ * empty and all static pages resolve their local stylesheets.
  */
-const PAGES_MISSING_THEIR_STYLESHEET = ["audit.html"];
+const PAGES_MISSING_THEIR_STYLESHEET = [];
 
 test("static pages: missing stylesheets are exactly the documented list", () => {
   const files = publicFiles();
