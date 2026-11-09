@@ -33,6 +33,35 @@ create table if not exists public.whatsapp_consents (
   notes text
 );
 
+-- Reconcile schema if an older prototype version of whatsapp_consents exists
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns 
+    where table_schema = 'public' 
+      and table_name = 'whatsapp_consents' 
+      and column_name = 'phone_number'
+  ) and not exists (
+    select 1 from information_schema.columns 
+    where table_schema = 'public' 
+      and table_name = 'whatsapp_consents' 
+      and column_name = 'phone'
+  ) then
+    alter table public.whatsapp_consents rename column phone_number to phone;
+  end if;
+end $$;
+
+alter table public.whatsapp_consents 
+  add column if not exists phone text,
+  add column if not exists status text not null default 'active',
+  add column if not exists company text,
+  add column if not exists contact_name text,
+  add column if not exists consent_method text,
+  add column if not exists form_version text not null default 'v1.0',
+  add column if not exists consent_at timestamptz not null default now(),
+  add column if not exists revoked_at timestamptz,
+  add column if not exists notes text;
+
 alter table public.whatsapp_messages enable row level security;
 alter table public.whatsapp_optouts enable row level security;
 alter table public.whatsapp_consents enable row level security;
