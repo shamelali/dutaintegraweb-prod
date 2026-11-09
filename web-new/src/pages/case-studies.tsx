@@ -191,23 +191,30 @@ export function CaseStudiesPage() {
       <section className="py-20 md:py-28 bg-gradient-to-br from-[#0a2540] via-[#0d3b66] to-[#0a2540] text-center text-white relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 relative z-10">
           <Badge variant="electric" className="mb-6 uppercase tracking-wider font-semibold">
-            {lang === "bm" ? "Kisah Kejayaan Sebenar" : "Proven Client Results"}
+            {lang === "bm" ? "Senario Pelaksanaan & Contoh Penggunaan" : "Illustrative Use Cases & Architectures"}
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
             {lang === "bm"
-              ? "Lihat Bagaimana Bisnes Tempatan Berkembang Bersama Kami."
-              : "See How Malaysian Businesses Scale With Duta Integra."}
+              ? "Contoh Pelaksanaan Penyelesaian Digital & IT Tempatan."
+              : "How Malaysian SMEs Automate & Scale With Duta Integra."}
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
             {lang === "bm"
-              ? "Daripada bengkel automotif dan klinik hingga ke kilang pembuatan — kami membantu perniagaan menyelesaikan masalah IT, mengautomasikan jualan WhatsApp, dan membina laman web yang menghasilkan jualan sebenar."
-              : "From auto workshops and clinics to manufacturing plants — we help businesses eliminate IT headaches, automate WhatsApp sales, and deploy high-converting websites."}
+              ? "Daripada bengkel automotif dan klinik hingga ke kilang pembuatan — lihat bagaimana aliran kerja IT, bot WhatsApp, dan integrasi digital kami direka untuk menyelesaikan cabaran operasi harian PKS."
+              : "From automotive workshops and clinics to manufacturing plants — explore how our managed IT workflows, WhatsApp automation, and digital integrations are engineered to resolve daily SME challenges."}
           </p>
+
+          <div className="mt-6 mx-auto max-w-2xl px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white/80 backdrop-blur-sm">
+            💡 <strong>{lang === "bm" ? "Notis Pematuhan:" : "Compliance Notice:"}</strong>{" "}
+            {lang === "bm"
+              ? "Profil dan metrik di bawah merupakan senario rujukan seni bina perkhidmatan dan simulasi potensi untuk tujuan ilustrasi perancangan PKS."
+              : "The profiles and metrics below represent illustrative service architecture scenarios and potential simulations for SME planning purposes."}
+          </div>
 
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
             {[
-              { id: "all", label: lang === "bm" ? "Semua Kisah" : "All Stories" },
+              { id: "all", label: lang === "bm" ? "Semua Senario" : "All Scenarios" },
               { id: "pks", label: "🇲🇾 PKS & Bengkel (Core)" },
               { id: "automation", label: "💬 WhatsApp & e-Invois (Advance)" },
               { id: "cloud", label: "🏢 Cloud & Multi-Cawangan (Pro)" },

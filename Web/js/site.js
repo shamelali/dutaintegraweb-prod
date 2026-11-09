@@ -332,7 +332,7 @@
 
     // ---- CASES PAGE ----
     casesHeroTitle:   { en: 'Case Studies',  bm: 'Kajian Kes' },
-    casesHeroDesc:    { en: 'Real results from real businesses. See how our managed IT services transform operations for Malaysian SMEs.', bm: 'Keputusan sebenar dari perniagaan sebenar. Lihat bagaimana perkhidmatan IT terurus kami mengubah operasi untuk SME Malaysia.' },
+    casesHeroDesc:    { en: 'Illustrative architectures and simulated workflows showing how our managed IT and digital solutions optimize Malaysian SME operations.', bm: 'Simulasi seni bina dan aliran kerja ilustrasi yang menunjukkan bagaimana penyelesaian IT terurus kami mengoptimumkan operasi PKS Malaysia.' },
     casesCtaTitle:    { en: 'Ready to transform your IT?', bm: 'Bersedia mengubah IT anda?' },
     casesCtaDesc:     { en: "Start with a free assessment. We'll identify your biggest wins and show you exactly how managed IT can help.", bm: 'Mulakan dengan penilaian percuma. Kami akan mengenal pasti kemenangan terbesar anda dan menunjukkan bagaimana IT terurus boleh membantu.' },
     casesFindTier:    { en: 'Free IT Audit',  bm: 'Audit IT Percuma' },
