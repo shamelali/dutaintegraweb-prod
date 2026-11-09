@@ -56,14 +56,16 @@ export function verifyMetaSignature(rawBody, signatureHeader, appSecret) {
 /**
  * Send an outbound message back to customer via Meta Cloud API.
  */
-export async function sendWhatsAppMessage({ to, text, replyToMessageId = null }) {
+export async function sendWhatsAppMessage({ to, text, replyToMessageId = null, phoneNumberId = null }) {
   const cfg = whatsappConfig();
-  if (!cfg.accessToken || !cfg.phoneNumberId) {
+  const activePhoneId = phoneNumberId || cfg.phoneNumberId;
+
+  if (!cfg.accessToken || !activePhoneId) {
     // Development or unconfigured mode: record mock outbound
-    return { mock: true, success: true, to, text };
+    return { mock: true, success: true, to, text, activePhoneId };
   }
 
-  const endpoint = `https://graph.facebook.com/${cfg.graphVersion}/${cfg.phoneNumberId}/messages`;
+  const endpoint = `https://graph.facebook.com/${cfg.graphVersion}/${activePhoneId}/messages`;
   const payload = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -243,6 +245,7 @@ export async function processWhatsAppWebhook(rawBody, headers = {}) {
     for (const change of changes) {
       if (change.field !== "messages") continue;
       const val = change.value ?? {};
+      const incomingPhoneId = val.metadata?.phone_number_id || null;
       const contacts = Array.isArray(val.contacts) ? val.contacts : [];
       const messages = Array.isArray(val.messages) ? val.messages : [];
 
@@ -302,6 +305,7 @@ export async function processWhatsAppWebhook(rawBody, headers = {}) {
             to: senderPhone,
             text: replyText,
             replyToMessageId: msgId,
+            phoneNumberId: incomingPhoneId,
           });
         } catch (err) {
           console.error("[whatsapp] failed to send auto-reply:", err);
