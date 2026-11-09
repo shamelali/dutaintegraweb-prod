@@ -19,6 +19,10 @@ const MAX_PROCESSED_IDS = 1000;
 // In-memory set of opted-out phone numbers (STOP / BERHENTI)
 const OPTOUT_PHONES = new Set();
 
+const WHATSAPP_MESSAGES_TABLE = "whatsapp_messages";
+const WHATSAPP_OPTOUTS_TABLE = "whatsapp_optouts";
+const WHATSAPP_CONSENTS_TABLE = "whatsapp_consents";
+
 /**
  * Normalise phone numbers to Meta wa_id standard (digits only without leading + or separators).
  */
