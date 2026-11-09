@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { answerLocally } from "./knowledge/duta-integra.mjs";
 import { recordEnquiry } from "./enquiries.mjs";
+import { supabaseConfigured, getSupabaseConfig } from "./supabase-client.mjs";
 
 /**
  * DutaConnect WhatsApp Bot & Meta Cloud API Webhook.
@@ -11,9 +12,69 @@ import { recordEnquiry } from "./enquiries.mjs";
  *                                and auto-replies via Graph API.
  */
 
-// In-memory LRU set to deduplicate Meta webhook delivery retries
+// In-memory LRU set to deduplicate Meta webhook delivery retries within the same isolate
 const PROCESSED_MESSAGE_IDS = new Set();
 const MAX_PROCESSED_IDS = 1000;
+
+/**
+ * Atomic deduplication check across Cloudflare isolates using Supabase.
+ * Returns true if message is fresh and claimed, false if duplicate.
+ */
+export async function claimWhatsAppMessage(wamid, phone = null) {
+  if (!wamid) return true;
+
+  // 1. In-memory check (fast-path for same isolate)
+  if (PROCESSED_MESSAGE_IDS.has(wamid)) {
+    return false;
+  }
+
+  // 2. Cross-isolate durable deduplication via Supabase
+  if (supabaseConfigured()) {
+    try {
+      const { REST_BASE, SERVICE_HEADERS } = getSupabaseConfig();
+      const res = await fetch(`${REST_BASE}/whatsapp_messages`, {
+        method: "POST",
+        headers: {
+          ...SERVICE_HEADERS,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          wamid,
+          phone: phone || null,
+          created_at: new Date().toISOString(),
+        }),
+      });
+
+      // 409 Conflict indicates another worker isolate has already claimed this message
+      if (res.status === 409) {
+        PROCESSED_MESSAGE_IDS.add(wamid);
+        return false;
+      }
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "");
+        if (
+          errorText.includes("duplicate key") ||
+          errorText.includes("already exists") ||
+          errorText.includes("23505")
+        ) {
+          PROCESSED_MESSAGE_IDS.add(wamid);
+          return false;
+        }
+        // If table doesn't exist yet, warn and allow fallback to in-memory set
+        console.warn(`[whatsapp] Supabase dedupe record returned ${res.status}: ${errorText.slice(0, 100)}`);
+      }
+    } catch (err) {
+      console.warn("[whatsapp] Supabase dedupe check error, falling back to in-memory:", err.message);
+    }
+  }
+
+  PROCESSED_MESSAGE_IDS.add(wamid);
+  if (PROCESSED_MESSAGE_IDS.size > MAX_PROCESSED_IDS) {
+    const first = PROCESSED_MESSAGE_IDS.values().next().value;
+    PROCESSED_MESSAGE_IDS.delete(first);
+  }
+  return true;
+}
 
 export function whatsappConfig() {
   return {
@@ -317,13 +378,9 @@ export async function dispatchWebhookProcessing(payload) {
 
         // Deduplication: prevent duplicate lead logging & double replies on Meta retries
         if (msgId) {
-          if (PROCESSED_MESSAGE_IDS.has(msgId)) {
+          const claimed = await claimWhatsAppMessage(msgId, msg.from);
+          if (!claimed) {
             continue;
-          }
-          PROCESSED_MESSAGE_IDS.add(msgId);
-          if (PROCESSED_MESSAGE_IDS.size > MAX_PROCESSED_IDS) {
-            const first = PROCESSED_MESSAGE_IDS.values().next().value;
-            PROCESSED_MESSAGE_IDS.delete(first);
           }
         }
 
@@ -407,7 +464,7 @@ export async function processWhatsAppWebhook(rawBody, headers = {}, asyncDispatc
 /**
  * Node HTTP request handler for both GET and POST /api/whatsapp/webhook.
  */
-export async function handleWhatsAppWebhook(req, res) {
+export async function handleWhatsAppWebhook(req, res, context = null) {
   const cfg = whatsappConfig();
 
   if (req.method === "GET") {
@@ -462,10 +519,14 @@ export async function handleWhatsAppWebhook(req, res) {
     });
     res.end(ack);
 
-    // Asynchronous processing (dedupe, lead logging, auto-reply)
-    dispatchWebhookProcessing(validation.payload).catch((err) => {
+    // Asynchronous processing (durable dedupe, lead logging, auto-reply)
+    const task = dispatchWebhookProcessing(validation.payload).catch((err) => {
       console.error("[whatsapp] async background processing error:", err);
     });
+
+    if (context && typeof context.waitUntil === "function") {
+      context.waitUntil(task);
+    }
     return;
   }
 

@@ -8,5 +8,5 @@ export async function onRequest(context) {
     process.env[key] = value;
   }
   
-  return handleApi(request);
+  return handleApi(request, context);
 }

@@ -1141,7 +1141,7 @@ async function handleHealth(req) {
 
 // ── Main Router ───────────────────────────────────────────────────────────────
 
-export async function handleApi(req) {
+export async function handleApi(req, context = null) {
   const url = new URL(req.url);
   const pathname = url.pathname;
 
@@ -1206,7 +1206,7 @@ export async function handleApi(req) {
       pathname === "/v1/whatsapp/webhook" ||
       pathname === "/api/v1/whatsapp/webhook"
     ) {
-      return await runNodeHandler(req, handleWhatsAppWebhook);
+      return await runNodeHandler(req, handleWhatsAppWebhook, context);
     }
 
     if (pathname === "/v1" || pathname === "/api/v1") {

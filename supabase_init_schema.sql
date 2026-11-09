@@ -76,3 +76,16 @@ create policy "Allow read on health_probe" on public.health_probe
 insert into public.health_probe (id, probed_at)
 values (1, now())
 on conflict (id) do update set probed_at = now();
+
+-- 4. WhatsApp Messages Deduplication & Event Log (Durable cross-isolate dedupe on wamid)
+create table if not exists public.whatsapp_messages (
+  wamid text primary key,
+  phone text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.whatsapp_messages enable row level security;
+
+create policy "Allow service role full access on whatsapp_messages" on public.whatsapp_messages
+  for all using (auth.role() = 'service_role');
+
