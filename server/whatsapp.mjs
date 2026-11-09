@@ -169,7 +169,8 @@ export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {
       `2️⃣ *DutaConnect WhatsApp Bot & e-Invois LHDN* (Pilot RM999)\n` +
       `3️⃣ *Bantuan Komputer & IT Helpdesk Kedai*\n` +
       `4️⃣ *Sembang dengan Jurutera Teknikal*\n\n` +
-      `Sila balas nombor (cth: *1* atau *2*), atau taip terus soalan anda.`
+      `Sila balas nombor (cth: *1* atau *2*), atau taip terus soalan anda.\n\n` +
+      `🔒 _Notis Privasi: Nombor & butiran anda disimpan sementara untuk tujuan menjawab pertanyaan ini selaras PDPA 2010 (https://dutaintegra.my/privacy)._`
     );
   }
 
