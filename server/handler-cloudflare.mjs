@@ -1200,8 +1200,33 @@ export async function handleApi(req) {
     if (pathname === "/api/payments/webhook/billplz") return await runNodeHandler(req, handleBillplzWebhook);
     if (pathname === "/api/payments/webhook/herepay") return await runNodeHandler(req, handleHerepayWebhook);
 
-    // DutaConnect WhatsApp Bot (Meta Cloud API Webhook)
-    if (pathname === "/api/whatsapp/webhook") return await runNodeHandler(req, handleWhatsAppWebhook);
+    // DutaConnect WhatsApp Bot & API v1 (Meta Cloud API Webhook)
+    if (
+      pathname === "/api/whatsapp/webhook" ||
+      pathname === "/v1/whatsapp/webhook" ||
+      pathname === "/api/v1/whatsapp/webhook"
+    ) {
+      return await runNodeHandler(req, handleWhatsAppWebhook);
+    }
+
+    if (pathname === "/v1" || pathname === "/api/v1") {
+      return new Response(
+        JSON.stringify({
+          service: "DutaConnect API",
+          version: "v1",
+          status: "online",
+          webhook: "https://dutaintegra.my/api/whatsapp/webhook",
+          documentation: "https://dutaintegra.my/dutaconnect.html",
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json; charset=utf-8",
+            "cache-control": "no-store",
+          },
+        }
+      );
+    }
 
     // DutaOS AI — grounded on the company's compliance brief, audited in ai_actions
     if (pathname === "/api/dutaos/brief") return await runNodeHandler(req, handleDutaosBrief);
