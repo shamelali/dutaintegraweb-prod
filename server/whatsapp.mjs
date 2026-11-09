@@ -92,6 +92,57 @@ export async function sendWhatsAppMessage({ to, text, replyToMessageId = null, p
 }
 
 /**
+ * Send an outbound pre-approved Meta Message Template (for business-initiated messages outside 24h window).
+ */
+export async function sendWhatsAppTemplate({
+  to,
+  templateName,
+  languageCode = "ms",
+  bodyParams = [],
+  phoneNumberId = null,
+}) {
+  const cfg = whatsappConfig();
+  const activePhoneId = phoneNumberId || cfg.phoneNumberId;
+
+  if (!cfg.accessToken || !activePhoneId) {
+    return { mock: true, success: true, to, templateName, bodyParams, activePhoneId };
+  }
+
+  const endpoint = `https://graph.facebook.com/${cfg.graphVersion}/${activePhoneId}/messages`;
+  const components = [];
+  if (bodyParams.length > 0) {
+    components.push({
+      type: "body",
+      parameters: bodyParams.map((p) => ({ type: "text", text: String(p) })),
+    });
+  }
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: to.replace(/[^0-9]/g, ""),
+    type: "template",
+    template: {
+      name: templateName,
+      language: { code: languageCode },
+      components,
+    },
+  };
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${cfg.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await res.json().catch(() => ({}));
+  return { success: res.ok, status: res.status, body };
+}
+
+/**
  * Intent analyzer and response generator for inbound customer WhatsApp messages.
  */
 export function generateBotReply(rawText = "", senderName = "Tuan/Puan") {

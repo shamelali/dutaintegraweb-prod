@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createHmac } from "node:crypto";
 
 import { handle } from "./handler.mjs";
-import { generateBotReply, verifyMetaSignature } from "./whatsapp.mjs";
+import { generateBotReply, sendWhatsAppTemplate, verifyMetaSignature } from "./whatsapp.mjs";
 import { listEnquiries } from "./enquiries.mjs";
 
 let server;
@@ -273,5 +273,18 @@ describe("generateBotReply unit tests", () => {
   test("generates human handoff confirmation for option 4", () => {
     const reply = generateBotReply("nak cakap dengan pegawai");
     assert.match(reply, /Sesi Perundingan Pegawai Teknikal/);
+  });
+
+  test("sendWhatsAppTemplate safely handles mock mode when credentials unset", async () => {
+    const result = await sendWhatsAppTemplate({
+      to: "601154034051",
+      templateName: "monthly_it_digest",
+      languageCode: "ms",
+      bodyParams: ["Encik Razak", "Mokhtar Trading", "November 2026", "Semua Lancar", "https://dutaintegra.my/portal"],
+    });
+    assert.equal(result.mock, true);
+    assert.equal(result.success, true);
+    assert.equal(result.templateName, "monthly_it_digest");
+    assert.equal(result.bodyParams.length, 5);
   });
 });
