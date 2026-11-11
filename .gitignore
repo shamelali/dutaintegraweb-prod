@@ -42,6 +42,9 @@ Web-backup-*/
 
 # personal tool configs
 obsidian-knowledge-base/
+# Agent session memory (curated notes + daily logs). Machine-local, like the
+# .qoder session artifacts below — never part of the deployable tree.
+.openhands/
 # CLI-local permissions/rules. `.qoder/settings.json` is the shareable project
 # scope and stays committable; the .local file carries this machine's approvals.
 .qoder/settings.local.json

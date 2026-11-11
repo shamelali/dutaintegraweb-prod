@@ -130,6 +130,14 @@ function tablesReferencedInCode(sources) {
     for (const m of src.matchAll(/\w*_TABLE\s*=\s*["'`](\w+)["'`]/g)) {
       found.set(m[1], file);
     }
+    // Hand-built PostgREST URLs: fetch(`${REST_BASE}/<table>?…`). The helpers
+    // above are not used on this path, so a table reached only this way stayed
+    // invisible here — which is how the three whatsapp_* tables shipped with
+    // no migration. Only literal names match: `${REST_BASE}/${table}` with a
+    // variable does not, and `${AUTH_BASE}/…` paths are not tables.
+    for (const m of src.matchAll(/\$\{\w*REST_BASE\}\/([a-z_][a-z0-9_]*)/g)) {
+      found.set(m[1], file);
+    }
   }
   return found;
 }
