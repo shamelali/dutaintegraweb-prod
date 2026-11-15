@@ -200,6 +200,68 @@ function herepayConfig() {
   };
 }
 
+// FPX bank prefixes HerePay expects in `bank_prefix`. The exact codes come from
+// HerePay's documentation; the defaults cover the common banks and can be
+// overridden per-deployment with HEREPAY_BANK_PREFIXES (comma-separated
+// `prefix=Label` pairs) without a redeploy. An empty override hides HerePay
+// from the checkout UI rather than offering a bank HerePay cannot route.
+const DEFAULT_HEREPAY_BANKS = [
+  { prefix: "MBB2E", label: "Maybank2u" },
+  { prefix: "CIMB", label: "CIMB Clicks" },
+  { prefix: "PBB", label: "Public Bank" },
+  { prefix: "RHB", label: "RHB Now" },
+  { prefix: "HLB", label: "Hong Leong Connect" },
+  { prefix: "BIMB", label: "Bank Islam" },
+  { prefix: "AMB", label: "AmBank" },
+  { prefix: "BKRM", label: "Bank Rakyat" },
+  { prefix: "BSN", label: "BSN" },
+  { prefix: "OCBC", label: "OCBC" },
+];
+
+function herepayBanks() {
+  const raw = process.env.HEREPAY_BANK_PREFIXES;
+  if (raw === undefined) return DEFAULT_HEREPAY_BANKS;
+  return raw
+    .split(",")
+    .map((entry) => {
+      const [prefix, ...rest] = entry.split("=");
+      const p = prefix.trim();
+      return { prefix: p, label: rest.join("=").trim() || p };
+    })
+    .filter((b) => b.prefix);
+}
+
+function providerConfigured(provider) {
+  if (provider === "hitpay") {
+    const c = hitpayConfig();
+    return Boolean(c.apiKey && c.secretKey);
+  }
+  if (provider === "billplz") {
+    const c = billplzConfig();
+    return Boolean(c.apiKey && c.collectionId);
+  }
+  if (provider === "herepay") {
+    const c = herepayConfig();
+    return Boolean(c.secretKey && c.apiKey && c.privateKey);
+  }
+  return false;
+}
+
+// What the checkout UI needs to render itself: the plans and their amounts, and
+// each provider with whether it is configured. Offering a provider whose keys
+// are unset only produces a checkout that fails after the click, so the UI hides
+// them instead — the same fail-closed rule the providers themselves apply.
+function billingCatalog() {
+  return {
+    plans: Object.entries(PLANS).map(([id, { amount }]) => ({ id, amount })),
+    providers: [...PROVIDERS].map((id) => ({
+      id,
+      configured: providerConfigured(id),
+      ...(id === "herepay" ? { banks: herepayBanks() } : {}),
+    })),
+  };
+}
+
 // ── provider: HitPay ───────────────────────────────────────────────────
 
 async function hitpayCreatePayment({ amount, orderId, description, returnUrl, callbackUrl, metadata }) {
@@ -566,6 +628,16 @@ async function handlePaymentsList(req, res) {
   return sendJson(res, 200, { payments });
 }
 
+// Plan amounts and which providers are configured. Requires a session so the
+// endpoint is not a public configuration probe, but reveals no secrets — only
+// booleans and the bank list the payer picks from.
+async function handleBillingProviders(req, res) {
+  const companyId = await getCompanyIdFromReq(req);
+  if (!companyId) return sendJson(res, 401, { error: "Not authenticated" });
+  if (req.method !== "GET") return sendJson(res, 405, { error: "Method not allowed" });
+  return sendJson(res, 200, billingCatalog());
+}
+
 async function handleHitpayWebhook(req, res) {
   if (req.method !== "POST") return sendJson(res, 405, { error: "Method not allowed" });
   const rl = webhookRateLimit(req);
@@ -621,7 +693,9 @@ export {
   getPayment,
   listPayments,
   updatePaymentStatus,
+  billingCatalog,
   handleBillingCheckout,
+  handleBillingProviders,
   handlePaymentsList,
   handleHitpayWebhook,
   handleBillplzWebhook,

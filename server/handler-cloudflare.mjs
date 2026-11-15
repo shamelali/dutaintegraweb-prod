@@ -82,6 +82,7 @@ import {
 import {
   handleBillingCheckout,
   handlePaymentsList,
+  handleBillingProviders,
   handleHitpayWebhook,
   handleBillplzWebhook,
   handleHerepayWebhook,
@@ -1195,6 +1196,7 @@ export async function handleApi(req, context = null) {
     // webhooks are unauthenticated-by-cookie by design; payments.mjs verifies
     // each provider HMAC and rate-limits by source IP before touching a record.
     if (pathname === "/api/billing/checkout") return await runNodeHandler(req, handleBillingCheckout);
+    if (pathname === "/api/billing/providers") return await runNodeHandler(req, handleBillingProviders);
     if (pathname === "/api/billing/payments") return await runNodeHandler(req, handlePaymentsList);
     if (pathname === "/api/payments/webhook/hitpay") return await runNodeHandler(req, handleHitpayWebhook);
     if (pathname === "/api/payments/webhook/billplz") return await runNodeHandler(req, handleBillplzWebhook);

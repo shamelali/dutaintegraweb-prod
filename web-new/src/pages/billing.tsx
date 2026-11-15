@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { AlertCircle, CreditCard, LoaderCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select } from "@/components/ui/select"
 import { DutaosAccountBar } from "@/components/dutaos-account-bar"
 import { useLanguage } from "@/hooks/use-language"
 
@@ -30,21 +33,37 @@ type Payment = {
 }
 
 type Plan = "starter" | "growth"
-type Provider = "hitpay" | "billplz"
+type Provider = "hitpay" | "billplz" | "herepay"
+
+type Bank = { prefix: string; label: string }
+type ProviderInfo = { id: Provider; configured: boolean; banks?: Bank[] }
+type Catalog = { plans: { id: string; amount: number }[]; providers: ProviderInfo[] }
 
 const PLAN_LABELS: Record<string, { en: string; bm: string }> = {
   starter: { en: "Starter", bm: "Permulaan" },
   growth: { en: "Growth", bm: "Pertumbuhan" },
 }
 
-const PLAN_PRICE: Record<string, string> = {
-  starter: "RM 799",
-  growth: "RM 1,899",
+// Plan amounts in cents. Kept in step with `PLANS` in server/payments.mjs; the
+// catalog endpoint is authoritative and these are only the pre-load fallback.
+const PLAN_AMOUNT: Record<string, number> = {
+  starter: 79900,
+  growth: 189900,
 }
+
+const DEFAULT_PROVIDERS: ProviderInfo[] = [
+  { id: "hitpay", configured: true },
+  { id: "billplz", configured: true },
+]
 
 const PROVIDER_LABELS: Record<string, { en: string; bm: string }> = {
   hitpay: { en: "HitPay", bm: "HitPay" },
   billplz: { en: "Billplz", bm: "Billplz" },
+  herepay: { en: "FPX online banking", bm: "Perbankan dalam talian FPX" },
+}
+
+function formatAmount(cents: number): string {
+  return `RM ${(cents / 100).toLocaleString("en-MY")}`
 }
 
 export function BillingPage() {
@@ -59,6 +78,12 @@ export function BillingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [provider, setProvider] = useState<Provider>("hitpay")
   const [plan, setPlan] = useState<Plan>("starter")
+  const [providers, setProviders] = useState<ProviderInfo[]>(DEFAULT_PROVIDERS)
+  const [planAmounts, setPlanAmounts] = useState<Record<string, number>>(PLAN_AMOUNT)
+  const [payerName, setPayerName] = useState("")
+  const [payerEmail, setPayerEmail] = useState("")
+  const [payerPhone, setPayerPhone] = useState("")
+  const [bankPrefix, setBankPrefix] = useState("")
 
   useEffect(() => {
     let active = true
@@ -100,6 +125,29 @@ export function BillingPage() {
     }
   }, [])
 
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      try {
+        const res = await fetch("/api/billing/providers", { credentials: "same-origin" })
+        if (!res.ok) return
+        const data = (await res.json()) as Catalog
+        if (!active) return
+        if (Array.isArray(data.providers) && data.providers.length) setProviders(data.providers)
+        if (Array.isArray(data.plans)) {
+          setPlanAmounts(
+            Object.fromEntries(data.plans.map((p) => [p.id, p.amount])),
+          )
+        }
+      } catch {
+        // Fall back to the defaults above; the server still enforces configuration.
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, [])
+
   const paymentStatus = params.get("payment")
   const flashMessage =
     paymentStatus === "success"
@@ -111,19 +159,47 @@ export function BillingPage() {
   const isActive = company?.subscriptionStatus === "active"
   const tier = company?.subscriptionTier ?? "starter"
   const planLabel = PLAN_LABELS[tier] ?? { en: tier, bm: tier }
-  const price = PLAN_PRICE[tier] ?? "Custom"
-  const selectedPrice = PLAN_PRICE[plan]
+  const price = formatAmount(planAmounts[tier] ?? 0)
+  const selectedAmount = planAmounts[plan] ?? 0
+
+  const activeProviders = providers.filter((p) => p.configured)
+  const currentProvider = activeProviders.find((p) => p.id === provider)
+  const needsPayer = currentProvider?.id === "herepay"
+  const banks = currentProvider?.banks ?? []
 
   async function handleCheckout(e: React.FormEvent) {
     e.preventDefault()
     setCheckoutError("")
+    if (!currentProvider) {
+      setCheckoutError(t("billingNoProvider"))
+      return
+    }
+    if (needsPayer) {
+      if (!payerName.trim() || !payerEmail.trim() || !payerPhone.trim()) {
+        setCheckoutError(t("billingHerepayPayerRequired"))
+        return
+      }
+      if (!bankPrefix) {
+        setCheckoutError(t("billingHerepayBankRequired"))
+        return
+      }
+    }
     setCheckoutLoading(true)
     try {
+      const body: Record<string, unknown> = { provider, plan }
+      if (needsPayer) {
+        body.customer = {
+          name: payerName.trim(),
+          email: payerEmail.trim(),
+          phone: payerPhone.trim(),
+          bankPrefix,
+        }
+      }
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ provider, plan }),
+        body: JSON.stringify(body),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Checkout failed")
@@ -196,34 +272,25 @@ export function BillingPage() {
                 <label className="block text-sm text-muted-foreground mb-2">
                   {t("billingPayWith")}
                 </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    id="provider-hitpay"
-                    type="radio"
-                    name="provider"
-                    value="hitpay"
-                    checked={provider === "hitpay"}
-                    onChange={() => setProvider("hitpay")}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <label htmlFor="provider-hitpay" className="text-sm font-medium">
-                    {PROVIDER_LABELS.hitpay[lang]}
-                  </label>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    id="provider-billplz"
-                    type="radio"
-                    name="provider"
-                    value="billplz"
-                    checked={provider === "billplz"}
-                    onChange={() => setProvider("billplz")}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <label htmlFor="provider-billplz" className="text-sm font-medium">
-                    {PROVIDER_LABELS.billplz[lang]}
-                  </label>
-                </div>
+                {activeProviders.length === 0 && (
+                  <p className="text-sm text-amber-700">{t("billingNoProvider")}</p>
+                )}
+                {activeProviders.map((p) => (
+                  <div key={p.id} className="flex items-center gap-2 mt-2 first:mt-0">
+                    <input
+                      id={`provider-${p.id}`}
+                      type="radio"
+                      name="provider"
+                      value={p.id}
+                      checked={provider === p.id}
+                      onChange={() => setProvider(p.id)}
+                      className="h-4 w-4 text-primary"
+                    />
+                    <label htmlFor={`provider-${p.id}`} className="text-sm font-medium">
+                      {PROVIDER_LABELS[p.id]?.[lang] ?? p.id}
+                    </label>
+                  </div>
+                ))}
               </div>
               <div>
                 <label className="block text-sm text-muted-foreground mb-2">
@@ -258,9 +325,60 @@ export function BillingPage() {
                   </label>
                 </div>
               </div>
+              {needsPayer && (
+                <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-6">
+                  <div className="sm:col-span-2">
+                    <p className="text-sm text-muted-foreground">{t("billingHerepayIntro")}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="payer-name">{t("billingPayerName")}</Label>
+                    <Input
+                      id="payer-name"
+                      className="mt-1"
+                      value={payerName}
+                      onChange={(e) => setPayerName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="payer-phone">{t("billingPayerPhone")}</Label>
+                    <Input
+                      id="payer-phone"
+                      className="mt-1"
+                      value={payerPhone}
+                      onChange={(e) => setPayerPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="payer-email">{t("billingPayerEmail")}</Label>
+                    <Input
+                      id="payer-email"
+                      type="email"
+                      className="mt-1"
+                      value={payerEmail}
+                      onChange={(e) => setPayerEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="payer-bank">{t("billingPayerBank")}</Label>
+                    <Select
+                      id="payer-bank"
+                      className="mt-1"
+                      value={bankPrefix}
+                      onChange={(e) => setBankPrefix(e.target.value)}
+                    >
+                      <option value="">{t("billingPayerBankSelect")}</option>
+                      {banks.map((b) => (
+                        <option key={b.prefix} value={b.prefix}>
+                          {b.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+              )}
               <div className="col-span-1 sm:col-span-2">
                 <p className="text-sm text-muted-foreground mb-2">
-                  {t("billingAmount")}: {selectedPrice} {t("billingPricePerMonth")}
+                  {t("billingAmount")}: {formatAmount(selectedAmount)} {t("billingPricePerMonth")}
                 </p>
                 {checkoutError && (
                   <p role="alert" className="text-sm text-destructive mb-3">

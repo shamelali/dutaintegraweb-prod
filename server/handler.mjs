@@ -62,6 +62,7 @@ import {
 
 import {
   handleBillingCheckout,
+  handleBillingProviders,
   handlePaymentsList,
   handleHitpayWebhook,
   handleBillplzWebhook,
@@ -1567,6 +1568,7 @@ export async function handle(req, res) {
 
     // ── DutaOS billing / payments (HitPay + Billplz + Herepay) ───────────────
     if (pathname === "/api/billing/checkout") return await handleBillingCheckout(req, res);
+    if (pathname === "/api/billing/providers") return await handleBillingProviders(req, res);
     if (pathname === "/api/billing/payments") return await handlePaymentsList(req, res);
     if (pathname === "/api/payments/webhook/hitpay") return await handleHitpayWebhook(req, res);
     if (pathname === "/api/payments/webhook/billplz") return await handleBillplzWebhook(req, res);

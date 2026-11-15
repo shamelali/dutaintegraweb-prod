@@ -115,6 +115,7 @@ function scrubEnv() {
   delete process.env.HEREPAY_API_KEY;
   delete process.env.HEREPAY_SECRET_KEY;
   delete process.env.HEREPAY_PRIVATE_KEY;
+  delete process.env.HEREPAY_BANK_PREFIXES;
   delete process.env.WEBHOOK_BASE_URL;
 }
 
@@ -289,6 +290,72 @@ describe("POST /api/billing/checkout", () => {
     assert.equal(second.status, 200);
     const res = await get("/api/billing/payments", { cookie: `dutaos_session=${token}` });
     assert.equal(res.body.payments[0].id, second.body.payment.id);
+  });
+});
+
+describe("GET /api/billing/providers", () => {
+  test("401 without a session", async () => {
+    const res = await get("/api/billing/providers");
+    assert.equal(res.status, 401);
+  });
+
+  test("reports plan amounts and provider configuration without leaking keys", async () => {
+    process.env.HITPAY_API_KEY = "hp_key";
+    process.env.HITPAY_SECRET_KEY = "hp_secret";
+    const { token } = await authenticatedCompany();
+    const res = await get("/api/billing/providers", { cookie: `dutaos_session=${token}` });
+    assert.equal(res.status, 200);
+    assert.deepEqual(
+      res.body.plans,
+      [
+        { id: "starter", amount: 79900 },
+        { id: "growth", amount: 189900 },
+      ],
+    );
+    const byId = Object.fromEntries(res.body.providers.map((p) => [p.id, p]));
+    assert.equal(byId.hitpay.configured, true);
+    assert.equal(byId.billplz.configured, false);
+    assert.equal(byId.herepay.configured, false);
+    // No secret material anywhere in the body.
+    const serialized = JSON.stringify(res.body);
+    assert.ok(!serialized.includes("hp_key") && !serialized.includes("hp_secret"));
+  });
+
+  test("exposes the HerePay bank list so the payer can pick one", async () => {
+    process.env.HEREPAY_API_KEY = "hr_key";
+    process.env.HEREPAY_SECRET_KEY = "hr_secret";
+    process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+    const { token } = await authenticatedCompany();
+    const res = await get("/api/billing/providers", { cookie: `dutaos_session=${token}` });
+    const herepay = res.body.providers.find((p) => p.id === "herepay");
+    assert.equal(herepay.configured, true);
+    assert.ok(Array.isArray(herepay.banks) && herepay.banks.length > 0);
+    assert.ok(herepay.banks.every((b) => b.prefix && b.label));
+  });
+
+  test("HEREPAY_BANK_PREFIXES overrides the bank list", async () => {
+    process.env.HEREPAY_API_KEY = "hr_key";
+    process.env.HEREPAY_SECRET_KEY = "hr_secret";
+    process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+    process.env.HEREPAY_BANK_PREFIXES = "MBB2E=Maybank2u,CIMB=CIMB Clicks";
+    const { token } = await authenticatedCompany();
+    const res = await get("/api/billing/providers", { cookie: `dutaos_session=${token}` });
+    const herepay = res.body.providers.find((p) => p.id === "herepay");
+    assert.deepEqual(herepay.banks, [
+      { prefix: "MBB2E", label: "Maybank2u" },
+      { prefix: "CIMB", label: "CIMB Clicks" },
+    ]);
+  });
+
+  test("an empty HEREPAY_BANK_PREFIXES yields no banks (hides HerePay)", async () => {
+    process.env.HEREPAY_API_KEY = "hr_key";
+    process.env.HEREPAY_SECRET_KEY = "hr_secret";
+    process.env.HEREPAY_PRIVATE_KEY = "hr_private";
+    process.env.HEREPAY_BANK_PREFIXES = "";
+    const { token } = await authenticatedCompany();
+    const res = await get("/api/billing/providers", { cookie: `dutaos_session=${token}` });
+    const herepay = res.body.providers.find((p) => p.id === "herepay");
+    assert.deepEqual(herepay.banks, []);
   });
 });
 
