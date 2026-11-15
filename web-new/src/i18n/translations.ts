@@ -3306,6 +3306,42 @@ export const translations = {
     en: "Provider",
     bm: "Penyedia",
   },
+  billingNoProvider: {
+    en: "No payment provider is available right now. Please contact us to arrange payment.",
+    bm: "Tiada penyedia pembayaran tersedia buat masa ini. Sila hubungi kami untuk mengatur pembayaran.",
+  },
+  billingHerepayIntro: {
+    en: "Online banking (FPX) needs the payer's details and their bank.",
+    bm: "Perbankan dalam talian (FPX) memerlukan maklumat pembayar dan bank mereka.",
+  },
+  billingPayerName: {
+    en: "Full name",
+    bm: "Nama penuh",
+  },
+  billingPayerEmail: {
+    en: "Email",
+    bm: "E-mel",
+  },
+  billingPayerPhone: {
+    en: "Phone number",
+    bm: "Nombor telefon",
+  },
+  billingPayerBank: {
+    en: "Bank",
+    bm: "Bank",
+  },
+  billingPayerBankSelect: {
+    en: "Select your bank",
+    bm: "Pilih bank anda",
+  },
+  billingHerepayPayerRequired: {
+    en: "Enter the payer's name, email and phone number.",
+    bm: "Masukkan nama, e-mel dan nombor telefon pembayar.",
+  },
+  billingHerepayBankRequired: {
+    en: "Select your bank.",
+    bm: "Pilih bank anda.",
+  },
   navAsk: {
     en: "Ask Duta",
     bm: "Tanya Duta",
