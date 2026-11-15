@@ -1,23 +1,29 @@
-## ✅ Cloudflare Pages Deployment - Final Steps
+# Duta Integra — Marketing Site & Lead-Capture API
 
-### ✅ Migration Status
+Marketing site and lead-capture API for `dutaintegra.my`, deployed to Cloudflare Pages.
+
+## Migration Status
+
 All migration files have been successfully created and verified:
-- `public/_redirects` - SPA fallback + legacy path redirects
-- `public/_headers` - Security headers + caching rules
-- `wrangler.toml` - Cloudflare Pages configuration
-- `functions/api/[[path]].js` - Cloudflare Functions entry point
-- `server/handler-cloudflare.mjs` - API router (Supabase-only)
+
+- [`public/_redirects`](public/_redirects) — SPA fallback + legacy path redirects
+- [`public/_headers`](public/_headers) — security headers + caching rules
+- [`wrangler.toml`](wrangler.toml) — Cloudflare Pages configuration
+- [`functions/api/[[path]].js`](<functions/api/[[path]].js>) — Cloudflare Functions entry point
+- [`server/handler-cloudflare.mjs`](server/handler-cloudflare.mjs) — API router (Supabase-only)
 - All Supabase-only server modules created
 
-### ✅ Package.json Scripts:
+## Package.json scripts
+
 ```json
 "cf:preview": "wrangler pages dev public --port 8788 --ip 127.0.0.1",
 "cf:deploy": "wrangler pages deploy public --project-name=dutaintegra",
 "cf:build": "npm --prefix web-new ci && npm --prefix web-new run build"
 ```
 
-### 📁 Directory Structure Verified:
-```
+## Directory Structure Verified
+
+```text
 dutaintegraweb-main/
 ├── public/           # Static files served directly by Cloudflare Pages
 │   ├── _redirects
@@ -36,7 +42,8 @@ dutaintegraweb-main/
     └── portal-cloudflare.mjs
 ```
 
-### ✅ Environment Variables Required in Cloudflare Pages:
+## Environment Variables Required in Cloudflare Pages
+
 | Variable | Value |
 |----------|---------|
 | `SUPABASE_URL` | Your Supabase project URL |
@@ -46,10 +53,12 @@ dutaintegraweb-main/
 | `ALLOWED_ORIGINS` | `https://dutaintegra.my,https://www.dutaintegra.my` |
 | `CONTACT_INBOX_EMAIL` | `contact@dutaintegra.my` |
 | `EMAIL_FROM` | `Duta Integra <no-reply@dutaintegra.my>` |
-| `RESEND_API_KEY` | Your Resend API key (or BREVO_API_KEY / POSTMARK_SERVER_TOKEN) |
+| `RESEND_API_KEY` | Your Resend API key (or `BREVO_API_KEY` / `POSTMARK_SERVER_TOKEN`) |
 
-### ✅ Deployment Steps:
+## Deployment Steps
+
 1. **Push to Git** (if not already done):
+
    ```bash
    cd /media/shamelali/Data/1-Projects/dutaintegraweb-main
    git add -A
@@ -62,24 +71,27 @@ dutaintegraweb-main/
    git push origin main
    ```
 
-2. **In Cloudflare Pages Dashboard**:
+2. **In the Cloudflare Pages dashboard**:
    - Connect repository → select `dutaintegraweb-main`
    - Build command: `npm run cf:build`
    - Output directory: `public`
    - Custom domain: `dutaintegra.my` (and `www.dutaintegra.my`)
 
-### 6. **Deploy to Production**
-```bash
-cd /media/shamelali/Data/1-Projects/dutaintegraweb-main
-npm run cf:deploy
-```
+3. **Deploy to production**:
+
+   ```bash
+   cd /media/shamelali/Data/1-Projects/dutaintegraweb-main
+   npm run cf:deploy
+   ```
 
 The site will be deployed to Cloudflare Pages and should be accessible at `https://dutaintegra.my` once the deployment completes.
 
-### ✅ Final Note:
+## Final Note
+
 The original Vercel setup remains intact for rollback. The migration to Cloudflare Pages is complete and successful.
+
 ## Unified workspace (Phase 2–4)
 
 The current workspace implementation adds `/digital-assessment` and `/workspace`, plus Supabase-backed lead, assessment, proposal, project, task, approval and activity APIs. See [`docs/PHASE-4-UNIFIED-WORKSPACE.md`](docs/PHASE-4-UNIFIED-WORKSPACE.md) for the migration, routes, security requirements and staging checklist.
 
-Before deploying this snapshot, apply `supabase/migrations/202610250001_workspace_phase4.sql`, configure server-side Supabase credentials and `ADMIN_TOKEN`, run the frontend build, and test in a Cloudflare Pages preview. `scripts/sync-web.mjs` now synchronises the SPA output to both `Web/` (Vercel) and `public/` (Cloudflare Pages).
+Before deploying this snapshot, apply [`supabase/migrations/202610250001_workspace_phase4.sql`](supabase/migrations/202610250001_workspace_phase4.sql), configure server-side Supabase credentials and `ADMIN_TOKEN`, run the frontend build, and test in a Cloudflare Pages preview. [`scripts/sync-web.mjs`](scripts/sync-web.mjs) now synchronizes the SPA output to both `Web/` (Vercel) and `public/` (Cloudflare Pages).
