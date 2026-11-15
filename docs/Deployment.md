@@ -7,6 +7,13 @@ product: system
 
 # Deployment Guide
 
+> **Not the production path for `dutaintegra.my`.** This document describes a
+> generic Vercel + Neon flow. The live site is **Cloudflare Pages** (project
+> `dutaintegra`), served from the committed `public/` tree with Pages Functions
+> under `functions/`. See the deployment section of `AGENTS.md`. The `vercel.json`
+> in this repo builds `Web/` and the Vercel webhook is still connected, but Vercel
+> serves a stale static-HTML build rather than the current SPA.
+
 ## Overview
 
 This guide covers deployment procedures for Duta Integra's AI platform and products.
