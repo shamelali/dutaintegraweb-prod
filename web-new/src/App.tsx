@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect } from "react"
+import { lazy, Suspense, useEffect, type ReactNode } from "react"
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { ProtectedRoute, type AuthIdentity } from "@/components/protected-route"
 import { Navbar } from "@/components/layout/navbar"
 import { Footer } from "@/components/layout/footer"
 import { PortalLayout } from "@/components/layout/portal-layout"
@@ -47,28 +48,33 @@ const marketingRoutes = [
   { path: "/ask", element: <AskPage /> },
 ]
 
-// Portal / dashboard routes — lazy + auth-guarded (low traffic for visitors).
-// `/dashboard`, `/compliance`, `/billing`, `/catalog-enrichment` are top-level.
-// The four `/portal/*` routes nest under `PortalLayout` via relative paths.
-const portalLayoutRoutes = [
-  { path: "proposals", element: <PortalProposalsPage /> },
-  { path: "proposals/:id", element: <PortalProposalDetailPage /> },
-  { path: "digests", element: <PortalDigestsPage /> },
-  { path: "compliance", element: <PortalCompliancePage /> },
-]
-
-const topLevelPortalRoutes = [
-  { path: "/dashboard", element: <DutaosDashboardPage /> },
-  { path: "/compliance", element: <CompliancePage /> },
-  { path: "/billing", element: <BillingPage /> },
-  { path: "/catalog-enrichment", element: <CatalogEnrichmentPage /> },
-]
-
 // Auth pages — lazy.
 const authRoutes = [
   { path: "/login", element: <PortalLoginPage /> },
   { path: "/signin", element: <AuthPage mode="login" /> },
   { path: "/signup", element: <AuthPage mode="signup" /> },
+]
+
+// Portal / dashboard routes — lazy + auth-guarded (low traffic for visitors).
+// `/dashboard`, `/compliance`, `/billing`, `/catalog-enrichment` are top-level.
+// The four `/portal/*` routes nest under `PortalLayout` via relative paths.
+//
+// `identity` names the session each page's data endpoints require, and is not
+// implied by the path: `/portal/compliance` reads `/api/compliance-items`, which
+// is DutaOS-scoped, so it takes `dutaos` like its top-level twin even though it
+// lives under `/portal/*`.
+export const portalLayoutRoutes: { path: string; element: ReactNode; identity: AuthIdentity }[] = [
+  { path: "proposals", element: <PortalProposalsPage />, identity: "portal" },
+  { path: "proposals/:id", element: <PortalProposalDetailPage />, identity: "portal" },
+  { path: "digests", element: <PortalDigestsPage />, identity: "portal" },
+  { path: "compliance", element: <PortalCompliancePage />, identity: "dutaos" },
+]
+
+export const topLevelPortalRoutes: { path: string; element: ReactNode; identity: AuthIdentity }[] = [
+  { path: "/dashboard", element: <DutaosDashboardPage />, identity: "dutaos" },
+  { path: "/compliance", element: <CompliancePage />, identity: "dutaos" },
+  { path: "/billing", element: <BillingPage />, identity: "dutaos" },
+  { path: "/catalog-enrichment", element: <CatalogEnrichmentPage />, identity: "dutaos" },
 ]
 
 function ScrollToTop() {
@@ -86,18 +92,6 @@ function RouteLoader() {
       <p className="text-muted-foreground">Loading…</p>
     </div>
   )
-}
-
-// Client-side auth gate. Requires a session source (cookie read or GET /api/auth/me)
-// to be wired in before enabling the fail-closed behaviour. Until then, renders
-// children for compatibility but the server-side gate remains the primary
-// protection — do not rely on this UI guard alone.
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // TODO:Wire this with a real client-side auth source before going live.
-  // Suitable sources: a session cookie read, or a GET /api/auth/me response.
-  // Until then, this gate is a no-op — the server-side enforcement in
-  // handler-cloudflare.mjs / handler.mjs is the primary protection.
-  return <>{children}</>
 }
 
 export default function App() {
@@ -144,9 +138,7 @@ export default function App() {
                 path="/portal/*"
                 element={
                   <Suspense fallback={<RouteLoader />}>
-                    <ProtectedRoute>
-                      <PortalLayout />
-                    </ProtectedRoute>
+                    <PortalLayout />
                   </Suspense>
                 }
               >
@@ -156,7 +148,7 @@ export default function App() {
                     path={r.path}
                     element={
                       <Suspense fallback={<RouteLoader />}>
-                        {r.element}
+                        <ProtectedRoute identity={r.identity}>{r.element}</ProtectedRoute>
                       </Suspense>
                     }
                   />
@@ -168,7 +160,7 @@ export default function App() {
                   path={r.path}
                   element={
                     <Suspense fallback={<RouteLoader />}>
-                      <ProtectedRoute>{r.element}</ProtectedRoute>
+                      <ProtectedRoute identity={r.identity}>{r.element}</ProtectedRoute>
                     </Suspense>
                   }
                 />
