@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { healthReport, resetHealthProbeCache } from "./health.mjs";
 import { resetBackendWarnings } from "./store.mjs";
 
-const ENV_KEYS = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "NODE_ENV", "VERCEL", "CONTACT_INBOX_EMAIL", "ADMIN_EMAIL", "HITPAY_API_KEY", "HITPAY_SECRET_KEY", "BILLPLZ_API_KEY", "BILLPLZ_COLLECTION_ID", "HEREPAY_API_KEY", "HEREPAY_SECRET_KEY", "HEREPAY_PRIVATE_KEY"];
+const ENV_KEYS = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "NODE_ENV", "VERCEL", "CONTACT_INBOX_EMAIL", "ADMIN_EMAIL", "HITPAY_API_KEY", "HITPAY_SECRET_KEY", "BILLPLZ_API_KEY", "BILLPLZ_COLLECTION_ID", "HEREPAY_API_KEY", "HEREPAY_SECRET_KEY", "HEREPAY_PRIVATE_KEY", "WHATSAPP_VERIFY_TOKEN", "WHATSAPP_APP_SECRET", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_PHONE_NUMBER_ID"];
 
 let saved;
 let originalFetch;
@@ -195,4 +195,57 @@ test("payments.providersConfigured reflects whether each provider has its keys",
   resetHealthProbeCache();
   report = await healthReport();
   assert.deepEqual(report.payments.providersConfigured, { hitpay: true, billplz: true, herepay: true });
+});
+
+test("whatsapp.configured reports each key's presence and ready only when all four are set", async () => {
+  let report = await healthReport();
+  assert.deepEqual(report.whatsapp.configured, {
+    verifyToken: false,
+    appSecret: false,
+    accessToken: false,
+    phoneNumberId: false,
+  });
+  assert.equal(report.whatsapp.ready, false);
+
+  // The verify token alone satisfies the Meta handshake but nothing else — an
+  // inbound POST is still refused without the app secret.
+  process.env.WHATSAPP_VERIFY_TOKEN = "vt";
+  resetHealthProbeCache();
+  report = await healthReport();
+  assert.equal(report.whatsapp.configured.verifyToken, true);
+  assert.equal(report.whatsapp.configured.appSecret, false);
+  assert.equal(report.whatsapp.ready, false);
+
+  process.env.WHATSAPP_APP_SECRET = "as";
+  process.env.WHATSAPP_ACCESS_TOKEN = "at";
+  resetHealthProbeCache();
+  report = await healthReport();
+  // Sending the auto-reply needs the phone number id too, so three of four
+  // must not read as ready.
+  assert.equal(report.whatsapp.ready, false);
+
+  process.env.WHATSAPP_PHONE_NUMBER_ID = "pn";
+  resetHealthProbeCache();
+  report = await healthReport();
+  assert.deepEqual(report.whatsapp.configured, {
+    verifyToken: true,
+    appSecret: true,
+    accessToken: true,
+    phoneNumberId: true,
+  });
+  assert.equal(report.whatsapp.ready, true);
+});
+
+test("whatsapp status never echoes the secret values", async () => {
+  process.env.WHATSAPP_VERIFY_TOKEN = "verify-token-value";
+  process.env.WHATSAPP_APP_SECRET = "app-secret-value";
+  process.env.WHATSAPP_ACCESS_TOKEN = "access-token-value";
+  process.env.WHATSAPP_PHONE_NUMBER_ID = "phone-number-id-value";
+  resetHealthProbeCache();
+
+  const report = await healthReport();
+  const serialised = JSON.stringify(report);
+  for (const secret of ["verify-token-value", "app-secret-value", "access-token-value", "phone-number-id-value"]) {
+    assert.doesNotMatch(serialised, new RegExp(secret));
+  }
 });

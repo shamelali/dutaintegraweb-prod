@@ -148,6 +148,25 @@ export async function healthReport({ now = Date.now(), force = false } = {}) {
         herepay: Boolean(process.env.HEREPAY_API_KEY && process.env.HEREPAY_SECRET_KEY && process.env.HEREPAY_PRIVATE_KEY),
       },
     },
+    whatsapp: {
+      // Presence only, never values. `verifyToken` is required for the Meta
+      // handshake; `appSecret` is required before any inbound POST is accepted,
+      // because validateIncomingWebhook fails closed without it. `accessToken`
+      // and `phoneNumberId` are both needed for the auto-reply to send.
+      configured: {
+        verifyToken: Boolean(process.env.WHATSAPP_VERIFY_TOKEN),
+        appSecret: Boolean(process.env.WHATSAPP_APP_SECRET),
+        accessToken: Boolean(process.env.WHATSAPP_ACCESS_TOKEN),
+        phoneNumberId: Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID),
+      },
+      // The webhook can only be exercised end to end when all four are set.
+      ready: Boolean(
+        process.env.WHATSAPP_VERIFY_TOKEN &&
+          process.env.WHATSAPP_APP_SECRET &&
+          process.env.WHATSAPP_ACCESS_TOKEN &&
+          process.env.WHATSAPP_PHONE_NUMBER_ID,
+      ),
+    },
     // Retained so the deployed uptime automation keeps parsing while it is
     // updated to read `datastore` instead.
     inboxConfigured,
