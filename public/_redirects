@@ -1,3 +1,10 @@
+/services /page-metadata/services 200
+/pricing /page-metadata/pricing 200
+/case-studies /page-metadata/case-studies 200
+/digital-assessment /page-metadata/digital-assessment 200
+/products /page-metadata/products 200
+/contact /page-metadata/contact 200
+
 /ms /
 /ms/* /:splat
 

@@ -18,6 +18,7 @@ import { AskPage } from "@/pages/ask"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { NotFoundPage } from "@/pages/not-found"
 import { WebVitals } from "@/components/WebVitals"
+import { PageMetadata } from "@/components/page-metadata"
 
 // Portal / dashboard — lazy-loaded so a first-time marketing visitor doesn't
 // download the portal bundle. Auth pages are also lazy (low traffic).
@@ -80,9 +81,12 @@ export const topLevelPortalRoutes: { path: string; element: ReactNode; identity:
 function ScrollToTop() {
   const location = useLocation()
   useEffect(() => {
-    window.scrollTo(0, 0)
-    document.documentElement.lang = location.pathname.startsWith("/ms") ? "ms" : "en"
-  }, [location.pathname, location.search])
+    if (location.hash) {
+      document.getElementById(location.hash.slice(1))?.scrollIntoView()
+    } else {
+      window.scrollTo(0, 0)
+    }
+  }, [location.pathname, location.search, location.hash])
   return null
 }
 
@@ -99,6 +103,7 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <ScrollToTop />
+        <PageMetadata />
         <div className="min-h-screen bg-background text-foreground font-sans">
           <Navbar />
           <main>

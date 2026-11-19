@@ -3,12 +3,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { pageMetadataPlugin } from './page-metadata-plugin.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), pageMetadataPlugin()],
   resolve: {
     alias: {
       "@": `${__dirname}/src`,

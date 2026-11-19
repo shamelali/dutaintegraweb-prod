@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import {
   ArrowRight,
   Check,
@@ -36,7 +37,6 @@ const HOME_COPY = {
     heroTitle: "Urusan Laman Web, WhatsApp & Sistem Bisnes Jadi Jauh Lebih Mudah.",
     heroSubtitle: "Satu rakan kongsi dipercayai untuk bantu perniagaan anda membina laman web pantas, membalas pelanggan 24 jam di WhatsApp, menyelaraskan e-Invois LHDN, dan menyelesaikan masalah komputer harian tanpa istilah teknikal yang mengelirukan.",
     primaryCta: "Lihat Pakej PKS (RM199 - RM699)",
-    secondaryCta: "Tempah Penilaian Percuma",
     trust: [
       "Bebas Jargon & Mesra Pengguna",
       "Siap Pantas (3 - 7 Hari)",
@@ -137,24 +137,24 @@ const HOME_COPY = {
         desc: "Sistem anda berjalan lancar dengan pemantauan kami. Sebarang isu teknikal, hanya hantar WhatsApp.",
       },
     ],
-    casesEyebrow: "Kisah Kejayaan",
-    casesTitle: "Perniagaan Tempatan Yang Berkembang Bersama Kami",
-    casesDesc: "Hasil sebenar untuk usahawan Malaysia daripada pelbagai sektor.",
+    casesEyebrow: "Senario ilustrasi",
+    casesTitle: "Contoh aliran kerja untuk perniagaan tempatan",
+    casesDesc: "Lihat cara automasi dan sokongan IT boleh membantu dalam operasi harian.",
     cases: [
       {
         sector: "Bengkel & Pusat Servis",
-        highlight: "Peningkatan 40% Tempahan Bulanan",
-        story: "Sebelum ini pelanggan WhatsApp lambat dibalas semasa mekanik sibuk membaiki kereta. Dengan DutaConnect, tempahan slot auto-dijawab dalam 5 saat.",
+        highlight: "Urus tempahan bengkel melalui WhatsApp",
+        story: "Rekod pertanyaan servis, tawarkan slot yang tersedia dan tugaskan susulan kepada staf apabila diperlukan.",
       },
       {
         sector: "Pembekal & Peruncitan",
-        highlight: "Jimat 3 Jam Pengurusan Invois Setiap Hari",
-        story: "Staf tidak lagi perlu menaip invois secara manual satu persatu. Sistem bersepadu kami menyelaraskan invois terus ke format e-Invois LHDN.",
+        highlight: "Sediakan e-Invois daripada pesanan",
+        story: "Gunakan butiran pesanan untuk menyediakan e-Invois dan serahkan kes khas kepada pasukan akaun.",
       },
       {
         sector: "Startup & Firma Profesional",
-        highlight: "Operasi IT Lengkap Tanpa Gaji Staf IT Penuh",
-        story: "Mendapat sokongan teknikal komprehensif, keselamatan fail awan, dan laman web korporat pada sebahagian kecil kos pekerja biasa.",
+        highlight: "Satu saluran untuk sokongan IT",
+        story: "Jadualkan sandaran, pantau peranti dan beri staf satu tempat untuk mendapatkan bantuan teknikal.",
       },
     ],
     finalCtaTitle: "Ada Masalah Yang Nak Diselesaikan Hari Ini?",
@@ -168,7 +168,6 @@ const HOME_COPY = {
     heroTitle: "Websites, WhatsApp & Business Systems Made Genuinely Simple.",
     heroSubtitle: "One trusted partner helping Malaysian businesses launch fast websites, respond to customers 24/7 on WhatsApp, streamline LHDN e-Invoicing, and solve daily IT headaches without intimidating technical jargon.",
     primaryCta: "View SME Packages (RM199 - RM699)",
-    secondaryCta: "Book a Free Assessment",
     trust: [
       "Jargon-Free & Practical",
       "Fast Turnaround (3 - 7 Days)",
@@ -269,24 +268,24 @@ const HOME_COPY = {
         desc: "Your setup runs smoothly with our proactive oversight. Any questions? Just reach us on WhatsApp.",
       },
     ],
-    casesEyebrow: "Real Results",
-    casesTitle: "Local Businesses Growing with Duta Integra",
-    casesDesc: "Tangible business outcomes for Malaysian entrepreneurs across diverse industries.",
+    casesEyebrow: "Illustrative scenarios",
+    casesTitle: "Example workflows for local businesses",
+    casesDesc: "See how automation and managed IT could support everyday operations.",
     cases: [
       {
         sector: "Auto Workshop & Service Center",
-        highlight: "+40% Monthly Booking Inquiries",
-        story: "Mechanics were busy fixing vehicles and missed customer messages. With DutaConnect, incoming inquiries receive instant booking options in 5 seconds.",
+        highlight: "Handle workshop bookings on WhatsApp",
+        story: "Capture service enquiries, offer available appointment slots and assign follow-up to staff when needed.",
       },
       {
         sector: "Wholesale Supplier & Retail",
-        highlight: "Saved 3 Hours on Daily Invoicing",
-        story: "Staff no longer copy-paste invoices manually one by one. Our integrated workflow formats orders directly for LHDN e-Invoicing compliance.",
+        highlight: "Prepare e-Invoices from orders",
+        story: "Use order details to prepare e-Invoices and route exceptions to your accounts team.",
       },
       {
         sector: "Startup & Professional Services",
-        highlight: "Full IT Department at a Fraction of the Cost",
-        story: "Secured enterprise-grade cloud backups, high-speed corporate web presence, and round-the-clock helpdesk without hiring full-time IT staff.",
+        highlight: "One place to get IT support",
+        story: "Schedule backups, monitor devices and give staff a single point of contact for technical help.",
       },
     ],
     finalCtaTitle: "Have an Issue to Solve Today?",
@@ -377,11 +376,12 @@ export function HomePage() {
                 </a>
               </Button>
               <Button asChild variant="outline" size="xl" className="w-full sm:w-auto border-border/80 dark:border-slate-700 text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/60 px-8 py-3.5 text-base font-semibold">
-                <a href="#pilot">
-                  {copy.secondaryCta}
-                </a>
+                <Link to="/digital-assessment">{t("navAssessmentCta")}</Link>
               </Button>
             </div>
+            <a href="#pilot" className="mb-6 inline-block text-sm font-semibold underline underline-offset-4">
+              {t("pilotHeroCta")}
+            </a>
 
             {/* Trust points */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 border-t border-border/50 text-xs sm:text-sm font-medium text-muted-foreground dark:text-slate-400">
@@ -635,7 +635,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 6. REAL CLIENT STORIES */}
+      {/* Implementation examples */}
       <section ref={casesRef} className="py-16 sm:py-20 bg-muted/20 dark:bg-slate-950/30 border-t border-border/40 dark:border-slate-800">
         <div className="landing-container">
           <div className="text-center max-w-2xl mx-auto mb-14">
@@ -661,15 +661,16 @@ export function HomePage() {
                     {c.highlight}
                   </h4>
                   <p className="text-xs sm:text-sm text-muted-foreground dark:text-slate-400 leading-relaxed">
-                    "{c.story}"
+                    {c.story}
                   </p>
-                </div>
-                <div className="mt-6 pt-4 border-t border-border/50 dark:border-slate-800 flex items-center gap-2 text-xs text-muted-foreground dark:text-slate-400">
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Kesan Terbukti di Malaysia</span>
                 </div>
               </div>
             ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link to="/case-studies" className="text-sm font-semibold underline underline-offset-4">
+              {lang === "bm" ? "Lihat contoh pelaksanaan" : "View implementation examples"}
+            </Link>
           </div>
         </div>
       </section>

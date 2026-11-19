@@ -13,16 +13,16 @@ import { useLanguage } from "@/hooks/use-language"
 
 type CaseItem = {
   id: string
-  clientName: string
+  scenario: string
   sector: string
   location: string
   teamSize: string
-  planUsed: "CORE" | "ADVANCE" | "PRO"
+  suggestedPlan: "CORE" | "ADVANCE" | "PRO"
   category: "all" | "pks" | "automation" | "cloud"
   headline: string
   challenge: string
   solution: string[]
-  metrics: { value: string; label: string }[]
+  measures: string[]
   outcomes: string[]
   tags: string[]
   accentColor: string
@@ -31,57 +31,57 @@ type CaseItem = {
 const CASE_STUDIES: CaseItem[] = [
   {
     id: "agmx",
-    clientName: "AGMX Precision Engineering",
+    scenario: "Kilang kejuruteraan persis",
     sector: "Pembuatan & Automotif",
     location: "Bayan Lepas, Pulau Pinang",
     teamSize: "45 Staf",
-    planUsed: "PRO",
+    suggestedPlan: "PRO",
     category: "cloud",
-    headline: "Pengurangan 92% Downtime Mesin & Penjimatan Kos Operasi RM320,000 Setahun",
-    challenge: "Pelayan operasi dan sistem inventori sering tergendala tanpa amaran semasa pesanan puncak kilang. Kos downtime mencecah RM15,000 setiap jam dan pasukan IT terpaksa membaiki masalah secara reaktif.",
+    headline: "Pemantauan Infrastruktur dan Pemulihan Operasi Kilang",
+    challenge: "Pelayan operasi dan sistem inventori sering tergendala tanpa amaran semasa pesanan puncak kilang. Pasukan IT perlu membaiki masalah secara reaktif.",
     solution: [
       "Memindahkan pangkalan data ke persekitaran hibrid awan dengan pemantauan automatik 24/7.",
       "Memasang pemantauan prediktif DutaOps bagi mengesan kegagalan sebelum pelayan terhenti.",
-      "Menyediakan sistem sandaran automatik luar premis dengan masa pemulihan (RTO) bawah 15 minit.",
+      "Menyediakan sistem sandaran automatik luar premis dan menguji masa pemulihan.",
       "Menugaskan pengurus akaun dedikasi untuk sokongan teknikal berterusan.",
     ],
-    metrics: [
-      { value: "99.97%", label: "Uptime Sistem Operasi" },
-      { value: "-92%", label: "Pengurangan Insiden Tergendala" },
-      { value: "RM 320k", label: "Penjimatan Kos Tahunan" },
-      { value: "< 15 Min", label: "Masa Pemulihan Sandaran" },
+    measures: [
+      "Uptime Sistem Operasi",
+      "Pengurangan Insiden Tergendala",
+      "Kos operasi tahunan",
+      "Masa Pemulihan Sandaran",
     ],
     outcomes: [
-      "Tiada lagi gangguan operasi kilang semasa shif malam.",
+      "Pengesanan awal boleh membantu pasukan mengurus gangguan semasa syif malam.",
       "Laporan kesihatan pelayan mingguan dihantar automatik kepada pihak pengurusan.",
-      "Penjimatan masa staf teknikal sebanyak 4 jam seminggu daripada kerja pembaikan manual.",
+      "Kurangkan kerja pemeriksaan dan pemulihan manual dengan amaran automatik.",
     ],
     tags: ["Infrastruktur Awan", "DutaOps", "Backup Automatik", "Pakej PRO"],
     accentColor: "from-blue-600 to-indigo-700",
   },
   {
     id: "eastelpro",
-    clientName: "Eastelpro Retail & Telecom",
+    scenario: "Kedai runcit dan telekomunikasi",
     sector: "Runcit & Pemasaran WiFi",
     location: "Cyberjaya, Selangor",
     teamSize: "28 Staf",
-    planUsed: "ADVANCE",
+    suggestedPlan: "ADVANCE",
     category: "automation",
-    headline: "Kutipan 65% Prospek Baharu Melalui Portal WiFi & Pengurusan WhatsApp Automatik",
+    headline: "Pendaftaran Pelawat melalui WiFi dan Susulan WhatsApp",
     challenge: "Pelanggan yang berkunjung ke cawangan kedai tidak direkodkan data mereka. Pertanyaan produk di WhatsApp sering lambat dibalas kerana staf sibuk melayan pelanggan di kaunter.",
     solution: [
       "Membina portal log masuk WiFi kedai berjenama yang merekodkan nombor telefon pelawat secara patuh PDPA.",
       "Memasang DutaConnect bot WhatsApp jualan 24/7 untuk menjawab soalan katalog & promosi serta-merta.",
       "Menghubungkan petunjuk jualan terus ke sistem pesanan dan invois digital.",
     ],
-    metrics: [
-      { value: "65%", label: "Kadar Pelawat Sertai Pangkalan Data" },
-      { value: "5 Saat", label: "Masa Balas WhatsApp Pelanggan" },
-      { value: "+38%", label: "Peningkatan Jualan Berulang" },
-      { value: "100%", label: "Pematuhan Garis Panduan PDPA" },
+    measures: [
+      "Kadar Pelawat Sertai Pangkalan Data",
+      "Masa Balas WhatsApp Pelanggan",
+      "Peningkatan Jualan Berulang",
+      "Rekod persetujuan pemasaran",
     ],
     outcomes: [
-      "Lebih 1,200 nombor pelanggan baharu dikumpul setiap bulan secara automatik.",
+      "Rekod persetujuan pelawat yang memilih untuk dihubungi.",
       "Pelanggan menerima mesej tawaran istimewa WhatsApp secara berjadual.",
       "Masa staf dijimatkan kerana soalan berulang (waktu operasi, stok) dijawab bot.",
     ],
@@ -90,29 +90,29 @@ const CASE_STUDIES: CaseItem[] = [
   },
   {
     id: "lapango",
-    clientName: "Lapango Auto & Tyre Centre",
+    scenario: "Bengkel servis kereta",
     sector: "Pusat Servis & Bengkel Kenderaan",
     location: "Shah Alam, Selangor",
     teamSize: "14 Mekanik & Staf",
-    planUsed: "CORE",
+    suggestedPlan: "CORE",
     category: "pks",
-    headline: "Laman Web Profil Baharu Jana 45+ Tempahan Servis Setiap Bulan Tanpa Staf IT",
-    challenge: "Perniagaan bergantung 100% kepada pelanggan walk-in. Laman web lama tidak boleh dibuka di telefon bimbit dan maklumat Google Maps tidak dikemaskini, menyebabkan ramai pelanggan memilih bengkel pesaing.",
+    headline: "Laman Web Bengkel untuk Tempahan Servis",
+    challenge: "Bengkel bergantung pada pelanggan yang datang terus. Laman web lama tidak boleh dibuka di telefon bimbit dan maklumat Google Maps tidak dikemaskini, menyebabkan ramai pelanggan memilih bengkel pesaing.",
     solution: [
       "Membina laman web profil 1-halaman responsif telefon pintar dengan butang terus tempah slot WhatsApp.",
       "Mengoptimumkan profil perniagaan tempatan Google Maps & carian SEO tempatan.",
       "Menyediakan bantuan sokongan komputer kedai dan sambungan WiFi mekanik yang stabil.",
       "Memasang sandaran data awan automatik untuk rekod invois pelanggan.",
     ],
-    metrics: [
-      { value: "45+", label: "Tempahan Servis Bulanan Baharu" },
-      { value: "#1", label: "Kedudukan Carian Servis Kereta Tempatan" },
-      { value: "100%", label: "Data Invois Selamat Disandarkan" },
-      { value: "RM 199", label: "Kos Bulanan Tetap Tanpa Caj Tambahan" },
+    measures: [
+      "Tempahan Servis Bulanan Baharu",
+      "Kedudukan Carian Servis Kereta Tempatan",
+      "Data Invois Selamat Disandarkan",
+      "Kos sokongan bulanan",
     ],
     outcomes: [
       "Pelanggan sekitar Shah Alam mudah mencari bengkel di Google Maps dan terus WhatsApp.",
-      "Komputer kaunter bayaran tidak lagi 'hang' atau terputus sambungan internet.",
+      "Staf kaunter boleh melaporkan masalah peranti dan sambungan kepada satu pasukan sokongan.",
       "Pemilik bengkel tenang kerana ada bantuan teknikal harian sedia dihubungi.",
     ],
     tags: ["Laman Web Profil", "Bantuan Komputer", "Google SEO", "Pakej CORE"],
@@ -120,24 +120,24 @@ const CASE_STUDIES: CaseItem[] = [
   },
   {
     id: "leish",
-    clientName: "Leish Wellness & Beauty Lounge",
+    scenario: "Pusat kecantikan dan kesejahteraan",
     sector: "Kecantikan & Hospitaliti",
     location: "Bangsar, Kuala Lumpur",
     teamSize: "18 Ahli Terapi",
-    planUsed: "ADVANCE",
+    suggestedPlan: "ADVANCE",
     category: "automation",
-    headline: "Tempahan Slot Janji Temu Selesai Dalam 90 Saat & Jimat 3 Jam Kerja Staf Setiap Hari",
+    headline: "Tempahan Rawatan dan Peringatan melalui WhatsApp",
     challenge: "Pengurusan janji temu pelanggan dibuat secara manual menggunakan buku log. Pelanggan kerap menukar waktu pada saat akhir dan staf terlepas pandang mesej tempahan di WhatsApp.",
     solution: [
       "Membina laman web jualan multi-halaman dengan sistem kalendar tempahan interaktif.",
       "Menghubungkan bot WhatsApp DutaConnect untuk pengesahan slot automatik dan peringatan temu janji.",
       "Menyelaraskan resit pembayaran dengan format sedia MyInvois LHDN.",
     ],
-    metrics: [
-      { value: "< 90 Saat", label: "Masa Pelanggan Kunci Tempahan" },
-      { value: "3 Jam", label: "Jimat Masa Staf Setiap Hari" },
-      { value: "-80%", label: "Pengurangan Pelanggan Tidak Hadir (No-show)" },
-      { value: "24/7", label: "Sistem Terima Tempahan Malam Hari" },
+    measures: [
+      "Masa Pelanggan Kunci Tempahan",
+      "Jimat Masa Staf Setiap Hari",
+      "Pengurangan Pelanggan Tidak Hadir (No-show)",
+      "Sistem Terima Tempahan Malam Hari",
     ],
     outcomes: [
       "Pelanggan boleh menempah slot rawatan pada bila-bila masa walaupun kedai telah tutup.",
@@ -149,28 +149,28 @@ const CASE_STUDIES: CaseItem[] = [
   },
   {
     id: "mediklinik",
-    clientName: "Rangkaian Poliklinik & Farmasi Harmoni",
+    scenario: "Rangkaian klinik dan farmasi",
     sector: "Klinik & Penjagaan Kesihatan",
     location: "Kajang & Bangi, Selangor",
     teamSize: "32 Doktor & Pembantu",
-    planUsed: "PRO",
+    suggestedPlan: "PRO",
     category: "cloud",
-    headline: "Integrasi Rekod Pesakit Bersepadu & e-Invois LHDN Tanpa Kehilangan Data",
+    headline: "Integrasi Rekod Klinik dan e-Invois LHDN",
     challenge: "Data pesakit disimpan pada komputer berasingan di 3 cawangan klinik. Risiko kehilangan rekod akibat kerosakan cakera keras serta keperluan mematuhi syarat e-Invois LHDN yang mendesak.",
     solution: [
       "Menghubungkan ketiga-tiga cawangan melalui rangkaian awan selamat dengan sandaran data berganda.",
       "Menyelaraskan sistem Point-of-Sale (POS) dan pendispensan ubat dengan API MyInvois LHDN.",
       "Menyediakan bantuan sokongan komputer klinikal dengan masa respons keutamaan VIP.",
     ],
-    metrics: [
-      { value: "3 Cawangan", label: "Rangkaian Klinik Bersambung" },
-      { value: "100%", label: "Sedia MyInvois LHDN" },
-      { value: "0", label: "Insiden Kehilangan Rekod Pesakit" },
-      { value: "24/7", label: "Pemantauan Sandaran Awan" },
+    measures: [
+      "Rangkaian Klinik Bersambung",
+      "Sedia MyInvois LHDN",
+      "Insiden Kehilangan Rekod Pesakit",
+      "Pemantauan Sandaran Awan",
     ],
     outcomes: [
       "Doktor boleh merujuk sejarah rawatan pesakit merentas semua cawangan klinik.",
-      "Resit perubatan terus dijana mengikut format cukai rasmi tanpa ralat manual.",
+      "Sediakan resit dalam format e-Invois dan serahkan pengecualian kepada staf.",
       "Pihak pengurusan mempunyai papan pemuka kewangan masa nyata.",
     ],
     tags: ["Rangkaian Multi-Cawangan", "MyInvois LHDN", "Sokongan VIP", "Pakej PRO"],
@@ -196,7 +196,7 @@ export function CaseStudiesPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
             {lang === "bm"
               ? "Contoh Pelaksanaan Penyelesaian Digital & IT Tempatan."
-              : "How Malaysian SMEs Automate & Scale With Duta Integra."}
+              : "Illustrative IT and Automation Scenarios for Malaysian SMEs"}
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
             {lang === "bm"
@@ -205,10 +205,10 @@ export function CaseStudiesPage() {
           </p>
 
           <div className="mt-6 mx-auto max-w-2xl px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white/80 backdrop-blur-sm">
-            💡 <strong>{lang === "bm" ? "Notis Pematuhan:" : "Compliance Notice:"}</strong>{" "}
+            💡 <strong>{lang === "bm" ? "Senario ilustrasi" : "Illustrative scenarios"}</strong>{" "}
             {lang === "bm"
-              ? "Profil dan metrik di bawah merupakan senario rujukan seni bina perkhidmatan dan simulasi potensi untuk tujuan ilustrasi perancangan PKS."
-              : "The profiles and metrics below represent illustrative service architecture scenarios and potential simulations for SME planning purposes."}
+              ? "Setiap contoh menerangkan pendekatan yang boleh dipertimbangkan dan ukuran yang boleh dipantau."
+              : "Each example describes a possible approach and measures an SME could track."}
           </div>
 
           {/* Filter Pills */}
@@ -251,11 +251,11 @@ export function CaseStudiesPage() {
                     {item.sector}
                   </span>
                   <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white text-[#0a2540] shadow-sm">
-                    Pakej {item.planUsed}
+                    Pakej {item.suggestedPlan}
                   </span>
                 </div>
                 <h3 className="relative z-10 text-lg font-extrabold text-white leading-snug">
-                  {item.clientName}
+                  {item.scenario}
                 </h3>
                 <p className="relative z-10 text-xs text-white/80 mt-1">
                   📍 {item.location} · {item.teamSize}
@@ -269,26 +269,12 @@ export function CaseStudiesPage() {
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>
                   <h4 className="text-sm sm:text-base font-bold text-navy dark:text-white mb-3 group-hover:text-[#1565C0] dark:group-hover:text-[#00d4ff] transition-colors leading-snug">
-                    "{item.headline}"
+                    {item.headline}
                   </h4>
                   <p className="text-xs text-muted-foreground dark:text-slate-400 mb-6 leading-relaxed line-clamp-3">
                     {item.challenge}
                   </p>
 
-                  {/* Primary Key Metric Badge */}
-                  <div className="p-3.5 rounded-xl bg-muted/40 dark:bg-slate-900/60 border border-border/60 dark:border-slate-800 mb-6 flex items-center justify-between">
-                    <div>
-                      <span className="text-xl sm:text-2xl font-extrabold text-navy dark:text-white block">
-                        {item.metrics[0].value}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground dark:text-slate-400">
-                        {item.metrics[0].label}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                      ⚡ Hasil Terbukti
-                    </span>
-                  </div>
                 </div>
 
                 <div>
@@ -333,35 +319,30 @@ export function CaseStudiesPage() {
             {/* Modal Header */}
             <div className="pr-8 mb-6">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#1565C0]/10 text-[#1565C0] dark:text-[#00d4ff] uppercase tracking-wider mb-2">
-                Pakej {activeModal.planUsed} · {activeModal.sector}
+                Pakej {activeModal.suggestedPlan} · {activeModal.sector}
               </span>
               <h2 className="text-xl sm:text-2xl font-extrabold text-navy dark:text-white">
-                {activeModal.clientName}
+                {activeModal.scenario}
               </h2>
               <p className="text-xs text-muted-foreground dark:text-slate-400 mt-1">
                 📍 {activeModal.location} · {activeModal.teamSize}
               </p>
             </div>
 
-            {/* Metrics 4-Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-muted/40 dark:bg-slate-900/60 border border-border/60 dark:border-slate-800 mb-6 text-center">
-              {activeModal.metrics.map((m, i) => (
-                <div key={i} className="p-2">
-                  <span className="text-lg sm:text-xl font-extrabold text-navy dark:text-white block">
-                    {m.value}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground leading-tight block mt-0.5">
-                    {m.label}
-                  </span>
-                </div>
-              ))}
+            <div className="mb-6 rounded-xl border border-border/60 bg-muted/40 p-4">
+              <h3 className="mb-2 text-sm font-semibold">
+                {lang === "bm" ? "Ukuran untuk dipantau" : "Measures to track"}
+              </h3>
+              <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
+                {activeModal.measures.map((measure) => <li key={measure}>{measure}</li>)}
+              </ul>
             </div>
 
             {/* Challenge & Solution */}
             <div className="space-y-5 mb-8">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#F04E00] mb-2 flex items-center gap-1.5">
-                  <span>Cabaran Asal Sebelum Kerjasama</span>
+                  <span>{lang === "bm" ? "Cabaran dalam senario ini" : "Scenario challenge"}</span>
                 </h4>
                 <p className="text-xs sm:text-sm text-foreground/90 dark:text-slate-300 leading-relaxed bg-amber-50/50 dark:bg-amber-950/20 p-3.5 rounded-xl border border-amber-200/50 dark:border-amber-900/30">
                   {activeModal.challenge}
@@ -370,7 +351,7 @@ export function CaseStudiesPage() {
 
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#1565C0] dark:text-[#00d4ff] mb-2">
-                  Penyelesaian Yang Dipasang Oleh Duta Integra:
+                  {lang === "bm" ? "Cadangan pelaksanaan" : "Proposed implementation"}
                 </h4>
                 <ul className="space-y-2">
                   {activeModal.solution.map((s, i) => (
@@ -384,7 +365,7 @@ export function CaseStudiesPage() {
 
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
-                  Hasil Sebenar Yang Dicapai:
+                  {lang === "bm" ? "Manfaat yang disasarkan" : "Intended benefits"}
                 </h4>
                 <ul className="space-y-2">
                   {activeModal.outcomes.map((o, i) => (
@@ -400,7 +381,7 @@ export function CaseStudiesPage() {
             {/* Direct Conversion Action */}
             <div className="pt-5 border-t border-border/60 flex flex-col sm:flex-row gap-3 items-center">
               <a
-                href={`https://wa.me/601154034051?text=${encodeURIComponent(`Salam Duta Integra, saya tertarik dengan kajian kes ${activeModal.clientName} (${activeModal.sector}). Saya ingin tahu bagaimana solusi Pakej ${activeModal.planUsed} boleh diaplikasikan untuk bisnes saya.`)}`}
+                href={`https://wa.me/601154034051?text=${encodeURIComponent(`Salam Duta Integra, saya tertarik dengan kajian kes ${activeModal.scenario} (${activeModal.sector}). Saya ingin tahu bagaimana solusi Pakej ${activeModal.suggestedPlan} boleh diaplikasikan untuk bisnes saya.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold bg-[#25D366] hover:bg-[#20ba59] text-white shadow-md text-xs sm:text-sm transition-all"
@@ -427,7 +408,7 @@ export function CaseStudiesPage() {
             Masa Untuk Mengubah Bisnes Anda
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-heading font-bold mb-4">
-            Ingin Hasil Seperti Mereka Untuk Perniagaan Anda?
+            Ingin meneroka contoh seperti ini untuk perniagaan anda?
           </h2>
           <p className="text-slate-300 text-sm sm:text-base mb-8">
             Dapatkan nasihat percuma selama 15 minit bersama jurutera teknikal Cyberjaya kami untuk mengenal pasti pembaziran masa dan peluang jualan anda.

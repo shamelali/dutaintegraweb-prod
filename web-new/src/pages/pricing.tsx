@@ -40,7 +40,6 @@ const smeTiers = [
     name: "ADVANCE",
     price: "RM 699",
     period: "/ bulan",
-    pilotNote: "Pilihan Pilot 30-Hari: RM 999",
     badge: "Paling Disyorkan",
     target: "Perniagaan berkembang yang nak gandakan jualan",
     desc: "Laman web jualan interaktif penuh berserta automasi WhatsApp jualan 24 jam dan e-Invois LHDN.",
@@ -54,7 +53,7 @@ const smeTiers = [
       "Sandaran Awan 100GB & Pemulihan Pantas",
     ],
     cta: "Pilih Pakej Advance",
-    whatsappMsg: "Salam Duta Integra, saya berminat dengan Pakej ADVANCE (RM699/bln / Pilot RM999) untuk bisnes saya.",
+    whatsappMsg: "Salam Duta Integra, saya berminat dengan Pakej ADVANCE (RM699/bln) untuk bisnes saya.",
     highlight: true,
   },
   {
@@ -168,6 +167,9 @@ export function PricingPage() {
   const ctaRef = useScrollReveal()
 
   const [activeCategory, setActiveCategory] = useState<"sme" | "enterprise">("sme")
+  const isMalay = lang === "bm"
+  const perMonth = isMalay ? "/bulan" : "/month"
+  const from = isMalay ? "Daripada " : "From "
 
   return (
     <div className="bg-background text-foreground transition-colors duration-200">
@@ -179,13 +181,13 @@ export function PricingPage() {
           </Badge>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold text-white mb-6 leading-tight">
             {lang === "bm"
-              ? "Penyelesaian Digital Lengkap Tanpa Kos Tersembunyi."
-              : "Complete Digital Solutions With Zero Hidden Costs."}
+              ? "Harga laman web, IT dan automasi"
+              : "Website, IT and automation pricing"}
           </h1>
           <p className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
             {lang === "bm"
-              ? "Pilih pakej bulanan yang sesuai dengan saiz perniagaan anda — daripada kedai runcit dan bengkel hingga ke perusahaan berkembang."
-              : "Choose an affordable monthly plan matching your stage — from local workshops and retail shops to growing enterprise operations."}
+              ? "Bandingkan pakej PKS, pelan aliran kerja AI terurus dan pilot WhatsApp DutaConnect."
+              : "Compare small-business packages, managed AI workflows and the DutaConnect WhatsApp pilot."}
           </p>
 
           {/* Interactive Category Switcher (Untitled UI style) */}
@@ -193,26 +195,94 @@ export function PricingPage() {
             <button
               type="button"
               onClick={() => setActiveCategory("sme")}
+              aria-pressed={activeCategory === "sme"}
               className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeCategory === "sme"
                   ? "bg-white text-[#0a2540] shadow-md scale-[1.02]"
                   : "text-white/80 hover:text-white"
               }`}
             >
-              🇲🇾 PKS & Startup (Bermula RM199)
+              {isMalay ? "Pakej PKS" : "Small-business packages"}
             </button>
             <button
               type="button"
               onClick={() => setActiveCategory("enterprise")}
+              aria-pressed={activeCategory === "enterprise"}
               className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeCategory === "enterprise"
                   ? "bg-white text-[#0a2540] shadow-md scale-[1.02]"
                   : "text-white/80 hover:text-white"
               }`}
             >
-              🏢 Enterprise & Cloud Ops
+              {isMalay ? "Pelan AI terurus dan awan" : "Managed AI and cloud plans"}
             </button>
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="compare-offers" className="mx-auto max-w-7xl px-6 py-12">
+        <h2 id="compare-offers" className="mb-6 text-center font-heading text-2xl font-bold">
+          {isMalay ? "Bandingkan tawaran" : "Compare offers"}
+        </h2>
+        <div className="grid gap-5 lg:grid-cols-3">
+          <Card className="flex flex-col gap-4 p-6">
+            <h3 className="font-heading text-lg font-bold">{isMalay ? "Pakej perniagaan kecil" : "Small-business packages"}</h3>
+            <p className="text-sm text-muted-foreground">
+              {isMalay
+                ? "Laman web dan sokongan komputer. Advance menambah automasi WhatsApp dan e-Invois. Pro menambah aliran kerja dan sokongan khusus."
+                : "Website and computer support. Advance adds WhatsApp automation and e-Invoicing. Pro adds business workflows and dedicated support."}
+            </p>
+            <ul className="flex-1 space-y-2 text-sm font-medium">
+              {smeTiers.map((tier) => (
+                <li key={tier.id}>{tier.name} · {tier.id === "pro" && from}{tier.price.replace(/^Dari /, "")}{perMonth}</li>
+              ))}
+            </ul>
+            <a href="#plans" onClick={() => setActiveCategory("sme")} className="text-sm font-semibold underline underline-offset-4">
+              {isMalay ? "Lihat butiran pakej PKS" : "See small-business package details"}
+            </a>
+          </Card>
+
+          <Card className="flex flex-col gap-4 p-6">
+            <h3 className="font-heading text-lg font-bold">{isMalay ? "Aliran kerja AI terurus" : "Managed AI workflows"}</h3>
+            <p className="text-sm text-muted-foreground">
+              {isMalay ? "Automasi untuk WhatsApp, e-mel, CRM dan kerja operasi." : "Automation for WhatsApp, email, CRM and operations."}
+            </p>
+            <ul className="flex-1 space-y-2 text-sm">
+              {enterpriseTiers.map((tier) => (
+                <li key={tier.nameKey}>
+                  <strong>{t(tier.nameKey)} · {tier.price}{perMonth}</strong>
+                  <p className="text-muted-foreground">{t(tier.setupKey)}</p>
+                </li>
+              ))}
+            </ul>
+            <a href="#plans" onClick={() => setActiveCategory("enterprise")} className="text-sm font-semibold underline underline-offset-4">
+              {isMalay ? "Lihat skop dan had penggunaan" : "See AI workflow scope and usage limits"}
+            </a>
+          </Card>
+
+          <Card className="flex flex-col gap-4 p-6">
+            <h3 className="font-heading text-lg font-bold">DutaConnect</h3>
+            <p className="text-sm text-muted-foreground">
+              {isMalay
+                ? "Uji satu aliran kerja susulan WhatsApp dengan ukuran sebelum dan selepas."
+                : "Test one WhatsApp follow-up workflow and measure results before and after."}
+            </p>
+            <dl className="flex-1 space-y-3 text-sm">
+              <div>
+                <dt className="font-semibold">{isMalay ? "RM999 untuk 30 hari" : "RM999 for 30 days"}</dt>
+                <dd className="text-muted-foreground">{isMalay ? "Pilot boleh ditempah secara berasingan." : "The pilot can be booked on its own."}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold">{isMalay ? "RM1,199/bulan selepas pilot" : "RM1,199/month after the pilot"}</dt>
+                <dd className="text-muted-foreground">
+                  {isMalay
+                    ? "Jumlah bulanan ialah kos pelan IT terurus aktif anda ditambah RM1,199. Caj penggunaan WhatsApp mungkin dikenakan."
+                    : "Your monthly total is the cost of your active managed IT plan plus RM1,199. WhatsApp usage charges may apply."}
+                </dd>
+              </div>
+            </dl>
+            <a href="/#pilot" className="text-sm font-semibold underline underline-offset-4">{t("pilotHeroCta")}</a>
+          </Card>
         </div>
       </section>
 
@@ -335,11 +405,6 @@ export function PricingPage() {
                             {tier.period}
                           </span>
                         </div>
-                        {tier.pilotNote && (
-                          <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                            ⚡ {tier.pilotNote}
-                          </p>
-                        )}
                       </div>
 
                       <ul className="space-y-3 mb-8">
@@ -487,7 +552,7 @@ export function PricingPage() {
                     ))}
                   </ul>
                   <Button asChild variant="electric" size="lg">
-                    <a href="/#pilot">{t("priceConnectCta")}</a>
+                    <a href="/#pilot">{t("pilotHeroCta")}</a>
                   </Button>
                 </div>
                 <div className="bg-muted/40 dark:bg-slate-900/40 p-6 rounded-xl border border-border dark:border-slate-800">

@@ -178,6 +178,10 @@
       "destination": "/api/gateway"
     },
     {
+      "source": "/:page(services|pricing|case-studies|digital-assessment|products|contact)",
+      "destination": "/page-metadata/:page.html"
+    },
+    {
       "source": "/((?!api/|admin/|assets/|.*\\.).*)",
       "destination": "/index.html"
     }

@@ -12,8 +12,8 @@ export const translations = {
     bm: "Produk",
   },
   navAssessmentCta: {
-    en: "Book a free assessment",
-    bm: "Tempah penilaian percuma",
+    en: "Start the free assessment",
+    bm: "Mulakan penilaian percuma",
   },
   navAbout: {
     en: "About",
@@ -1131,7 +1131,7 @@ export const translations = {
   opsF6Title: { en: "Predictable monthly pricing", bm: "Harga bulanan yang boleh dijangka" },
   opsF6Tag: { en: "Start small and scale only when it works.", bm: "Mulakan kecil dan kembangkan hanya apabila ia berkesan." },
   opsF6Desc: { en: "Choose a subscription based on the number of workflows and integrations you need. No large upfront project is required for standard setups.", bm: "Pilih langganan berdasarkan bilangan aliran kerja dan integrasi yang anda perlukan. Tiada projek besar di hadapan diperlukan untuk persediaan standard." },
-  opsF6B1: { en: "Plans from RM690/month", bm: "Pelan daripada RM690/bulan" },
+  opsF6B1: { en: "Managed AI plans from RM690/month", bm: "Pelan AI terurus daripada RM690/bulan" },
   opsF6B2: { en: "Month-to-month, no lock-in", bm: "Bulan ke bulan, tiada pengikatan" },
   opsF6B3: { en: "Clear AI usage and message limits", bm: "Had penggunaan AI dan mesej yang jelas" },
   opsF6B4: { en: "Managed monitoring and support included", bm: "Pemantauan dan sokongan terurus disertakan" },
