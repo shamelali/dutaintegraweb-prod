@@ -215,25 +215,17 @@ export async function notifyEnquiry(enquiry) {
   const subject = enquirySubject(enquiry);
   const text = enquiryBody(enquiry);
 
-  if (process.env.RESEND_API_KEY) {
-    await sendViaResend({ to, from, subject, text }, process.env.RESEND_API_KEY);
-  } else if (process.env.BREVO_API_KEY) {
-    await sendViaBrevo({ to, from, subject, text }, process.env.BREVO_API_KEY);
-  } else if (process.env.POSTMARK_SERVER_TOKEN) {
-    await sendViaPostmark({ to, from, subject, text }, process.env.POSTMARK_SERVER_TOKEN);
-  } else {
-    return false; // no provider configured — stored only
-  }
+  if (!await sendMail({ to, from, subject, text })) return false;
 
   await markEnquiryEmailed(enquiry.id);
   return true;
 }
 
 export async function sendMail({ to, from, subject, text }) {
-  if (process.env.RESEND_API_KEY) {
-    await sendViaResend({ to, from, subject, text }, process.env.RESEND_API_KEY);
-  } else if (process.env.BREVO_API_KEY) {
+  if (process.env.BREVO_API_KEY) {
     await sendViaBrevo({ to, from, subject, text }, process.env.BREVO_API_KEY);
+  } else if (process.env.RESEND_API_KEY) {
+    await sendViaResend({ to, from, subject, text }, process.env.RESEND_API_KEY);
   } else if (process.env.POSTMARK_SERVER_TOKEN) {
     await sendViaPostmark({ to, from, subject, text }, process.env.POSTMARK_SERVER_TOKEN);
   } else {
@@ -259,16 +251,7 @@ export async function notifyEnquirer(enquiry) {
   ].join("\n");
 
   try {
-    if (process.env.RESEND_API_KEY) {
-      await sendViaResend({ to: enquiry.email, from, subject, text }, process.env.RESEND_API_KEY);
-    } else if (process.env.BREVO_API_KEY) {
-      await sendViaBrevo({ to: enquiry.email, from, subject, text }, process.env.BREVO_API_KEY);
-    } else if (process.env.POSTMARK_SERVER_TOKEN) {
-      await sendViaPostmark({ to: enquiry.email, from, subject, text }, process.env.POSTMARK_SERVER_TOKEN);
-    } else {
-      return false;
-    }
-    return true;
+    return await sendMail({ to: enquiry.email, from, subject, text });
   } catch (err) {
     console.error(`[enquiry ${enquiry.id}] auto-reply failed: ${err.message}`);
     return false;
@@ -291,11 +274,16 @@ async function sendViaResend({ to, from, subject, text }, apiKey) {
 }
 
 async function sendViaBrevo({ to, from, subject, text }, apiKey) {
+  const namedSender = from?.match(/^(.*?)\s*<([^<>]+)>$/);
+  const sender = {
+    name: namedSender?.[1].trim() || "Duta Integra",
+    email: namedSender?.[2].trim() || from || "no-reply@dutaintegra.my",
+  };
   const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: { "api-key": apiKey, "content-type": "application/json" },
     body: JSON.stringify({
-      sender: from ? { name: "Duta Integra", email: from } : { name: "Duta Integra", email: "no-reply@dutaintegrasolutions.com" },
+      sender,
       to: [{ email: to }],
       subject,
       textContent: text,

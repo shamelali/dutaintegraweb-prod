@@ -33,7 +33,7 @@ test("an assessment follow-up stores the lead and sends both notifications", asy
     SUPABASE_URL: "https://assessment-storage.invalid",
     SUPABASE_SERVICE_ROLE_KEY: "fixture-storage-key",
     CONTACT_INBOX_EMAIL: "team@example.test",
-    EMAIL_FROM: "sender@example.test",
+    EMAIL_FROM: "Duta Integra QA <sender@example.test>",
     RESEND_API_KEY: "fixture-resend-key",
     BREVO_API_KEY: "fixture-mail-key",
   };
@@ -51,7 +51,7 @@ test("an assessment follow-up stores the lead and sends both notifications", asy
   const requests = [];
   const log = context.mock.method(console, "log", () => {});
   const leadsUrl = settings.SUPABASE_URL + "/rest/v1/leads";
-  const mailUrl = "https://api.resend.com/emails";
+  const mailUrl = "https://api.brevo.com/v3/smtp/email";
   context.mock.method(globalThis, "fetch", async (url, init) => {
     requests.push({ url, method: init.method, body: JSON.parse(init.body) });
     if (url === leadsUrl && init.method === "POST") return Response.json([], { status: 201 });
@@ -88,13 +88,14 @@ test("an assessment follow-up stores the lead and sends both notifications", asy
   assert.equal(lead.body.service, service);
   assert.equal(lead.body.message, "Digital readiness score: 40/100");
   assert.equal(notification.url, mailUrl);
-  assert.equal(notification.body.to, settings.CONTACT_INBOX_EMAIL);
-  assert.match(notification.body.text, /Digital readiness score: 40\/100/);
+  assert.deepEqual(notification.body.sender, { name: "Duta Integra QA", email: "sender@example.test" });
+  assert.deepEqual(notification.body.to, [{ email: settings.CONTACT_INBOX_EMAIL }]);
+  assert.match(notification.body.textContent, /Digital readiness score: 40\/100/);
   assert.equal(emailed.url, leadsUrl + "?id=eq." + lead.body.id);
   assert.ok(emailed.body.emailed_at);
   assert.equal(receipt.url, mailUrl);
-  assert.equal(receipt.body.to, "visitor@example.test");
-  assert.match(receipt.body.text, /^Hi Assessment Visitor,\n\nThanks for reaching out/);
+  assert.deepEqual(receipt.body.to, [{ email: "visitor@example.test" }]);
+  assert.match(receipt.body.textContent, /^Hi Assessment Visitor,\n\nThanks for reaching out/);
   assert.ok(log.mock.calls.some(({ arguments: [message] }) =>
     typeof message === "string" && message.endsWith("delivered=true autoReplyAccepted=true")));
 });
