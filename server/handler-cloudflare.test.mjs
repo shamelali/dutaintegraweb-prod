@@ -27,6 +27,78 @@ function call(pathname, init = {}) {
   return handleApi(req);
 }
 
+test("an assessment follow-up stores the lead and sends both notifications", async (context) => {
+  const settings = {
+    ALLOWED_ORIGINS: ORIGIN,
+    SUPABASE_URL: "https://assessment-storage.invalid",
+    SUPABASE_SERVICE_ROLE_KEY: "fixture-storage-key",
+    CONTACT_INBOX_EMAIL: "team@example.test",
+    EMAIL_FROM: "sender@example.test",
+    RESEND_API_KEY: "fixture-resend-key",
+    BREVO_API_KEY: "fixture-mail-key",
+  };
+  const previous = Object.fromEntries(
+    Object.keys(settings).map((key) => [key, process.env[key]]),
+  );
+  Object.assign(process.env, settings);
+  context.after(() => {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  const requests = [];
+  const log = context.mock.method(console, "log", () => {});
+  const leadsUrl = settings.SUPABASE_URL + "/rest/v1/leads";
+  const mailUrl = "https://api.resend.com/emails";
+  context.mock.method(globalThis, "fetch", async (url, init) => {
+    requests.push({ url, method: init.method, body: JSON.parse(init.body) });
+    if (url === leadsUrl && init.method === "POST") return Response.json([], { status: 201 });
+    if (url === mailUrl && init.method === "POST") return Response.json({}, { status: 201 });
+    if (url.startsWith(leadsUrl + "?id=eq.") && init.method === "PATCH") return new Response(null, { status: 204 });
+    throw new Error("Unexpected follow-up request");
+  });
+
+  const service = "Digital assessment follow-up";
+  const csrf = "assessment-test-token";
+  const response = await call("/api/send-email", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: ORIGIN,
+      "x-csrf-token": csrf,
+      cookie: `csrf_token=${csrf}`,
+    },
+    body: JSON.stringify({
+      name: "Assessment Visitor",
+      email: "visitor@example.test",
+      company: "Example Workshop",
+      service,
+      source: "contact-form",
+      message: "Digital readiness score: 40/100",
+    }),
+  });
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { success: true, delivered: true });
+  assert.equal(requests.length, 4);
+  const [lead, notification, emailed, receipt] = requests;
+  assert.equal(lead.url, leadsUrl);
+  assert.equal(lead.body.service, service);
+  assert.equal(lead.body.message, "Digital readiness score: 40/100");
+  assert.equal(notification.url, mailUrl);
+  assert.equal(notification.body.to, settings.CONTACT_INBOX_EMAIL);
+  assert.match(notification.body.text, /Digital readiness score: 40\/100/);
+  assert.equal(emailed.url, leadsUrl + "?id=eq." + lead.body.id);
+  assert.ok(emailed.body.emailed_at);
+  assert.equal(receipt.url, mailUrl);
+  assert.equal(receipt.body.to, "visitor@example.test");
+  assert.match(receipt.body.text, /^Hi Assessment Visitor,\n\nThanks for reaching out/);
+  assert.ok(log.mock.calls.some(({ arguments: [message] }) =>
+    typeof message === "string" && message.endsWith("delivered=true autoReplyAccepted=true")));
+});
+
 describe("ops task surface removed; admin token still gated", () => {
   let originalFetch;
 

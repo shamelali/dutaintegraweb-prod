@@ -454,8 +454,9 @@ async function handleSendEmail(req, res) {
   }
 
   // Best-effort auto-reply to the prospect (never blocks the response).
+  let autoReplyAccepted = false;
   try {
-    await notifyEnquirer(enquiry);
+    autoReplyAccepted = await notifyEnquirer(enquiry);
   } catch (err) {
     console.error(`[enquiry ${enquiry.id}] auto-reply failed: ${err.message}`);
   }
@@ -463,7 +464,7 @@ async function handleSendEmail(req, res) {
   if (!delivered && !resolveInboxEmail()) {
     console.warn(`[enquiry ${enquiry.id}] no CONTACT_INBOX_EMAIL configured — stored only`);
   }
-  console.log(`[enquiry ${enquiry.id}] received service="${enquiry.service}" delivered=${delivered}`);
+  console.log(`[enquiry ${enquiry.id}] received service="${enquiry.service}" delivered=${delivered} autoReplyAccepted=${autoReplyAccepted}`);
 
   send(res, 200, { success: true, delivered }, headers);
 }

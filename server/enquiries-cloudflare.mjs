@@ -256,7 +256,7 @@ export async function notifyEnquirer(enquiry) {
     "",
     "— Duta Integra Solutions",
     "https://dutaintegra.my",
-  ].join("\\n");
+  ].join("\n");
 
   try {
     if (process.env.RESEND_API_KEY) {
