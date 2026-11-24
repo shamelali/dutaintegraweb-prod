@@ -346,6 +346,25 @@ describe("testimonial capture", () => {
   });
 });
 
+describe("public product catalog", () => {
+  test("returns 503 instead of a successful empty catalog when storage is misconfigured", async () => {
+    const savedUrl = process.env.SUPABASE_URL;
+    const savedKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_URL = "https://stub.supabase.co";
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    try {
+      const res = await fetch(`${base}/api/products`);
+      assert.equal(res.status, 503);
+      assert.deepEqual(await res.json(), { error: "Product catalog is temporarily unavailable." });
+    } finally {
+      if (savedUrl === undefined) delete process.env.SUPABASE_URL;
+      else process.env.SUPABASE_URL = savedUrl;
+      if (savedKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      else process.env.SUPABASE_SERVICE_ROLE_KEY = savedKey;
+    }
+  });
+});
+
 describe("static site and health", () => {
   test("serves the marketing homepage", async () => {
     const res = await fetch(`${base}/`);

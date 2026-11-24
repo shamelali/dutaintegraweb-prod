@@ -1233,7 +1233,7 @@ async function handleProducts(req, res) {
     return send(res, 200, { products });
   } catch (err) {
     console.error("[products] public API error:", err.message);
-    return send(res, 200, { products: [] });
+    return send(res, 503, { error: "Product catalog is temporarily unavailable." });
   }
 }
 

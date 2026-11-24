@@ -355,6 +355,32 @@ describe("portal auth — the route names the React portal actually calls", () =
   });
 });
 
+describe("public product catalog failures", () => {
+  let savedEnv;
+
+  before(() => {
+    savedEnv = {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    };
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  });
+
+  after(() => {
+    for (const [key, value] of Object.entries(savedEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  test("returns 503 instead of a successful empty catalog when storage is unavailable", async () => {
+    const res = await call("/api/products");
+    assert.equal(res.status, 503);
+    assert.deepEqual(await res.json(), { error: "Product catalog is temporarily unavailable." });
+  });
+});
+
 describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
   let originalFetch;
   let sessions;

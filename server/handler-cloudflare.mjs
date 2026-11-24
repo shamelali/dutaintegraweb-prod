@@ -999,7 +999,7 @@ async function handleProducts(req) {
     return sendJson(200, { products });
   } catch (err) {
     console.error("[products] public API error:", err.message);
-    return sendJson(200, { products: [] });
+    return sendJson(503, { error: "Product catalog is temporarily unavailable." });
   }
 }
 

@@ -24,6 +24,7 @@ export function ProductsPage() {
   const { lang } = useLanguage()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     fetch("/api/products")
@@ -32,11 +33,19 @@ export function ProductsPage() {
         if (!r.ok) throw new Error(data.error || "Failed to load")
         setProducts(data.products || [])
       })
-      .catch(console.error)
+      .catch((error) => {
+        console.error("[products] public API error:", error)
+        setLoadError(true)
+      })
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><LoaderCircle className="animate-spin h-8 w-8" /></div>
+  if (loading) return (
+    <div role="status" aria-live="polite" className="min-h-screen flex items-center justify-center gap-3 text-muted-foreground">
+      <LoaderCircle aria-hidden="true" className="animate-spin h-8 w-8" />
+      <span>{lang === "bm" ? "Memuatkan produk…" : "Loading products…"}</span>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-background py-16 px-6">
@@ -52,9 +61,20 @@ export function ProductsPage() {
           </p>
         </header>
 
-        {products.length === 0 ? (
+        {loadError ? (
+          <div role="alert" className="text-center py-16">
+            <h2 className="text-2xl font-heading font-bold mb-3">
+              {lang === "bm" ? "Kami tidak dapat memuatkan katalog produk." : "We couldn't load the product catalog."}
+            </h2>
+            <p className="text-muted-foreground">
+              {lang === "bm" ? "Sila cuba lagi sebentar." : "Please try again in a moment."}
+            </p>
+          </div>
+        ) : products.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground">No products published yet.</p>
+            <h2 className="text-2xl font-heading font-bold text-muted-foreground">
+              {lang === "bm" ? "Belum ada produk yang diterbitkan." : "No products published yet."}
+            </h2>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
