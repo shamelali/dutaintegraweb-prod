@@ -67,4 +67,54 @@ describe("product catalog states", () => {
     expect(within(alert).getByRole("heading", { name: "We couldn't load the product catalog." })).toBeTruthy()
     expect(screen.queryByRole("heading", { name: "No products published yet." })).toBeNull()
   })
+
+  it("renders label/value metric objects without crashing", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(reply(200, {
+      products: [{
+        id: "leish",
+        name: "Leish",
+        tagline: "AI customer support",
+        category: "AI",
+        descriptionEn: "Automate customer enquiries.",
+        descriptionMs: "Automasikan pertanyaan pelanggan.",
+        tags: ["Marketplace", "AI chatbot"],
+        metrics: [
+          { label: "Fewer enquiries", value: "70%" },
+          { label: "Support", value: "24/7" },
+        ],
+        previewUrl: null,
+        imageUrl: null,
+        contactCtaEn: null,
+        contactCtaMs: null,
+        sortOrder: 1,
+      }],
+    }))
+
+    renderProducts("en")
+    expect(await screen.findByText("Fewer enquiries: 70%")).toBeTruthy()
+    expect(screen.getByText("Support: 24/7")).toBeTruthy()
+  })
+
+  it("continues to render legacy string metrics", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(reply(200, {
+      products: [{
+        id: "legacy-product",
+        name: "Legacy Product",
+        tagline: null,
+        category: null,
+        descriptionEn: null,
+        descriptionMs: null,
+        tags: [],
+        metrics: ["99.99% uptime"],
+        previewUrl: null,
+        imageUrl: null,
+        contactCtaEn: null,
+        contactCtaMs: null,
+        sortOrder: 1,
+      }],
+    }))
+
+    renderProducts("en")
+    expect(await screen.findByText("99.99% uptime")).toBeTruthy()
+  })
 })

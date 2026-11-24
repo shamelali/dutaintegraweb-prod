@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/hooks/use-language"
 
+type ProductMetric = string | { label: string; value: string }
+
 type Product = {
   id: string
   name: string
@@ -12,7 +14,7 @@ type Product = {
   descriptionEn: string | null
   descriptionMs: string | null
   tags: string[]
-  metrics: string[]
+  metrics: ProductMetric[]
   previewUrl: string | null
   imageUrl: string | null
   contactCtaEn: string | null
@@ -103,7 +105,7 @@ export function ProductsPage() {
                       {p.metrics.map((m, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                           <Check className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                          {m}
+                          {typeof m === "string" ? m : `${m.label}: ${m.value}`}
                         </li>
                       ))}
                     </ul>
