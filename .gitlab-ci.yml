@@ -55,6 +55,7 @@ server-tests:
   needs: []
   script:
     - npm test
+    - PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s automations/uptime-watch -p 'test_*.py' -v
 
 frontend-tests:
   stage: verify

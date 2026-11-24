@@ -363,6 +363,53 @@ describe("public product catalog", () => {
       else process.env.SUPABASE_SERVICE_ROLE_KEY = savedKey;
     }
   });
+
+  test("normalizes mixed metric shapes and drops malformed entries", async (context) => {
+    const savedUrl = process.env.SUPABASE_URL;
+    const savedKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const savedDataDir = process.env.DATA_DIR;
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dir = await mkdtemp(join(tmpdir(), "products-"));
+    process.env.DATA_DIR = dir;
+    context.after(async () => {
+      await rm(dir, { recursive: true, force: true });
+      if (savedDataDir === undefined) delete process.env.DATA_DIR;
+      else process.env.DATA_DIR = savedDataDir;
+      if (savedUrl === undefined) delete process.env.SUPABASE_URL;
+      else process.env.SUPABASE_URL = savedUrl;
+      if (savedKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      else process.env.SUPABASE_SERVICE_ROLE_KEY = savedKey;
+    });
+    const path = dataFile("products.jsonl");
+    const rows = [
+      {
+        id: "mixed-metrics",
+        name: "Mixed Metrics",
+        metrics: [
+          "99.99% uptime",
+          { label: "Fewer enquiries", value: "70%", ignored: "extra" },
+          null,
+          42,
+          { label: "Missing value" },
+          { label: 123, value: "wrong type" },
+          [],
+          "   ",
+        ],
+      },
+      { id: "object-metrics", name: "Object Metrics", metrics: { label: "Not an array" } },
+    ];
+    await writeFile(path, rows.map((row) => JSON.stringify(row)).join("\n") + "\n");
+
+    const res = await fetch(`${base}/api/products`);
+    assert.equal(res.status, 200);
+    const { products } = await res.json();
+    assert.deepEqual(products[0].metrics, [
+      "99.99% uptime",
+      { label: "Fewer enquiries", value: "70%" },
+    ]);
+    assert.deepEqual(products[1].metrics, []);
+  });
 });
 
 describe("static site and health", () => {

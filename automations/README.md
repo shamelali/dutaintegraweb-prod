@@ -14,6 +14,12 @@ emits a new hashed bundle (`index-<hash>.js`), so a deploy that ships a stale
 200. The watch therefore also fetches every `/assets/*` reference the homepage
 declares, and treats a 404 there as a failure.
 
+It also loads `/products`, fetches the React bundle that page references, and
+validates `/api/products`. The catalog check fails when the page loses its
+bundle, the bundle is empty or served as HTML instead of JavaScript, or any
+metric is neither a non-empty string nor an object with non-empty string
+`label` and `value` fields, so malformed CMS data cannot reach React unnoticed.
+
 It also reads `/api/health` and classifies what it finds into two kinds of
 incident, counted and alerted separately:
 
@@ -64,6 +70,12 @@ WATCH_BASE_URL=http://127.0.0.1:4711 python3 automations/uptime-watch/main.py
 Locally `AGENT_SERVER_URL` and `SESSION_API_KEY` are unset, so no secret is
 fetched, no webhook fires, and state goes to `/tmp/watch-state.json`. That is the
 intended behaviour, not a misconfiguration.
+
+Run the product-catalog contract tests without network access:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s automations/uptime-watch -p 'test_*.py' -v
+```
 
 The callback function only posts when `AUTOMATION_CALLBACK_URL` is set, which
 only happens inside a real automation run.

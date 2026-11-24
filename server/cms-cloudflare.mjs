@@ -2,6 +2,8 @@
  * Case Studies & Products CMS — Supabase only (Cloudflare compatible).
  */
 
+import { normalizeProductMetrics } from "./product-metrics.mjs";
+
 function supabaseConfigured() {
   return Boolean(
     process.env.SUPABASE_URL?.trim() && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
@@ -163,7 +165,7 @@ function normalizeProduct(p) {
     descriptionEn: p.description_en,
     descriptionMs: p.description_ms,
     tags: p.tags,
-    metrics: p.metrics,
+    metrics: normalizeProductMetrics(p.metrics),
     previewUrl: p.preview_url,
     imageUrl: p.image_url,
     contactCtaEn: p.contact_cta_en,

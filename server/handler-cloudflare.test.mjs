@@ -381,6 +381,61 @@ describe("public product catalog failures", () => {
   });
 });
 
+describe("public product metric normalization", () => {
+  let savedEnv;
+  let originalFetch;
+
+  before(() => {
+    savedEnv = {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    };
+    process.env.SUPABASE_URL = "https://stub.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (input) => {
+      const url = new URL(String(input));
+      assert.equal(url.pathname, "/rest/v1/products");
+      return Response.json([
+        {
+          id: "mixed-metrics",
+          name: "Mixed Metrics",
+          metrics: [
+            "99.99% uptime",
+            { label: "Fewer enquiries", value: "70%", ignored: "extra" },
+            null,
+            42,
+            { label: "Missing value" },
+            { label: 123, value: "wrong type" },
+            [],
+            "   ",
+          ],
+        },
+        { id: "object-metrics", name: "Object Metrics", metrics: { label: "Not an array" } },
+      ]);
+    };
+  });
+
+  after(() => {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries(savedEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+
+  test("normalizes mixed metric shapes and drops malformed entries", async () => {
+    const res = await call("/api/products");
+    assert.equal(res.status, 200);
+    const { products } = await res.json();
+    assert.deepEqual(products[0].metrics, [
+      "99.99% uptime",
+      { label: "Fewer enquiries", value: "70%" },
+    ]);
+    assert.deepEqual(products[1].metrics, []);
+  });
+});
+
 describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
   let originalFetch;
   let sessions;

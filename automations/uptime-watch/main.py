@@ -162,23 +162,38 @@ def save_state(state):
 # Checks
 # --------------------------------------------------------------------------
 
-def fetch(path, method="GET"):
-    """Return (status, body, elapsed_seconds). Status -1 means transport error."""
+def _fetch(path, method="GET"):
+    """Return (status, content_type, body, elapsed_seconds)."""
     url = BASE.rstrip("/") + path
     req = urllib.request.Request(url, method=method, headers={"User-Agent": "di-watch/1.0"})
     started = time.monotonic()
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
             body = r.read(300_000).decode("utf-8", "replace")
-            return r.status, body, time.monotonic() - started
+            content_type = r.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+            return r.status, content_type, body, time.monotonic() - started
     except urllib.error.HTTPError as exc:
         try:
             body = exc.read(50_000).decode("utf-8", "replace")
         except Exception:
             body = ""
-        return exc.code, body, time.monotonic() - started
+        content_type = ""
+        if exc.headers:
+            content_type = exc.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        return exc.code, content_type, body, time.monotonic() - started
     except Exception as exc:
-        return -1, f"{type(exc).__name__}: {exc}", time.monotonic() - started
+        return -1, "", f"{type(exc).__name__}: {exc}", time.monotonic() - started
+
+
+def fetch(path, method="GET"):
+    """Return (status, body, elapsed_seconds). Status -1 means transport error."""
+    status, _, body, elapsed = _fetch(path, method)
+    return status, body, elapsed
+
+
+def fetch_asset(path):
+    """Return an asset's status, normalized MIME type, body, and elapsed time."""
+    return _fetch(path)
 
 
 def check_paths():
@@ -294,6 +309,88 @@ def check_asset_integrity():
     return failures
 
 
+def _looks_like_html(body):
+    text = body.lstrip("\ufeff \t\r\n")
+    while text.startswith("<!--"):
+        end = text.find("-->")
+        if end == -1:
+            return True
+        text = text[end + 3:].lstrip("\ufeff \t\r\n")
+    return re.match(r"(?:<!doctype\s+html\b|<(?:html|head|body)\b)", text, re.I) is not None
+
+
+def _renderable_metric(metric):
+    if isinstance(metric, str):
+        return bool(metric.strip())
+    return (
+        isinstance(metric, dict)
+        and isinstance(metric.get("label"), str)
+        and bool(metric["label"].strip())
+        and isinstance(metric.get("value"), str)
+        and bool(metric["value"].strip())
+    )
+
+
+def check_product_catalog():
+    """The product page and its API must stay renderable after a deploy."""
+    failures = []
+    status, html, elapsed = fetch("/products")
+    print(f"[watch] {'/products':<14} {status} {elapsed:.2f}s")
+    if status != 200:
+        failures.append(f"/products returned {status} (expected 200)")
+    else:
+        refs = re.findall(r'(?:src|href)="(/assets/index-[^"]+\.js)"', html)
+        if not refs:
+            failures.append("/products references no /assets/index-*.js bundle")
+        for ref in refs:
+            astatus, content_type, body, _ = fetch_asset(ref)
+            print(f"[watch] {ref} {astatus} {content_type or 'unknown'}")
+            if astatus != 200:
+                failures.append(f"asset {ref} returned {astatus}")
+            elif content_type not in {
+                "application/javascript",
+                "text/javascript",
+                "application/ecmascript",
+                "text/ecmascript",
+            }:
+                failures.append(f"asset {ref} returned {content_type or 'no content type'} instead of JavaScript")
+            elif not body.strip() or _looks_like_html(body):
+                failures.append(f"asset {ref} returned empty or HTML content")
+
+    status, body, elapsed = fetch("/api/products")
+    print(f"[watch] {'/api/products':<14} {status} {elapsed:.2f}s")
+    if status != 200:
+        failures.append(f"/api/products returned {status} (expected 200)")
+        return failures
+
+    try:
+        payload = json.loads(body)
+    except Exception:
+        failures.append("/api/products returned invalid JSON")
+        return failures
+
+    products = payload.get("products") if isinstance(payload, dict) else None
+    if not isinstance(products, list):
+        failures.append("/api/products returned no products array")
+        return failures
+
+    for product_index, product in enumerate(products):
+        if not isinstance(product, dict):
+            failures.append(f"/api/products product {product_index} is not an object")
+            continue
+        metrics = product.get("metrics")
+        if not isinstance(metrics, list):
+            failures.append(f"/api/products product {product_index} metrics is not an array")
+            continue
+        for metric_index, metric in enumerate(metrics):
+            if not _renderable_metric(metric):
+                failures.append(
+                    f"/api/products product {product_index} metric {metric_index} is not renderable"
+                )
+
+    return failures
+
+
 def send_alert(webhook, text):
     if not webhook:
         return
@@ -327,6 +424,7 @@ def main():
         all_failures += check_datastore()
         all_failures += check_auth_paths()
         all_failures += check_asset_integrity()
+        all_failures += check_product_catalog()
     except Exception as exc:
         all_failures.append(f"unexpected error: {type(exc).__name__}: {exc}")
 

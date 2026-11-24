@@ -10,6 +10,7 @@ import { usingSupabase } from "./store.mjs";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { dataFile } from "./paths.mjs";
+import { normalizeProductMetrics } from "./product-metrics.mjs";
 
 
 function storePath(name) {
@@ -222,7 +223,7 @@ function normalizeProduct(p) {
     descriptionEn: p.description_en,
     descriptionMs: p.description_ms,
     tags: p.tags,
-    metrics: p.metrics,
+    metrics: normalizeProductMetrics(p.metrics),
     previewUrl: p.preview_url,
     imageUrl: p.image_url,
     contactCtaEn: p.contact_cta_en,

@@ -33,6 +33,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Test uptime automation
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s automations/uptime-watch -p 'test_*.py' -v
+
   # .env.example is the contract for every variable the server reads; a name used in
   # code but undocumented (or documented but gone) fails here rather than on a cold
   # start. Cheap enough to be its own job, and it needs no install.
