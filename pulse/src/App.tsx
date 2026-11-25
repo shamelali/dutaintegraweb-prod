@@ -12,6 +12,8 @@ import { ChannelDonut } from "./components/charts/channel-donut";
 import { ProductBar } from "./components/charts/product-bar";
 import { OrderDetail } from "./components/order-detail";
 import { OrdersTable } from "./components/orders-table";
+import { type DemoOrder } from "./lib/demo-data";
+import { generateCsv } from "./lib/csv";
 
 type Range = "7d" | "30d" | "90d";
 
@@ -25,6 +27,20 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
   const selection = selectDashboard(DEMO_ORDERS, { range, channel, status, search }, now);
   const { revenue, orders, aov, conversionRate } = selection.metrics;
   const selectedOrder = selection.orders.find((order) => order.id === selectedOrderId);
+
+  function downloadCsv(orders: readonly DemoOrder[]) {
+    const blob = new Blob([generateCsv(orders)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "pulse-orders.csv";
+    document.body.appendChild(anchor);
+    anchor.click();
+    setTimeout(() => {
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+    }, 0);
+  }
 
   return (
     <main className="pulse-shell">
@@ -49,6 +65,12 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
           <ChannelFilter channel={channel} onChange={setChannel} />
           <StatusFilter status={status} onChange={setStatus} />
           <SearchFilter value={search} onChange={setSearch} />
+          <button
+            className="pulse-export-button"
+            onClick={() => downloadCsv(selection.orders)}
+          >
+            Export CSV
+          </button>
         </section>
         <section className="pulse-metrics" aria-label="Key metrics">
           <StatCard title="Revenue" value={formatMoney(revenue)} />

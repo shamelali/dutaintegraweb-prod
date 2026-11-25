@@ -5,6 +5,19 @@ import { DEMO_ORDERS } from "../lib/demo-data";
 
 const order = DEMO_ORDERS[0];
 
+function setMatchMedia(matches: boolean) {
+  const mq = {
+    matches,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  };
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: vi.fn(() => mq),
+  });
+}
+
 function renderDrawer(props = {}) {
   const onOpenChange = vi.fn();
   render(
@@ -19,6 +32,7 @@ function renderDrawer(props = {}) {
 }
 
 test("renders nothing when the drawer is closed", () => {
+  setMatchMedia(false);
   const { container } = render(
     <OrderDetail
       order={order}
@@ -32,6 +46,7 @@ test("renders nothing when the drawer is closed", () => {
 });
 
 test("renders order fields and items when open", () => {
+  setMatchMedia(false);
   renderDrawer();
 
   expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -50,9 +65,30 @@ test("renders order fields and items when open", () => {
 });
 
 test("calls onOpenChange with false when the close button is clicked", () => {
+  setMatchMedia(false);
   const onOpenChange = renderDrawer();
 
   fireEvent.click(screen.getByRole("button", { name: /close/i }));
 
   expect(onOpenChange).toHaveBeenCalledWith(false);
+});
+
+test("slides from the bottom on small screens", () => {
+  setMatchMedia(true);
+  renderDrawer();
+
+  expect(screen.getByRole("dialog")).toHaveAttribute(
+    "data-vaul-drawer-direction",
+    "bottom",
+  );
+});
+
+test("slides from the side on wide screens", () => {
+  setMatchMedia(false);
+  renderDrawer();
+
+  expect(screen.getByRole("dialog")).toHaveAttribute(
+    "data-vaul-drawer-direction",
+    "right",
+  );
 });

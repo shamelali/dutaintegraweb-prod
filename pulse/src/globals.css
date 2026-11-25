@@ -357,6 +357,24 @@ body {
   gap: 8px;
 }
 
+.pulse-export-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--site-radius);
+  border: 1px solid var(--site-border);
+  background: var(--site-surface);
+  color: var(--site-fg);
+  font-size: calc(14px * var(--site-type, 1));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pulse-export-button:hover {
+  background: var(--site-bg);
+}
+
 .pulse-range-item {
   padding: 8px 14px;
   border-radius: var(--site-radius);
@@ -438,6 +456,10 @@ body {
   }
   .pulse-range-selector {
     width: 100%;
+  }
+
+  .pulse-table-scroll {
+    overflow-x: auto;
   }
 }
 

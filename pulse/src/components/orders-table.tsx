@@ -27,7 +27,8 @@ export function OrdersTable({
 
   return (
     <section className="pulse-panel pulse-orders-table" aria-label="Orders" data-testid="orders-panel">
-      <table>
+      <div className="pulse-table-scroll">
+        <table>
         <thead>
           <tr>
             <th>Order</th>
@@ -56,6 +57,7 @@ export function OrdersTable({
           ))}
         </tbody>
       </table>
+      </div>
       <div className="pulse-pagination">
         <button disabled={page === 1} onClick={() => goTo(page - 1)}>
           Previous

@@ -8,7 +8,7 @@ const orders = DEMO_ORDERS.slice(0, 6);
 function renderTable(page = 1, pageSize = 10) {
   const onPageChange = vi.fn();
   const onSelect = vi.fn();
-  render(
+  const { container } = render(
     <OrdersTable
       orders={orders}
       page={page}
@@ -17,7 +17,7 @@ function renderTable(page = 1, pageSize = 10) {
       onSelect={onSelect}
     />,
   );
-  return { onPageChange, onSelect };
+  return { container, onPageChange, onSelect };
 }
 
 test("renders orders newest first", () => {
@@ -65,4 +65,12 @@ test("calls onSelect with the clicked order id", () => {
 
   fireEvent.click(screen.getByText("demo-0006"));
   expect(onSelect).toHaveBeenCalledWith("demo-0006");
+});
+
+test("wraps the table in a horizontally scrollable container", () => {
+  const { container } = renderTable();
+
+  const scrollContainer = container.querySelector(".pulse-table-scroll");
+  expect(scrollContainer).not.toBeNull();
+  expect(scrollContainer!.querySelector("table")).not.toBeNull();
 });

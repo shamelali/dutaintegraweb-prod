@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Drawer,
   DrawerClose,
@@ -30,8 +31,22 @@ export function OrderDetail({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [small, setSmall] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 899px)");
+    setSmall(mq.matches);
+    const onChange = () => setSmall(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      direction={small ? "bottom" : "right"}
+    >
       <DrawerOverlay />
       <DrawerContent className="pulse-detail-panel">
         <DrawerClose aria-label="Close" />

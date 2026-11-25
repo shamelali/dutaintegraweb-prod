@@ -1,6 +1,16 @@
 import { render, screen, fireEvent, within } from "@testing-library/react";
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import { App } from "./App";
+
+Object.defineProperty(window, "matchMedia", {
+  writable: true,
+  configurable: true,
+  value: vi.fn(() => ({
+    matches: false,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  })),
+});
 import { DEMO_ORDERS } from "./lib/demo-data";
 import { selectDashboard, formatMoney } from "./lib/analytics";
 
@@ -69,4 +79,16 @@ test("clicking an order row selects it", () => {
 
   expect(row).toHaveAttribute("aria-current", "true");
   expect(screen.getByText("demo-0053").closest("tr")).not.toHaveAttribute("aria-current", "true");
+});
+
+test("exporting CSV downloads the filtered orders", () => {
+  render(<App now={now} />);
+
+  fireEvent.click(screen.getByRole("button", { name: /export csv/i }));
+
+  const anchor = document.querySelector(
+    'a[download="pulse-orders.csv"]',
+  ) as HTMLAnchorElement | null;
+  expect(anchor).not.toBeNull();
+  expect(anchor!.href).toMatch(/^blob:/);
 });

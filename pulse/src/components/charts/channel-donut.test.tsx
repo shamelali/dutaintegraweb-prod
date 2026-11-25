@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { test, expect } from "vitest";
 import { ChannelDonut } from "./channel-donut";
-import type { ChannelAggregate } from "../../../lib/analytics";
+import type { ChannelAggregate } from "../../lib/analytics";
 
 const CHANNELS: ChannelAggregate[] = [
   { channel: "direct", revenue: 10000, orders: 4, share: 57.1 },

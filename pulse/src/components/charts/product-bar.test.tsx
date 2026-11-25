@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { test, expect } from "vitest";
 import { ProductBar } from "./product-bar";
-import type { ProductAggregate } from "../../../lib/analytics";
+import type { ProductAggregate } from "../../lib/analytics";
 
 const PRODUCTS: ProductAggregate[] = [
   { product: "Starter Pack", sku: "SP-001", revenue: 44900, units: 2, orders: 2 },
