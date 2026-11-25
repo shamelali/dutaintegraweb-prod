@@ -10,6 +10,7 @@ import { Sidebar } from "./components/sidebar";
 import { TrendChart } from "./components/charts/trend-chart";
 import { ChannelDonut } from "./components/charts/channel-donut";
 import { ProductBar } from "./components/charts/product-bar";
+import { OrderDetail } from "./components/order-detail";
 import { OrdersTable } from "./components/orders-table";
 
 type Range = "7d" | "30d" | "90d";
@@ -23,6 +24,7 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
 
   const selection = selectDashboard(DEMO_ORDERS, { range, channel, status, search }, now);
   const { revenue, orders, aov, conversionRate } = selection.metrics;
+  const selectedOrder = selection.orders.find((order) => order.id === selectedOrderId);
 
   return (
     <main className="pulse-shell">
@@ -75,6 +77,13 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
           onPageChange={() => {}}
           onSelect={setSelectedOrderId}
         />
+        {selectedOrder && (
+          <OrderDetail
+            order={selectedOrder}
+            open
+            onOpenChange={() => setSelectedOrderId(null)}
+          />
+        )}
       </div>
     </main>
   );
