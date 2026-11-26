@@ -104,7 +104,7 @@ jobs:
       url: https://dutaintegra.my
     steps:
       - name: Download the verified artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: pages-deploy-public
           path: public
