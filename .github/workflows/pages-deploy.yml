@@ -87,7 +87,7 @@ jobs:
           echo "Both deploy trees match a fresh build of web-new/."
 
       - name: Upload the verified public/ tree
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pages-deploy-public
           path: public
