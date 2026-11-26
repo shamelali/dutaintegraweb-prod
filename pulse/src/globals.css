@@ -498,3 +498,86 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+.pulse-rankings {
+  display: grid;
+  gap: 24px;
+  margin: 32px 0 24px;
+}
+
+.pulse-ranking-group h2 {
+  margin: 0 0 10px;
+  font-size: calc(18px * var(--site-type, 1));
+  letter-spacing: -0.02em;
+  color: var(--site-fg);
+}
+
+.pulse-ranking-group ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.pulse-ranking-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--site-border);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+  color: var(--site-fg);
+  font-size: calc(14px * var(--site-type, 1));
+  cursor: default;
+  transition: calc(120ms * var(--site-motion, 1)) ease;
+}
+
+.pulse-ranking-item--highlight {
+  background: var(--site-accent);
+  color: var(--site-on-accent);
+  border-color: transparent;
+}
+
+.pulse-ranking-rank {
+  flex: none;
+  width: 20px;
+  font-weight: 700;
+  color: var(--site-muted);
+}
+
+.pulse-ranking-item--highlight .pulse-ranking-rank {
+  color: var(--site-on-accent);
+}
+
+.pulse-ranking-name {
+  min-width: 110px;
+  font-weight: 600;
+}
+
+.pulse-ranking-value {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.pulse-ranking-meta {
+  color: var(--site-muted);
+  font-size: calc(13px * var(--site-type, 1));
+}
+
+.pulse-ranking-item--highlight .pulse-ranking-meta {
+  color: var(--site-on-accent);
+}
+
+@media (max-width: 768px) {
+  .pulse-rankings {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .pulse-rankings {
+    grid-template-columns: 1fr 1fr;
+  }
+}

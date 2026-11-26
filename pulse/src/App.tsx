@@ -10,6 +10,7 @@ import { Sidebar } from "./components/sidebar";
 import { TrendChart } from "./components/charts/trend-chart";
 import { ChannelDonut } from "./components/charts/channel-donut";
 import { ProductBar } from "./components/charts/product-bar";
+import { Rankings } from "./components/rankings/rankings";
 import { OrderDetail } from "./components/order-detail";
 import { OrdersTable } from "./components/orders-table";
 import { type DemoOrder } from "./lib/demo-data";
@@ -26,6 +27,7 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
 
   const selection = selectDashboard(DEMO_ORDERS, { range, channel, status, search }, now);
   const { revenue, orders, aov, conversionRate } = selection.metrics;
+  const { channels, products } = selection;
   const selectedOrder = selection.orders.find((order) => order.id === selectedOrderId);
 
   function downloadCsv(orders: readonly DemoOrder[]) {
@@ -92,6 +94,7 @@ export function App({ now = new Date() }: { now?: Date } = {}) {
             <ProductBar products={selection.products} />
           </section>
         </section>
+        <Rankings channels={channels} products={products} />
         <OrdersTable
           orders={selection.orders}
           pageSize={10}
