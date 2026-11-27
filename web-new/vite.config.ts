@@ -1,6 +1,6 @@
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vitest/config'
+import { defineConfig, loadEnv } from 'vite'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { pageMetadataPlugin } from './page-metadata-plugin.ts'
@@ -8,7 +8,9 @@ import { pageMetadataPlugin } from './page-metadata-plugin.ts'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, __dirname, '')
+  return {
   plugins: [react(), tailwindcss(), pageMetadataPlugin()],
   resolve: {
     alias: {
@@ -18,7 +20,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: `http://localhost:${env.API_PORT || "3000"}`,
         changeOrigin: true,
       },
     },
@@ -28,4 +30,4 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     restoreMocks: true,
   },
-})
+}})
