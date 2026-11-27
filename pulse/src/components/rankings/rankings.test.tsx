@@ -91,5 +91,5 @@ test("renders empty rankings without crashing", () => {
   expect(screen.getByRole("region", { name: /rankings/i })).toBeInTheDocument();
   expect(screen.getByText("Top channels")).toBeInTheDocument();
   expect(screen.getByText("Top products")).toBeInTheDocument();
-  expect(screen.getAllByRole("listitem")).toHaveLength(0);
+  expect(screen.queryAllByRole("listitem")).toHaveLength(0);
 });
