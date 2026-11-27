@@ -21,7 +21,10 @@ export default defineConfig(({ mode }) => {
     proxy: {
       "/api": {
         target: `http://localhost:${env.API_PORT || "3000"}`,
-        changeOrigin: true,
+        // Keep the browser's Host header: the Node server's checkOrigin()
+        // compares Origin against Host, and rewriting Host to the API
+        // server's own made every browser POST fail with "Invalid origin".
+        changeOrigin: false,
       },
     },
   },
