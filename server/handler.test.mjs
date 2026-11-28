@@ -386,6 +386,7 @@ describe("public product catalog", () => {
       {
         id: "mixed-metrics",
         name: "Mixed Metrics",
+        status: "published",
         metrics: [
           "99.99% uptime",
           { label: "Fewer enquiries", value: "70%", ignored: "extra" },
@@ -397,7 +398,7 @@ describe("public product catalog", () => {
           "   ",
         ],
       },
-      { id: "object-metrics", name: "Object Metrics", metrics: { label: "Not an array" } },
+      { id: "object-metrics", name: "Object Metrics", status: "published", metrics: { label: "Not an array" } },
     ];
     await writeFile(path, rows.map((row) => JSON.stringify(row)).join("\n") + "\n");
 
@@ -409,6 +410,58 @@ describe("public product catalog", () => {
       { label: "Fewer enquiries", value: "70%" },
     ]);
     assert.deepEqual(products[1].metrics, []);
+  });
+
+  test("public CMS lists hide drafts while admin lists include them", async (context) => {
+    const savedEnv = {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      DATA_DIR: process.env.DATA_DIR,
+      ADMIN_TOKEN: process.env.ADMIN_TOKEN,
+    };
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dir = await mkdtemp(join(tmpdir(), "cms-publication-"));
+    process.env.DATA_DIR = dir;
+    process.env.ADMIN_TOKEN = "cms-admin-token";
+    context.after(async () => {
+      await rm(dir, { recursive: true, force: true });
+      for (const [key, value] of Object.entries(savedEnv)) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    });
+
+    const products = [
+      { id: "published-product", name: "Published Product", status: "published" },
+      { id: "draft-product", name: "Draft Product", status: "draft" },
+    ];
+    const caseStudies = [
+      { id: "published-case", client_name: "Published Client", status: "published" },
+      { id: "draft-case", client_name: "Draft Client", status: "draft" },
+    ];
+    await writeFile(dataFile("products.jsonl"), products.map((row) => JSON.stringify(row)).join("\n") + "\n");
+    await writeFile(dataFile("case-studies.jsonl"), caseStudies.map((row) => JSON.stringify(row)).join("\n") + "\n");
+
+    const [publicProducts, publicCases, adminProducts, adminCases] = await Promise.all([
+      fetch(`${base}/api/products`),
+      fetch(`${base}/api/case-studies`),
+      fetch(`${base}/admin/products`, { headers: { "x-admin-token": "cms-admin-token" } }),
+      fetch(`${base}/admin/case-studies`, { headers: { "x-admin-token": "cms-admin-token" } }),
+    ]);
+    assert.equal(publicProducts.status, 200);
+    assert.equal(publicCases.status, 200);
+    assert.equal(adminProducts.status, 200);
+    assert.equal(adminCases.status, 200);
+
+    const publicProductBody = await publicProducts.json();
+    const publicCaseBody = await publicCases.json();
+    const adminProductBody = await adminProducts.json();
+    const adminCaseBody = await adminCases.json();
+    assert.deepEqual(publicProductBody.products.map((product) => product.id), ["published-product"]);
+    assert.deepEqual(publicCaseBody.caseStudies.map((study) => study.id), ["published-case"]);
+    assert.deepEqual(adminProductBody.products.map((product) => product.id), ["published-product", "draft-product"]);
+    assert.deepEqual(adminCaseBody.caseStudies.map((study) => study.id), ["published-case", "draft-case"]);
   });
 });
 
@@ -1518,18 +1571,75 @@ describe("vercel.json security headers", () => {
      */
     const raw = await readFile(new URL("../public/_headers", import.meta.url), "utf8");
     const lines = raw.split("\n");
-    const start = lines.findIndex((line) => line.trim() === "/*");
-    assert.ok(start >= 0, "public/_headers must have a global /* block");
+    const starts = lines.flatMap((line, index) => (line.trim() === "/*" ? [index] : []));
+    assert.equal(
+      starts.length,
+      1,
+      "public/_headers must have exactly one global /* rule so security and cache headers apply together",
+    );
     const values = new Map();
-    for (const line of lines.slice(start + 1)) {
+    for (const line of lines.slice(starts[0] + 1)) {
       if (!line.startsWith("  ")) break;
       const idx = line.indexOf(":");
       values.set(line.slice(0, idx).trim().toLowerCase(), line.slice(idx + 1).trim());
     }
     const vercel = await loadHeaders();
-    for (const key of ["x-content-type-options", "x-frame-options", "x-permitted-cross-domain-policies", "content-security-policy"]) {
-      assert.equal(values.get(key), vercel.get(key), `${key} must match across both platforms`);
+    for (const [key, value] of vercel) {
+      assert.equal(values.get(key), value, `${key} must match across both platforms`);
     }
+    assert.equal(
+      values.get("cache-control"),
+      "public, max-age=0, must-revalidate",
+      "the global /* rule must revalidate HTML, including the extensionless SPA shell",
+    );
+  });
+
+  test("every narrower Cache-Control rule detaches the global value first", async () => {
+    /**
+     * Pages joins values from every matching rule. Without a detach, an asset
+     * receives both max-age=31536000 and max-age=0, and an API response receives
+     * both public and no-store. The narrower rule must replace, not append to,
+     * the global /* Cache-Control value.
+     */
+    const raw = await readFile(new URL("../public/_headers", import.meta.url), "utf8");
+    const rules = [];
+    let current;
+    for (const line of raw.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      if (!line.startsWith("  ")) {
+        current = { pattern: trimmed, headers: [] };
+        rules.push(current);
+      } else {
+        assert.ok(current, `header line has no rule: ${trimmed}`);
+        current.headers.push(trimmed);
+      }
+    }
+
+    const globalRules = rules.filter((rule) => rule.pattern === "/*");
+    assert.equal(globalRules.length, 1, "expected exactly one global /* rule");
+    assert.equal(
+      rules[0]?.pattern,
+      "/*",
+      "the global /* rule must be parsed first; later overrides cannot inherit its Cache-Control",
+    );
+
+    let checked = 0;
+    for (const rule of rules) {
+      if (rule.pattern === "/*") continue;
+      const cacheIndexes = rule.headers
+        .map((header, index) => (/^cache-control:/i.test(header) ? [index] : []))
+        .flat();
+      if (cacheIndexes.length === 0) continue;
+      assert.equal(cacheIndexes.length, 1, `${rule.pattern} must set Cache-Control only once`);
+      assert.equal(
+        rule.headers[cacheIndexes[0] - 1]?.toLowerCase(),
+        "! cache-control",
+        `${rule.pattern} must detach the global Cache-Control before replacing it`,
+      );
+      checked += 1;
+    }
+    assert.ok(checked > 0, "expected narrower Cache-Control rules to verify");
   });
 });
 

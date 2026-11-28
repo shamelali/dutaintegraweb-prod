@@ -381,7 +381,7 @@ describe("public product catalog failures", () => {
   });
 });
 
-describe("public product metric normalization", () => {
+describe("CMS publication status and public product metric normalization", () => {
   let savedEnv;
   let originalFetch;
 
@@ -389,30 +389,45 @@ describe("public product metric normalization", () => {
     savedEnv = {
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      ADMIN_TOKEN: process.env.ADMIN_TOKEN,
     };
     process.env.SUPABASE_URL = "https://stub.supabase.co";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
+    process.env.ADMIN_TOKEN = "cms-admin-token";
     originalFetch = globalThis.fetch;
+    const products = [
+      {
+        id: "mixed-metrics",
+        name: "Mixed Metrics",
+        status: "published",
+        metrics: [
+          "99.99% uptime",
+          { label: "Fewer enquiries", value: "70%", ignored: "extra" },
+          null,
+          42,
+          { label: "Missing value" },
+          { label: 123, value: "wrong type" },
+          [],
+          "   ",
+        ],
+      },
+      { id: "object-metrics", name: "Object Metrics", status: "published", metrics: { label: "Not an array" } },
+      { id: "draft-product", name: "Draft Product", status: "draft" },
+    ];
+    const caseStudies = [
+      { id: "published-case", client_name: "Published Client", status: "published" },
+      { id: "draft-case", client_name: "Draft Client", status: "draft" },
+    ];
     globalThis.fetch = async (input) => {
       const url = new URL(String(input));
-      assert.equal(url.pathname, "/rest/v1/products");
-      return Response.json([
-        {
-          id: "mixed-metrics",
-          name: "Mixed Metrics",
-          metrics: [
-            "99.99% uptime",
-            { label: "Fewer enquiries", value: "70%", ignored: "extra" },
-            null,
-            42,
-            { label: "Missing value" },
-            { label: 123, value: "wrong type" },
-            [],
-            "   ",
-          ],
-        },
-        { id: "object-metrics", name: "Object Metrics", metrics: { label: "Not an array" } },
-      ]);
+      const rows = url.pathname === "/rest/v1/products"
+        ? products
+        : url.pathname === "/rest/v1/case_studies"
+          ? caseStudies
+          : null;
+      assert.ok(rows, `unexpected CMS request: ${url.pathname}`);
+      const publishedOnly = url.searchParams.get("status") === "eq.published";
+      return Response.json(publishedOnly ? rows.filter((row) => row.status === "published") : rows);
     };
   });
 
@@ -424,31 +439,66 @@ describe("public product metric normalization", () => {
     }
   });
 
-  test("normalizes mixed metric shapes and drops malformed entries", async () => {
-    const res = await call("/api/products");
-    assert.equal(res.status, 200);
-    const { products } = await res.json();
+  test("public product and case-study lists request published rows only", async () => {
+    const productResponse = await call("/api/products");
+    const caseResponse = await call("/api/case-studies");
+    assert.equal(productResponse.status, 200);
+    assert.equal(caseResponse.status, 200);
+
+    const { products } = await productResponse.json();
+    const { caseStudies: visibleCases } = await caseResponse.json();
+    assert.deepEqual(products.map((product) => product.id), ["mixed-metrics", "object-metrics"]);
+    assert.deepEqual(visibleCases.map((study) => study.id), ["published-case"]);
     assert.deepEqual(products[0].metrics, [
       "99.99% uptime",
       { label: "Fewer enquiries", value: "70%" },
     ]);
     assert.deepEqual(products[1].metrics, []);
   });
+
+  test("admin product and case-study listings include drafts", async () => {
+    const headers = { "x-admin-token": "cms-admin-token" };
+    const productResponse = await call("/admin/products", { headers });
+    const caseResponse = await call("/admin/case-studies", { headers });
+    assert.equal(productResponse.status, 200);
+    assert.equal(caseResponse.status, 200);
+
+    const { products } = await productResponse.json();
+    const { caseStudies } = await caseResponse.json();
+    assert.deepEqual(products.map((product) => product.id), ["mixed-metrics", "object-metrics", "draft-product"]);
+    assert.deepEqual(caseStudies.map((study) => study.id), ["published-case", "draft-case"]);
+  });
 });
 
 describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
   let originalFetch;
   let sessions;
+  let companies;
 
   before(() => {
     process.env.SUPABASE_URL = "https://stub.supabase.co";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "stub-service-role";
     sessions = [];
+    companies = [];
     originalFetch = globalThis.fetch;
     globalThis.fetch = async (input, init = {}) => {
       const url = new URL(String(input));
       const method = (init.method ?? "GET").toUpperCase();
       const body = init.body ? JSON.parse(init.body) : null;
+      if (url.pathname === "/rest/v1/companies") {
+        if (method === "POST") {
+          const row = Array.isArray(body) ? body[0] : body;
+          companies.push(row);
+          return Response.json([row], { status: 201 });
+        }
+        if (method === "GET") {
+          const id = (url.searchParams.get("id") ?? "").replace(/^eq\./, "");
+          const email = (url.searchParams.get("email") ?? "").replace(/^eq\./, "");
+          return Response.json(companies.filter((company) =>
+            (!id || company.id === id) && (!email || company.email === email)));
+        }
+        return Response.json([]);
+      }
       if (url.pathname.endsWith("/dutaos_sessions")) {
         if (method === "POST") {
           const row = Array.isArray(body) ? body[0] : body;
@@ -472,7 +522,7 @@ describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
-  async function signup() {
+  async function signup({ isStaff = false } = {}) {
     const res = await call("/api/auth/signup", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -486,7 +536,13 @@ describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
     const setCookie = res.headers.get("set-cookie") ?? "";
     assert.match(setCookie, /dutaos_session=/, "signup must mint a DutaOS session");
     assert.doesNotMatch(setCookie, /(^|,\s*)di_session=/, "must not clobber the portal cookie");
-    return { cookie: setCookie.split(";")[0] };
+    const { company } = await res.json();
+    if (isStaff) {
+      const row = companies.find((candidate) => candidate.id === company.id);
+      assert.ok(row, "signup should store the company in the Supabase stub");
+      row.is_staff = true;
+    }
+    return { cookie: setCookie.split(";")[0], companyId: company.id };
   }
 
   test("signup authenticates, and compliance answers with that session", async () => {
@@ -502,11 +558,36 @@ describe("DutaOS auth, compliance and catalog on the Pages entrypoint", () => {
     assert.equal(res.status, 401);
   });
 
-  test("catalog is closed to anonymous callers and open to a DutaOS session", async () => {
+  test("catalog rejects an ordinary signed-up company", async () => {
+    const { cookie } = await signup();
+    const requests = [
+      ["/api/catalog/items", { headers: { cookie } }],
+      ["/api/catalog/items", {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie },
+        body: JSON.stringify({ title: "Not allowed" }),
+      }],
+      ["/api/catalog/enrich", {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie },
+        body: JSON.stringify({ imageBase64: "aGVsbG8=" }),
+      }],
+      ["/api/catalog/items/11111111-1111-4111-8111-111111111111", {
+        method: "DELETE",
+        headers: { cookie },
+      }],
+    ];
+    for (const [path, init] of requests) {
+      const res = await call(path, init);
+      assert.equal(res.status, 403, `${init.method ?? "GET"} ${path} must reject a non-staff company`);
+    }
+  });
+
+  test("catalog is closed to anonymous callers and open to a staff company", async () => {
     const anonymous = await call("/api/catalog/items");
     assert.equal(anonymous.status, 401);
 
-    const { cookie } = await signup();
+    const { cookie } = await signup({ isStaff: true });
     const list = await call("/api/catalog/items", { headers: { cookie } });
     assert.equal(list.status, 200);
 

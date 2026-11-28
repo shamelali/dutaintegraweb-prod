@@ -131,6 +131,10 @@ deploy-pages:
   stage: deploy
   timeout: 15m
   needs:
+    - job: server-tests
+    - job: frontend-tests
+    - job: env-docs
+    - job: secret-scan
     - job: artifact-drift
       artifacts: true
   rules:

@@ -1,12 +1,13 @@
 import test, { after, afterEach, before, beforeEach, describe } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { handle } from "./handler.mjs";
-import { resetAuthRateLimit } from "./auth.mjs";
+import { createSession, resetAuthRateLimit } from "./auth.mjs";
+import { dataFile } from "./paths.mjs";
 
 /**
  * End-to-end tests for /api/catalog/* against the real handler and the JSONL
@@ -48,11 +49,26 @@ function sessionToken(headers) {
   return cookie?.split(";")[0]?.split("=")?.[1] ?? null;
 }
 
-async function authenticatedCompany() {
+async function authenticatedCompany({ isStaff = false } = {}) {
   const res = await request("/api/auth/signup", { method: "POST", body: VALID });
   const token = sessionToken(res.headers);
   assert.ok(token, "signup should set a dutaos_session cookie");
-  return { cookie: `dutaos_session=${token}` };
+  const companyId = res.body.company.id;
+  assert.ok(companyId, "signup should return the company id");
+
+  if (isStaff) {
+    const path = dataFile("dutaos-companies.jsonl");
+    const rows = (await readFile(path, "utf8"))
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line));
+    const company = rows.find((row) => row.id === companyId);
+    assert.ok(company, "signed-up company should be in the JSONL store");
+    company.is_staff = true;
+    await writeFile(path, rows.map((row) => JSON.stringify(row)).join("\n") + "\n");
+  }
+
+  return { cookie: `dutaos_session=${token}`, companyId };
 }
 
 before(async () => {
@@ -105,11 +121,62 @@ describe("catalog auth gate", () => {
     const res = await request(`/api/catalog/items/${id}`, { method: "DELETE" });
     assert.equal(res.status, 401);
   });
+
+  test("ordinary companies cannot list catalog items", async () => {
+    const { cookie } = await authenticatedCompany();
+    const res = await request("/api/catalog/items", { headers: { cookie } });
+    assert.equal(res.status, 403);
+  });
+
+  test("ordinary companies cannot create catalog items", async () => {
+    const { cookie } = await authenticatedCompany();
+    const res = await request("/api/catalog/items", {
+      method: "POST",
+      headers: { cookie },
+      body: { title: "Not allowed" },
+    });
+    assert.equal(res.status, 403);
+  });
+
+  test("ordinary companies cannot enrich catalog images", async () => {
+    const { cookie } = await authenticatedCompany();
+    const savedHost = process.env.OLLAMA_HOST;
+    process.env.OLLAMA_HOST = "http://127.0.0.1:1";
+    try {
+      const res = await request("/api/catalog/enrich", {
+        method: "POST",
+        headers: { cookie },
+        body: { imageBase64: "aGVsbG8=" },
+      });
+      assert.equal(res.status, 403);
+    } finally {
+      if (savedHost === undefined) delete process.env.OLLAMA_HOST;
+      else process.env.OLLAMA_HOST = savedHost;
+    }
+  });
+
+  test("ordinary companies cannot delete catalog items", async () => {
+    const { cookie } = await authenticatedCompany();
+    const id = "11111111-1111-4111-8111-111111111111";
+    const res = await request(`/api/catalog/items/${id}`, {
+      method: "DELETE",
+      headers: { cookie },
+    });
+    assert.equal(res.status, 403);
+  });
+
+  test("sessions for missing companies cannot access the catalog", async () => {
+    const { token } = await createSession("33333333-3333-4333-8333-333333333333");
+    const res = await request("/api/catalog/items", {
+      headers: { cookie: `dutaos_session=${token}` },
+    });
+    assert.equal(res.status, 403);
+  });
 });
 
 describe("catalog CRUD", () => {
   test("creates, lists, updates and deletes an item", async () => {
-    const { cookie } = await authenticatedCompany();
+    const { cookie } = await authenticatedCompany({ isStaff: true });
 
     const created = await request("/api/catalog/items", {
       method: "POST",
@@ -154,7 +221,7 @@ describe("catalog CRUD", () => {
   });
 
   test("title is required", async () => {
-    const { cookie } = await authenticatedCompany();
+    const { cookie } = await authenticatedCompany({ isStaff: true });
     const res = await request("/api/catalog/items", {
       method: "POST",
       headers: { cookie },
@@ -164,7 +231,7 @@ describe("catalog CRUD", () => {
   });
 
   test("unknown ids are 404 on patch and delete", async () => {
-    const { cookie } = await authenticatedCompany();
+    const { cookie } = await authenticatedCompany({ isStaff: true });
     const id = "22222222-2222-4222-8222-222222222222";
 
     const patched = await request(`/api/catalog/items/${id}`, {

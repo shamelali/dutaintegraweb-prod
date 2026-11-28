@@ -62,13 +62,15 @@ async function sbFetch(table, path, init = {}) {
 
 // ── Generic CRUD helpers ─────────────────────────────────────────────────────
 
-async function listAll(table, storeName, order = "created_at.desc") {
+async function listAll(table, storeName, order = "created_at.desc", { publishedOnly = false } = {}) {
   if (usingSupabase()) {
-    const res = await sbFetch(table, `?select=*&order=${order}`);
+    const statusFilter = publishedOnly ? "&status=eq.published" : "";
+    const res = await sbFetch(table, `?select=*&order=${order}${statusFilter}`);
     if (!res.ok) throw new Error(`Supabase list failed: ${res.status}`);
     return res.json();
   }
-  return jsonlReadAll(storePath(storeName));
+  const rows = await jsonlReadAll(storePath(storeName));
+  return publishedOnly ? rows.filter((row) => row.status === "published") : rows;
 }
 
 async function getOne(table, storeName, id) {
@@ -157,8 +159,10 @@ function normalizeCaseStudy(c) {
   };
 }
 
-export async function listCaseStudies() {
-  const rows = await listAll(CS_TABLE, CS_STORE, "sort_order.asc,created_at.desc");
+export async function listCaseStudies({ includeUnpublished = false } = {}) {
+  const rows = await listAll(CS_TABLE, CS_STORE, "sort_order.asc,created_at.desc", {
+    publishedOnly: !includeUnpublished,
+  });
   return rows.map(normalizeCaseStudy);
 }
 
@@ -235,8 +239,10 @@ function normalizeProduct(p) {
   };
 }
 
-export async function listProducts() {
-  const rows = await listAll(PROD_TABLE, PROD_STORE, "sort_order.asc,created_at.desc");
+export async function listProducts({ includeUnpublished = false } = {}) {
+  const rows = await listAll(PROD_TABLE, PROD_STORE, "sort_order.asc,created_at.desc", {
+    publishedOnly: !includeUnpublished,
+  });
   return rows.map(normalizeProduct);
 }
 

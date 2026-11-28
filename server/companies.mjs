@@ -69,6 +69,7 @@ function normalizeCompany(c) {
     phone: c.phone ?? null,
     subscriptionTier: c.subscription_tier,
     subscriptionStatus: c.subscription_status,
+    isStaff: c.is_staff === true,
     createdAt: c.created_at,
     updatedAt: c.updated_at,
   };

@@ -14,15 +14,13 @@
 # first frontend step, `deploy` had `needs: verify`, and nothing ever shipped. Both
 # are fixed below, because a gate that passes by crashing is not a gate.
 #
-# Deploy is opt-in and shared with ci.yml: unset CF_PAGES_DEPLOY_ENABLED and neither
-# workflow uploads. `workflow_dispatch` is what this file is for — a deliberate,
-# auditable one-off deploy of the current main.
+# Deploy remains opt-in through CF_PAGES_DEPLOY_ENABLED. This workflow is
+# manual-only: workflow_dispatch runs a deliberate, auditable one-off deploy of
+# the selected ref; ci.yml is the sole automatic deployment path on main.
 name: Deploy to Cloudflare Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -42,6 +40,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -58,8 +58,17 @@ jobs:
       - name: Run server tests
         run: npm test
 
+      - name: Test uptime automation
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s automations/uptime-watch -p 'test_*.py' -v
+
       - name: Validate .env.example
         run: npm run validate:env
+
+      - name: Scan working tree for live secrets
+        run: node scripts/scan-secrets.mjs --verify
+
+      - name: Scan full git history for live secrets
+        run: node scripts/scan-secrets.mjs --history --verify
 
       - name: Install frontend dependencies
         run: npm --prefix web-new ci
@@ -99,10 +108,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: github.ref == 'refs/heads/main' && vars.CF_PAGES_DEPLOY_ENABLED == 'true'
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     environment:
       name: production
       url: https://dutaintegra.my
     steps:
+      # Checkout supplies scripts/verify-deploy.mjs. The artifact is downloaded
+      # afterwards and replaces public/, so the uploaded bytes remain the bytes
+      # the verify job tested rather than a second, unverified build.
+      - name: Checkout the verify script
+        uses: actions/checkout@v4
+
       - name: Download the verified artifact
         uses: actions/download-artifact@v4
         with:
@@ -114,18 +132,22 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      # No checkout, no second build: the bytes uploaded are the bytes the verify job
-      # tested. A deploy that rebuilds is a deploy of something nothing checked.
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      # Event fields go through env, never inline into the shell line. The
+      # explicit production branch avoids wrangler's detached-HEAD preview
+      # fallback, and the explicit hash records the dispatched commit rather
+      # than the runner's own CF_PAGES_COMMIT_SHA as the Pages Source.
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Without an explicit hash, wrangler records the runner's own
-          # CF_PAGES_COMMIT_SHA as the Pages "Source" — provenance about the machine,
-          # not the commit. Wrangler reads these from the environment, so nothing is
-          # interpolated into a shell line.
-          env:
-            CF_PAGES_COMMIT_SHA: ${{ github.sha }}
-            CF_PAGES_COMMIT_MESSAGE: "GitHub Actions ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          command: pages deploy public --project-name=dutaintegra
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: wrangler pages deploy public --project-name=dutaintegra --branch main --commit-hash "$COMMIT_SHA" --commit-message "GitHub Actions $RUN_URL"
+
+      # Wrangler returning 0 does not prove the custom domain changed. This
+      # fails unless production serves the exact bundle from the artifact.
+      - name: Verify production serves this build
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        run: node scripts/verify-deploy.mjs

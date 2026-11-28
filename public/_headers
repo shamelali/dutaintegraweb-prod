@@ -1,5 +1,9 @@
 # Cloudflare Pages headers
-# Security headers for all responses
+# Pages joins values from every matching rule. The global /* rule applies
+# security headers and HTML cache revalidation to every response, including
+# extensionless SPA routes that resolve to /index.html. Narrower rules detach
+# Cache-Control before replacing it so immutable and no-store policies remain
+# authoritative instead of being combined with the global value.
 
 /*
   X-Content-Type-Options: nosniff
@@ -10,37 +14,33 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://va.vercel-scripts.com https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://va.vercel-scripts.com https://www.google-analytics.com https://cloudflareinsights.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';
+  Cache-Control: public, max-age=0, must-revalidate
 
 # Cache static assets
 /assets/*
+  ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
 
 # Cache fonts
 /css/fonts.css
+  ! Cache-Control
   Cache-Control: public, max-age=31536000, immutable
 
-# No cache for HTML pages (they may change)
+# Revalidate HTML pages (they may change)
 /*.html
-  Cache-Control: public, max-age=0, must-revalidate
-
-# The SPA app shell is served at extensionless routes (/pricing, /services,
-# /about, /contact, /quiz, /billing) via the /* -> /index.html fallback. With no
-# Cache-Control here, Cloudflare applies its default ~7-day shared cache to those
-# HTML responses, so a marketing deploy stays invisible until the cache is
-# purged. Revalidate on every load so deploys show immediately; the JS/CSS stay
-# immutable and cached under /assets/* (content-hashed), so this only adds cheap
-# 304 revalidations of the ~2 KB shell.
-/*
+  ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate
 
 # API routes - no cache, CORS handled by Functions
 /api/*
+  ! Cache-Control
   Cache-Control: no-store
   Access-Control-Allow-Origin: *
   Access-Control-Allow-Methods: GET, POST, OPTIONS, PATCH
   Access-Control-Allow-Headers: Content-Type, x-csrf-token, x-admin-token, x-digest-token
 
 /admin/*
+  ! Cache-Control
   Cache-Control: no-store
   Access-Control-Allow-Origin: *
   Access-Control-Allow-Methods: GET, POST, OPTIONS, PATCH

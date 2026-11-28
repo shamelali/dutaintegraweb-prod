@@ -113,6 +113,7 @@ describe("GET /api/companies", () => {
     assert.equal(res.body.company.industry, VALID.industry);
     assert.equal(res.body.company.subscriptionTier, "starter");
     assert.equal(res.body.company.subscriptionStatus, "active");
+    assert.equal(res.body.company.isStaff, false);
     assert.ok(res.body.company.id);
   });
 
@@ -159,15 +160,21 @@ describe("PATCH /api/companies/:id", () => {
     assert.equal(res.body.company.ssmNumber, "SSM-999");
   });
 
-  test("ignores non-updatable fields such as subscription tier", async () => {
+  test("ignores non-updatable fields such as subscription tier and staff access", async () => {
     const { token } = await authenticatedCompany();
     const { body: me } = await get("/api/companies", { cookie: `dutaos_session=${token}` });
     const id = me.company.id;
 
-    await patch(`/api/companies/${id}`, { subscriptionTier: "enterprise", name: "Renamed" }, { cookie: `dutaos_session=${token}` });
+    await patch(`/api/companies/${id}`, {
+      subscriptionTier: "enterprise",
+      isStaff: true,
+      is_staff: true,
+      name: "Renamed",
+    }, { cookie: `dutaos_session=${token}` });
     const res = await get("/api/companies", { cookie: `dutaos_session=${token}` });
     assert.equal(res.body.company.name, "Renamed");
     assert.equal(res.body.company.subscriptionTier, "starter");
+    assert.equal(res.body.company.isStaff, false);
   });
 
   test("401s without a session cookie", async () => {

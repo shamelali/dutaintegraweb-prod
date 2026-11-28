@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import { dataFile } from "./paths.mjs";
 import { usingSupabase } from "./store.mjs";
 import { getCompanyIdFromReq } from "./auth.mjs";
+import { getCompany } from "./companies.mjs";
 
 /**
  * Retail Catalog Enrichment — image → structured catalog entry via VLM.
@@ -370,20 +371,25 @@ function strField(value, { required = false, max, label }) {
   return { value: trimmed || null };
 }
 
-// The catalog is staff-internal: every route requires a DutaOS session. The
-// tables carry RLS and are written with the service role, so this check is the
-// only thing standing between the public internet and an open VLM proxy.
-async function requireCompany(req, res) {
+// The catalog is staff-internal. A DutaOS session alone is not enough: public
+// signup creates an ordinary company, and the service-role data access below
+// bypasses RLS. Every route therefore checks the server-controlled staff flag.
+async function requireStaff(req, res) {
   const companyId = await getCompanyIdFromReq(req);
   if (!companyId) {
     sendCatalog(res, 401, { error: "Not authenticated" });
+    return null;
+  }
+  const company = await getCompany(companyId);
+  if (!company?.isStaff) {
+    sendCatalog(res, 403, { error: "Staff access required" });
     return null;
   }
   return companyId;
 }
 
 async function handleCatalogEnrich(req, res) {
-  if (!(await requireCompany(req, res))) return;
+  if (!(await requireStaff(req, res))) return;
   if (req.method !== "POST") return sendCatalog(res, 405, { error: "Method not allowed" });
 
   const parsed = await readBody(req);
@@ -439,7 +445,7 @@ async function handleCatalogEnrich(req, res) {
 }
 
 async function handleCatalogItems(req, res) {
-  if (!(await requireCompany(req, res))) return;
+  if (!(await requireStaff(req, res))) return;
   if (req.method === "GET") {
     const items = await listCatalogItems();
     return sendCatalog(res, 200, { items });
@@ -480,7 +486,7 @@ async function handleCatalogItems(req, res) {
 }
 
 async function handleCatalogItemById(req, res, id) {
-  if (!(await requireCompany(req, res))) return;
+  if (!(await requireStaff(req, res))) return;
   if (req.method === "GET") {
     const item = await getCatalogItem(id);
     if (!item) return sendCatalog(res, 404, { error: "Catalog item not found" });

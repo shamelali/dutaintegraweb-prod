@@ -171,7 +171,7 @@ jobs:
   # the env context, which is the one place a secret's presence can be tested —
   # `secrets` is not available to `if` at the job level.
   deploy-pages:
-    needs: [test, frontend, artifact-drift]
+    needs: [test, env-docs, frontend, secret-scan, artifact-drift]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: github.ref == 'refs/heads/main'

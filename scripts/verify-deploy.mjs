@@ -1,13 +1,18 @@
-// Fails the pipeline when production is not serving the bundle this pipeline built.
+// Fails the pipeline when production is not serving the bundle this pipeline built
+// or when the static security headers are missing from the index response.
 //
 // The deploy job reporting success is not proof the site changed: wrangler uploads
 // to a preview alias unless it is told `--branch main`, and a deploy that lands on a
 // preview leaves the custom domain on the previous bundle. That happened here and
 // was invisible — the job was green and the site was stale. This compares the asset
 // the artifact's index.html references with the asset production actually serves, so
-// the difference is a red pipeline instead of a silent no-op.
+// the difference is a red pipeline instead of a silent no-op. It also checks the
+// required response headers because a green bundle match must not hide a Pages
+// header-rule regression.
 
 import { readFile } from "node:fs/promises";
+
+import { missingSecurityHeaders } from "./deploy-security-headers.mjs";
 
 const SITE_URL = process.env.SITE_URL ?? "https://dutaintegra.my";
 const ATTEMPTS = Number(process.env.VERIFY_ATTEMPTS ?? 12);
@@ -24,7 +29,9 @@ async function fetchIndex(url) {
     redirect: "follow",
   });
   if (!res.ok) throw new Error(`GET ${url} -> HTTP ${res.status}`);
-  return res.text();
+  const html = await res.text();
+  const missingHeaders = missingSecurityHeaders(res.headers);
+  return { html, missingHeaders };
 }
 
 const local = assetsIn(await readFile("public/index.html", "utf8"));
@@ -35,30 +42,39 @@ if (local.length === 0) {
 console.log(`[verify-deploy] artifact expects: ${local.join(", ")}`);
 
 let lastSeen = [];
+let lastError;
 for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+  lastError = undefined;
   try {
-    const remote = assetsIn(await fetchIndex(SITE_URL));
+    const { html, missingHeaders } = await fetchIndex(SITE_URL);
+    const remote = assetsIn(html);
     lastSeen = remote;
     const missing = local.filter((a) => !remote.includes(a));
-    if (missing.length === 0) {
+    if (missingHeaders.length > 0) {
+      lastError = `GET ${SITE_URL} -> missing or invalid security headers: ${missingHeaders.join(", ")}`;
+      console.log(`[verify-deploy] attempt ${attempt}/${ATTEMPTS}: ${lastError}`);
+    } else if (missing.length === 0) {
       console.log(`[verify-deploy] OK: ${SITE_URL} serves ${local.join(", ")}`);
       process.exit(0);
+    } else {
+      console.log(
+        `[verify-deploy] attempt ${attempt}/${ATTEMPTS}: production still serves ` +
+          `${remote.join(", ") || "(nothing)"} — waiting for ${missing.join(", ")}`,
+      );
     }
-    console.log(
-      `[verify-deploy] attempt ${attempt}/${ATTEMPTS}: production still serves ` +
-        `${remote.join(", ") || "(nothing)"} — waiting for ${missing.join(", ")}`,
-    );
   } catch (err) {
+    lastError = err.message;
     console.log(`[verify-deploy] attempt ${attempt}/${ATTEMPTS}: ${err.message}`);
   }
   if (attempt < ATTEMPTS) await new Promise((r) => setTimeout(r, DELAY_MS));
 }
 
 console.error(
-  `[verify-deploy] FAIL: ${SITE_URL} never served the built bundle.\n` +
+  `[verify-deploy] FAIL: ${SITE_URL} never served the built bundle with all required security headers.\n` +
     `  expected: ${local.join(", ")}\n` +
     `  served:   ${lastSeen.join(", ") || "(nothing)"}\n` +
-    `The deploy job succeeded but production did not change — check that wrangler ` +
-    `passed --branch main and did not upload to a preview alias.`,
+    `  last error: ${lastError || "production still served a different bundle"}\n` +
+    `The deploy job succeeded but production did not pass verification — check that wrangler ` +
+    `passed --branch main, did not upload to a preview alias, and deployed public/_headers.`,
 );
 process.exit(1);

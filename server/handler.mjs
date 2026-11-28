@@ -950,7 +950,7 @@ async function handleAdminCaseStudies(req, res) {
   if (!auth) return send(res, 401, { error: "Unauthorized" });
 
   if (req.method === "GET") {
-    const studies = await listCaseStudies();
+    const studies = await listCaseStudies({ includeUnpublished: true });
     return send(res, 200, { count: studies.length, caseStudies: studies });
   }
 
@@ -998,7 +998,7 @@ async function handleAdminProducts(req, res) {
   if (!auth) return send(res, 401, { error: "Unauthorized" });
 
   if (req.method === "GET") {
-    const products = await listProducts();
+    const products = await listProducts({ includeUnpublished: true });
     return send(res, 200, { count: products.length, products });
   }
 
