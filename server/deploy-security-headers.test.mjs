@@ -55,6 +55,12 @@ test("a complete security header set has no missing or invalid headers", () => {
   assert.deepEqual(missingSecurityHeaders(completeHeaders()), []);
 });
 
+test("accepts Cloudflare's 180-day HSTS edge override with preload enabled", () => {
+  const headers = completeHeaders();
+  headers.set("strict-transport-security", "max-age=15552000; includeSubDomains; preload");
+  assert.deepEqual(missingSecurityHeaders(headers), []);
+});
+
 test("an empty response reports every required security header", () => {
   assert.deepEqual(
     missingSecurityHeaders(new Headers()),
@@ -221,7 +227,7 @@ test("normalizes Content-Security-Policy case and whitespace", () => {
 const INCOMPLETE_HSTS = [
   ["max-age=31536000; preload", "includeSubDomains"],
   ["max-age=31536000; includeSubDomains", "preload"],
-  ["max-age=31535999; includeSubDomains; preload", "max-age=31536000"],
+  ["max-age=15551999; includeSubDomains; preload", "at least 180 days"],
   ["max-age=0; max-age=31536000; includeSubDomains; preload", "one unambiguous max-age"],
 ];
 

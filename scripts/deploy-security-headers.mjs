@@ -79,6 +79,8 @@ function validCsp(value) {
   return true;
 }
 
+const MIN_HSTS_MAX_AGE = 15552000; // Cloudflare's zone policy overrides the origin header to 180 days.
+
 function validHsts(value) {
   const directives = value
     .split(";")
@@ -88,8 +90,11 @@ function validHsts(value) {
     const match = directive.match(/^max-age\s*=\s*(.*)$/);
     return match ? [match[1].trim()] : [];
   });
+  const maxAge = Number(maxAges[0]);
   return maxAges.length === 1
-    && maxAges[0] === "31536000"
+    && /^\d+$/.test(maxAges[0])
+    && Number.isSafeInteger(maxAge)
+    && maxAge >= MIN_HSTS_MAX_AGE
     && directives.includes("includesubdomains")
     && directives.includes("preload");
 }
